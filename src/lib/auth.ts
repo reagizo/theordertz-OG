@@ -23,6 +23,12 @@ const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name
   { email: 'test-premier@test.com', password: 'test', role: 'customer', name: 'Test Premier Customer' },
 ]
 
+// Helper to safely access localStorage only in the browser
+const getLocalStorage = () => {
+  if (typeof window === 'undefined') return null
+  return window.localStorage
+}
+
 export async function login(email: string, password: string): Promise<User> {
   const found = MOCK_USERS.find(u => u.email === email && u.password === password)
   const testFound = TEST_ACCOUNTS.find(u => u.email === email && u.password === password)
@@ -42,34 +48,45 @@ export async function login(email: string, password: string): Promise<User> {
     name: source.name,
     app_metadata: { roles: [source.role], isTestAccount: isTest },
   }
-  localStorage.setItem('mock.user', JSON.stringify(user))
+  
+  const ls = getLocalStorage()
+  if (ls) ls.setItem('mock.user', JSON.stringify(user))
+  
   return user
 }
 
 // --- Pending registrations (admin approval) ---
 export type PendingRegistration = { email: string; role: 'agent' | 'customer'; name?: string; isTestAccount?: boolean }
 const PENDING_KEY = 'mock.pending.registrations'
+
 function loadPending(): PendingRegistration[] {
+  const ls = getLocalStorage()
+  if (!ls) return []
   try {
-    const raw = localStorage.getItem(PENDING_KEY)
+    const raw = ls.getItem(PENDING_KEY)
     if (!raw) return []
     return JSON.parse(raw) as PendingRegistration[]
   } catch {
     return []
   }
 }
+
 function savePending(list: PendingRegistration[]) {
-  localStorage.setItem(PENDING_KEY, JSON.stringify(list))
+  const ls = getLocalStorage()
+  if (ls) ls.setItem(PENDING_KEY, JSON.stringify(list))
 }
+
 export async function requestRegistration(email: string, role: 'agent' | 'customer', meta?: Record<string, unknown>): Promise<void> {
   const pending = loadPending()
   if (pending.find(p => p.email === email)) return
   pending.push({ email, role, name: meta?.name as string | undefined, isTestAccount: meta?.isTestAccount as boolean | undefined })
   savePending(pending)
 }
+
 export async function listPendingRegistrations(): Promise<PendingRegistration[]> {
   return loadPending()
 }
+
 export async function approveRegistration(email: string): Promise<User | null> {
   const pending = loadPending()
   const foundIndex = pending.findIndex(p => p.email === email)
@@ -85,7 +102,8 @@ export async function approveRegistration(email: string): Promise<User | null> {
   MOCK_USERS.push({ email: email, password: 'Temp123!', role: p.role, name: p.name, isTestAccount: isTest })
   pending.splice(foundIndex, 1)
   savePending(pending)
-  localStorage.setItem('mock.user', JSON.stringify(newUser))
+  const ls = getLocalStorage()
+  if (ls) ls.setItem('mock.user', JSON.stringify(newUser))
   return newUser
 }
 
@@ -97,12 +115,15 @@ export async function signup(email: string, password: string, meta: Record<strin
     name: meta?.name as string | undefined,
     app_metadata: { roles: ['customer'], tier: meta?.tier as string | undefined, isTestAccount: isTest },
   }
-  localStorage.setItem('mock.user', JSON.stringify(user))
+  const ls = getLocalStorage()
+  if (ls) ls.setItem('mock.user', JSON.stringify(user))
   return user
 }
 
 export function getCurrentUser(): User | null {
-  const raw = localStorage.getItem('mock.user')
+  const ls = getLocalStorage()
+  if (!ls) return null
+  const raw = ls.getItem('mock.user')
   if (!raw) return null
   try {
     return JSON.parse(raw) as User
@@ -112,11 +133,13 @@ export function getCurrentUser(): User | null {
 }
 
 export function setCurrentUser(u: User): void {
-  localStorage.setItem('mock.user', JSON.stringify(u))
+  const ls = getLocalStorage()
+  if (ls) ls.setItem('mock.user', JSON.stringify(u))
 }
 
 export function logout(): void {
-  localStorage.removeItem('mock.user')
+  const ls = getLocalStorage()
+  if (ls) ls.removeItem('mock.user')
 }
 
 export function isTestUser(user?: User | null): boolean {
@@ -176,6 +199,7 @@ export async function seedProductionLiveData(): Promise<void> {
     }
   }
 }
+
 export function getRegisteredAccountsCount(): number {
   return MOCK_USERS.length
 }

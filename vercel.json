@@ -1,12 +1,4 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "server/server.js": {
-      "memory": 1024
-    }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "server/server.js" }
-  ]
+  "outputDirectory": "dist/client"
 }

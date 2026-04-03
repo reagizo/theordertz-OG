@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "vercel-build": "npm run build && mkdir -p api && cp dist/server/server.js api/index.js",
-    "preview": "vite preview",
-    "start": "node dist/server/server.js",
+  "dev": "vite dev --port 3000",
+  "build": "vite build",
+  "preview": "vite preview",
+  "start": "node dist/server/server.js"
+}
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

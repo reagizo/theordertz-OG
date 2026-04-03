@@ -1,8 +1,13 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/client",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "dist/server/server.js" }
+  "outputDirectory": "dist",
+  "functions": {
+    "server/server.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/server/server.js" }
   ]
 }

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL Database ─────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: theordertz-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: theordertz
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ChangeMe123!}
+      POSTGRES_DB: theordertz
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U theordertz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Application ─────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: theordertz-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://theordertz:${DB_PASSWORD:-ChangeMe123!}@postgres:5432/theordertz
+      SESSION_SECRET: ${SESSION_SECRET:-change-this-to-a-random-32-char-string}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  postgres_data:
+  app_data:

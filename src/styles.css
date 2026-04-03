@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss" source("../");
+
+/* Branding variables and decorative background scaffolding */
+:root {
+  --brand-1: #4F46E5;
+  --brand-2: #06B6D4;
+  --bg: #0b1020;
+}
+
+@theme {
+  --color-brand-blue: #1E3A5F;
+  --color-brand-pink: #EC4899;
+  --color-brand-orange: #F97316;
+  --color-brand-light: #FEF3E5;
+}
+
+@layer base {
+  /* Body text - Open Sans everywhere */
+  body, p, span, div, label, input, select, textarea, button, a, td, th, li, small, code, pre {
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  body {
+    font-weight: 400;
+    color: #1E3A5F;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Headings - Playfair Display */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  h1 { font-weight: 700; }
+  h2 { font-weight: 600; }
+  h3 { font-weight: 600; }
+  h4, h5, h6 { font-weight: 500; }
+
+  /* Font weight utilities */
+  .font-light { font-weight: 300; }
+  .font-regular { font-weight: 400; }
+  .font-medium { font-weight: 500; }
+  .font-semibold { font-weight: 600; }
+  .font-bold { font-weight: 700; }
+
+  code {
+    font-family: 'Open Sans', monospace;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-pink-700 transition-all;
+  }
+
+  .btn-secondary {
+    @apply bg-pink-50 text-pink-600 font-semibold rounded-xl border border-pink-200 hover:bg-pink-100 transition-all;
+  }
+
+  .btn-outline {
+    @apply bg-white text-brand-blue font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-all;
+  }
+
+  .card {
+    @apply bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink text-sm transition-all shadow-sm;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-brand-blue mb-1.5;
+  }
+
+  /* Brand background - soft gradient with curved arcs */
+  .brand-bg {
+    @apply bg-gradient-to-br from-[#FFF5EE] via-[#FFE4E8] to-[#E8D5F5] relative overflow-hidden;
+  }
+
+  /* Decorative curved arcs */
+  .brand-arc-top-left {
+    @apply absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full border-[3px] border-orange-300/20 pointer-events-none;
+  }
+
+  .brand-arc-top-left-inner {
+    @apply absolute -top-20 -left-20 w-[400px] h-[400px] rounded-full border-[2px] border-orange-400/15 pointer-events-none;
+  }
+
+  .brand-arc-bottom-right {
+    @apply absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full border-[3px] border-purple-300/20 pointer-events-none;
+  }
+
+  .brand-arc-bottom-right-inner {
+    @apply absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full border-[2px] border-purple-400/15 pointer-events-none;
+  }
+
+  /* Soft glow overlays */
+  .brand-glow-top {
+    @apply absolute top-0 left-0 w-96 h-96 bg-orange-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none;
+  }
+
+  .brand-glow-bottom {
+    @apply absolute bottom-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #EC4899;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1E3A5F;
+}

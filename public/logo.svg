@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <defs>
+    <linearGradient id="chevron-dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="chevron-red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#BE185D"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+    <linearGradient id="chevron-orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+  <path d="M200 40 L340 120 L340 180 L200 100 L60 180 L60 120 Z" fill="url(#chevron-dark)"/>
+  <path d="M200 140 L340 220 L340 280 L200 200 L60 280 L60 220 Z" fill="url(#chevron-red)"/>
+  <path d="M200 240 L300 300 L300 340 L200 280 L100 340 L100 300 Z" fill="url(#chevron-orange)"/>
+  <text x="200" y="400" text-anchor="middle" font-family="'Dancing Script', 'Brush Script MT', cursive, serif" font-size="56" fill="#0F172A">The Order</text>
+  <text x="200" y="445" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="24" fill="#BE185D" letter-spacing="4">REAGIZO SERVICE COMPANY</text>
+</svg>

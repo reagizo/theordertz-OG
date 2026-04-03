@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.tanstack/
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Data files (production database)
+data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+
+# Temporary files
+tmp/
+temp/

@@ -3,15 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "dev": "vite dev --port 3000",
-  "build": "vite build",
-  "preview": "vite preview",
-  "start": "node dist/server/server.js"
-}
-    "docker:build": "docker compose build",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f app"
+    "dev": "vite dev --port 3000",
+    "build": "vite build",
+    "start": "node dist/server/server.js",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.6",

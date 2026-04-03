@@ -3,17 +3,29 @@ import { existsSync, readFileSync, mkdirSync } from 'fs'
 import path from 'path'
 
 type BlobEntry = { key: string }
+
 class SimpleStore {
   private store: Record<string, any> = {}
   private file: string
-  constructor(private name: string) {
+  private name: string
+
+  constructor(name: string) {
+    this.name = name
     const dataDir = path.join(process.cwd(), 'data')
-    if (!existsSync(dataDir)) {
-      mkdirSync(dataDir, { recursive: true })
+    
+    // Safe directory creation
+    try {
+      if (!existsSync(dataDir)) {
+        mkdirSync(dataDir, { recursive: true })
+      }
+    } catch (err) {
+      console.warn(`Warning: Could not create data directory. Using memory store only. Error: ${err}`)
     }
+
     this.file = path.join(dataDir, `${name}.json`)
     this.load()
   }
+
   private load() {
     try {
       if (existsSync(this.file)) {
@@ -26,13 +38,29 @@ class SimpleStore {
       this.store = {}
     }
   }
+
   async get(id: string, _opts: { type?: string } = {}) {
     return this.store[id] ?? null
   }
+
   async setJSON(id: string, value: any) {
     this.store[id] = value
-    await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
+    try {
+      await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
+    } catch (err) {
+      console.error(`Error saving ${this.name}:`, err)
+    }
   }
+
+  async delete(id: string) {
+    delete this.store[id]
+    try {
+      await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
+    } catch (err) {
+      console.error(`Error deleting from ${this.name}:`, err)
+    }
+  }
+
   async list(): Promise<{ blobs: BlobEntry[] }> {
     const keys = Object.keys(this.store)
     return { blobs: keys.map(k => ({ key: k })) }
@@ -43,6 +71,5 @@ class SimpleStore {
 const registry: Record<string, SimpleStore> = {}
 export function getStore(name: string) {
   if (!registry[name]) registry[name] = new SimpleStore(name)
-  // @ts-ignore - actual methods used by callers
   return registry[name]
 }

@@ -3,11 +3,10 @@
   "outputDirectory": "dist/client",
   "functions": {
     "dist/server/server.js": {
-      "memory": 1024,
-      "maxDuration": 10
+      "memory": 1024
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/dist/server/server.js" }
+    { "source": "/(.*)", "destination": "dist/server/server.js" }
   ]
 }

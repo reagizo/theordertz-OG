@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Fallback to empty string to prevent crash if env vars are missing
+const supabaseUrl = process.env.SUPABASE_URL || ''
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 // Safe storage for server-side (prevents localStorage crash)
 const serverStorage = {
@@ -21,7 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 })
 
-// Admin for Server Functions (uses Service Role Key to bypass RLS for now)
+// Admin for Server Functions (uses Service Role Key)
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,

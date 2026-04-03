@@ -1,19 +1,12 @@
 import { defineConfig } from 'vite'
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import viteReact from '@vitejs/plugin-react'
-import viteTsConfigPaths from 'vite-tsconfig-paths'
+import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-// Netlify plugin removed: manual deployment only
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
-const config = defineConfig({
+export default defineConfig({
   plugins: [
-    viteTsConfigPaths({
-      projects: ['./tsconfig.json'],
-    }),
+    react(),
     tailwindcss(),
     tanstackStart(),
-    viteReact(),
   ],
 })
-
-export default config

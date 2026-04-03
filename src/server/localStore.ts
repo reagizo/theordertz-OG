@@ -8,6 +8,7 @@ class SimpleStore {
   private store: Record<string, any> = {}
   private file: string
   private name: string
+  private isWritable: boolean = true
 
   constructor(name: string) {
     this.name = name
@@ -18,8 +19,13 @@ class SimpleStore {
       if (!existsSync(dataDir)) {
         mkdirSync(dataDir, { recursive: true })
       }
+      // Test write access
+      const testFile = path.join(dataDir, '.write_test')
+      fs.writeFileSync(testFile, 'test')
+      fs.unlinkSync(testFile)
     } catch (err) {
-      console.warn(`Warning: Could not create data directory. Using memory store only. Error: ${err}`)
+      console.warn(`Warning: Data directory is read-only. Using memory store only for ${name}.`)
+      this.isWritable = false
     }
 
     this.file = path.join(dataDir, `${name}.json`)
@@ -45,19 +51,23 @@ class SimpleStore {
 
   async setJSON(id: string, value: any) {
     this.store[id] = value
-    try {
-      await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
-    } catch (err) {
-      console.error(`Error saving ${this.name}:`, err)
+    if (this.isWritable) {
+      try {
+        await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
+      } catch (err) {
+        console.error(`Error saving ${this.name}:`, err)
+      }
     }
   }
 
   async delete(id: string) {
     delete this.store[id]
-    try {
-      await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
-    } catch (err) {
-      console.error(`Error deleting from ${this.name}:`, err)
+    if (this.isWritable) {
+      try {
+        await fs.writeFile(this.file, JSON.stringify(this.store, null, 2), 'utf8')
+      } catch (err) {
+        console.error(`Error deleting from ${this.name}:`, err)
+      }
     }
   }
 

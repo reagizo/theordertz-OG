@@ -3,9 +3,10 @@ workflows:
   android-build:
     name: theordertz Android
     max_build_duration: 15
-    instance_type: mac_mini_m1
+    instance_type: linux_x2
     environment:
       node: latest
+      java: 21
     scripts:
       - name: Install dependencies
         script: npm ci --prefer-offline
@@ -15,14 +16,8 @@ workflows:
         script: node scripts/generate-capacitor-index.js
       - name: Sync Capacitor
         script: npx cap sync android
-      - name: Setup Java 21
-        script: |
-          export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-          echo "JAVA_HOME=$JAVA_HOME" >> $CM_ENV
-          echo "PATH=$JAVA_HOME/bin:$PATH" >> $CM_ENV
       - name: Build Android APK
         script: |
-          export JAVA_HOME=$(/usr/libexec/java_home -v 21)
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon

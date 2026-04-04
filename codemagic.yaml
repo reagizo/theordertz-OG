@@ -15,8 +15,14 @@ workflows:
         script: node scripts/generate-capacitor-index.js
       - name: Sync Capacitor
         script: npx cap sync android
+      - name: Setup Java 21
+        script: |
+          export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+          echo "JAVA_HOME=$JAVA_HOME" >> $CM_ENV
+          echo "PATH=$JAVA_HOME/bin:$PATH" >> $CM_ENV
       - name: Build Android APK
         script: |
+          export JAVA_HOME=$(/usr/libexec/java_home -v 21)
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon

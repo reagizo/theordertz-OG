@@ -203,15 +203,15 @@ function CustomerServices() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Transaction Request</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transaction Request</h1>
         <p className="text-gray-500 text-sm mt-1">{customer?.tier === 'premier' ? 'Premier Customer' : 'Day-to-Day Customer'}</p>
       </div>
 
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         {[1, 2, 3].map(s => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step >= s ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{s}</div>
-            <span className={step >= s ? 'text-gray-700 font-medium' : 'text-gray-400'}>{s === 1 ? 'Service' : s === 2 ? 'Details' : 'Confirm'}</span>
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${step >= s ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{s}</div>
+            <span className={`hidden sm:inline ${step >= s ? 'text-gray-700 font-medium' : 'text-gray-400'}`}>{s === 1 ? 'Service' : s === 2 ? 'Details' : 'Confirm'}</span>
             {s < 3 && <div className={`flex-1 h-px w-8 ${step > s ? 'bg-green-400' : 'bg-gray-200'}`} />}
           </div>
         ))}

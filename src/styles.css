@@ -126,3 +126,55 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #1E3A5F;
 }
+
+/* Mobile-friendly improvements */
+@media (max-width: 640px) {
+  /* Prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Better tap targets on mobile */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Smaller padding on mobile containers */
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* Safe area padding for notched phones (iPhone X+) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Mobile-friendly improvements */
+@media (max-width: 640px) {
+  /* Prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Better tap targets on mobile */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Smaller padding on mobile containers */
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* Safe area padding for notched phones (iPhone X+) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

@@ -118,9 +118,9 @@ function AdminSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Settings</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Settings</h1>
           <p className="text-gray-500 text-sm mt-1">Manage Super Agent name, password, users, and alerts</p>
         </div>
         {unreadAlerts.length > 0 && (
@@ -134,7 +134,7 @@ function AdminSettings() {
       {/* Settings Tabs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="border-b border-gray-200 px-6">
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto">
             {[
               { id: 'general' as const, label: 'General', icon: User },
               { id: 'alerts' as const, label: `Registration Alerts${unreadAlerts.length > 0 ? ` (${unreadAlerts.length})` : ''}`, icon: Bell },
@@ -144,7 +144,7 @@ function AdminSettings() {
               <button
                 key={tab.id}
                 onClick={() => setSettingsTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   settingsTab === tab.id ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >

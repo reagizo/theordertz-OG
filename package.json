@@ -9,9 +9,18 @@
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "push": "git add . && git commit -m \"auto-deploy\" && git push",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "build:mobile": "npm run build && node scripts/generate-capacitor-index.js && npx cap sync",
+    "cap:sync": "npm run build:mobile",
+    "cap:android": "npm run build:mobile && npx cap open android",
+    "cap:ios": "npm run build:mobile && npx cap open ios",
+    "cap:live": "npm run build:mobile && npx cap run"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
     "@supabase/supabase-js": "^2.101.1",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-router": "^1.163.3",

@@ -602,9 +602,9 @@ function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">
             Monitor transactions, agents, and customers
             <span className="ml-2 text-indigo-600 font-medium">| Super Agent: {settings.superAgentName}</span>
@@ -688,13 +688,13 @@ function AdminDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-xl p-5">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Monthly Revenue</h3>
-                  <div className="h-64">
+                  <div className="h-48 sm:h-64">
                     <Bar data={revenueBarData} options={chartOptions} />
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Transaction Trend (30 days)</h3>
-                  <div className="h-64">
+                  <div className="h-48 sm:h-64">
                     <Line data={trendLineData} options={chartOptions} />
                   </div>
                 </div>
@@ -704,13 +704,13 @@ function AdminDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-xl p-5">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Transactions by Tier</h3>
-                  <div className="h-64 flex items-center justify-center">
+                  <div className="h-48 sm:h-64 flex items-center justify-center">
                     <Doughnut data={tierDoughnutData} options={doughnutOptions} />
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Transactions by Service</h3>
-                  <div className="h-64">
+                  <div className="h-48 sm:h-64">
                     <Bar data={serviceBarData} options={chartOptions} />
                   </div>
                 </div>

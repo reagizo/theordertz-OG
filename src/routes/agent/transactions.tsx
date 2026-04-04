@@ -35,7 +35,7 @@ function AgentTransactions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">My Transactions</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Transactions</h1>
         <p className="text-gray-500 text-sm mt-1">All customer service requests assigned to you</p>
       </div>
 
@@ -56,8 +56,8 @@ function AgentTransactions() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
+      <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />

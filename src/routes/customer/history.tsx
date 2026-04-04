@@ -38,7 +38,7 @@ function CustomerHistory() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transaction History</h1>
         <p className="text-gray-500 text-sm mt-1">All your service requests</p>
       </div>
 
@@ -63,30 +63,32 @@ function CustomerHistory() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-40">
+      <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search provider..."
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="all">All Services</option>
-          <option value="cash_send">Cash Send</option>
-          <option value="cash_withdrawal">Cash Withdrawal</option>
-          <option value="airtime_bundle">Airtime/Bundle</option>
-          <option value="tv_subscriptions">TV Subscriptions</option>
-          <option value="internet_subscriptions">Internet Subscriptions</option>
-          <option value="utility_bills">Utility Bills</option>
-          <option value="all_payments">All Payment Bills</option>
-        </select>
+        <div className="flex gap-3">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            className="flex-1 sm:flex-none px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)}
+            className="flex-1 sm:flex-none px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="all">All Services</option>
+            <option value="cash_send">Cash Send</option>
+            <option value="cash_withdrawal">Cash Withdrawal</option>
+            <option value="airtime_bundle">Airtime/Bundle</option>
+            <option value="tv_subscriptions">TV Subscriptions</option>
+            <option value="internet_subscriptions">Internet Subscriptions</option>
+            <option value="utility_bills">Utility Bills</option>
+            <option value="all_payments">All Payment Bills</option>
+          </select>
+        </div>
       </div>
 
       {/* Transactions */}

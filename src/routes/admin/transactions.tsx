@@ -64,7 +64,7 @@ function AdminTransactions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transactions</h1>
         <p className="text-gray-500 text-sm mt-1">Review and approve customer service requests</p>
       </div>
 
@@ -73,31 +73,33 @@ function AdminTransactions() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-48">
+      <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col sm:flex-row flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-48 w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or provider..."
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <select value={tierFilter} onChange={e => setTierFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="all">All Tiers</option>
-          <option value="d2d">Day-to-Day</option>
-          <option value="premier">Premier</option>
-        </select>
-        <select value={paymentFilter} onChange={e => setPaymentFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="all">All Payments</option>
-          <option value="cod">COD</option>
-          <option value="oc">On Credit (OC)</option>
-        </select>
+        <div className="flex flex-wrap gap-3">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select value={tierFilter} onChange={e => setTierFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="all">All Tiers</option>
+            <option value="d2d">Day-to-Day</option>
+            <option value="premier">Premier</option>
+          </select>
+          <select value={paymentFilter} onChange={e => setPaymentFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="all">All Payments</option>
+            <option value="cod">COD</option>
+            <option value="oc">On Credit (OC)</option>
+          </select>
+        </div>
       </div>
 
       {/* Table */}

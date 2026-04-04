@@ -2,11 +2,43 @@
   "name": "theordertz",
   "private": true,
   "type": "module",
-"scripts": {
+  "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "start": "node dist/server/server.js",
-    "preview": "vite preview",
-    "deploy": "npm run build && git add . && git commit -m \"auto-deploy\" && git push"
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "push": "git add . && git commit -m \"auto-deploy\" && git push",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
+    "@tailwindcss/vite": "^4.0.6",
+    "@tanstack/react-router": "^1.163.3",
+    "@tanstack/react-start": "^1.166.1",
+    "@tanstack/react-store": "^0.9.1",
+    "@tanstack/router-plugin": "^1.164.0",
+    "@tanstack/store": "^0.9.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "chart.js": "^4.5.1",
+    "lucide-react": "^0.576.0",
+    "react": "^19.2.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.0.6",
+    "vite-tsconfig-paths": "^6.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.31.0",
+    "@tailwindcss/vite": "^4.0.6",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "lucide-react": "^0.576.0",
+    "rimraf": "^6.0.1",
+    "tailwindcss": "^4.0.6",
+    "typescript": "^5.7.2",
+    "vite": "^7.1.7",
+    "wrangler": "^4.80.0"
   }
 }

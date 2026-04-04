@@ -1,0 +1,20 @@
+version: 2.1
+workflows:
+  main:
+    name: Build
+    max_build_duration: 60
+    environment:
+      node: 18
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build
+        script: npm run build
+      - name: Test (optional)
+        script: npm test --silent
+    cache:
+      - node_modules
+      - ~/.npm
+      - ~/.cache/yarn
+    artifacts:
+      - dist/**

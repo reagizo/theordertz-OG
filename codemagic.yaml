@@ -7,12 +7,6 @@ workflows:
     environment:
       node: latest
     scripts:
-      - name: Install Java 21
-        script: |
-          brew install openjdk@21
-          export JAVA_HOME=/opt/homebrew/opt/openjdk@21
-          export PATH=$JAVA_HOME/bin:$PATH
-          java -version
       - name: Install dependencies
         script: npm ci --prefer-offline
       - name: Build web app
@@ -23,8 +17,6 @@ workflows:
         script: npx cap sync android
       - name: Build Android APK
         script: |
-          export JAVA_HOME=/opt/homebrew/opt/openjdk@21
-          export PATH=$JAVA_HOME/bin:$PATH
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon

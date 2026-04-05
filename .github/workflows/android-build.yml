@@ -23,10 +23,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build web app
-        run: npm run build
+      - name: Build Capacitor app
+        run: npm run build:capacitor
 
-      - name: Generate index.html for Capacitor
+      - name: Generate index.html
         run: node scripts/generate-capacitor-index.js
 
       - name: Setup Java

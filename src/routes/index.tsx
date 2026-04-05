@@ -13,16 +13,20 @@ function Home() {
 
   useEffect(() => {
     if (loading) return
-    if (!user) {
-      router.navigate({ to: '/login' })
-    } else if (role === 'admin') {
-      router.navigate({ to: '/admin' })
-    } else if (role === 'agent') {
-      router.navigate({ to: '/agent' })
-    } else if (role === 'customer') {
-      router.navigate({ to: '/customer' })
-    } else {
-      router.navigate({ to: '/login' })
+    try {
+      if (!user) {
+        router.navigate({ to: '/login' })
+      } else if (role === 'admin') {
+        router.navigate({ to: '/admin' })
+      } else if (role === 'agent') {
+        router.navigate({ to: '/agent' })
+      } else if (role === 'customer') {
+        router.navigate({ to: '/customer' })
+      } else {
+        router.navigate({ to: '/login' })
+      }
+    } catch (err) {
+      console.error('Navigation error:', err)
     }
   }, [user, loading, role, router])
 

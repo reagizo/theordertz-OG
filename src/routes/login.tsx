@@ -21,11 +21,13 @@ function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      router.navigate({ to: '/' })
+      // Delay navigation to let auth state propagate
+      setTimeout(() => {
+        router.navigate({ to: '/' })
+      }, 100)
     } catch (err: unknown) {
       const e = err as { message?: string }
       setError(e?.message ?? 'Login failed. Please try again.')
-    } finally {
       setLoading(false)
     }
   }

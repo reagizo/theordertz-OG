@@ -14,10 +14,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.debug
         }
     }
     applicationVariants.all { variant ->
@@ -50,8 +61,8 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-// Override Capacitor's debug signing config to use Gradle's built-in keystore
-android.buildTypes.debug.signingConfig = null
+// Ensure debug builds are signed
+android.buildTypes.debug.signingConfig = android.signingConfigs.debug
 
 try {
     def servicesJSON = file('google-services.json')

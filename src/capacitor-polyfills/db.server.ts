@@ -1,4 +1,4 @@
-import { getStore } from '@/server/localStore'
+// Capacitor-compatible db.server using localStorage instead of Node.js fs
 import type {
   AgentProfile,
   CustomerProfile,
@@ -8,10 +8,48 @@ import type {
   CreditPortfolio,
 } from '@/lib/types'
 
-// ── Store routing: test accounts use isolated demo stores ─────────────────────
-// Test account data is stored in separate "test-*" stores so it never pollutes
-// the real audit trail. Admins can still view test data via the admin panel
-// but it is clearly marked and excluded from production reports.
+// In-memory store for Capacitor (persists via localStorage)
+interface StoreData {
+  agents: Map<string, AgentProfile>
+  customers: Map<string, CustomerProfile>
+  transactions: Map<string, Transaction>
+  floatRequests: Map<string, FloatRequest>
+  floatExchanges: Map<string, FloatExchange>
+}
+
+const stores: StoreData = {
+  agents: new Map(),
+  customers: new Map(),
+  transactions: new Map(),
+  floatRequests: new Map(),
+  floatExchanges: new Map(),
+}
+
+// Load from localStorage on init
+try {
+  const raw = localStorage.getItem('capacitor-store')
+  if (raw) {
+    const data = JSON.parse(raw)
+    if (data.agents) Object.entries(data.agents).forEach(([k, v]) => stores.agents.set(k, v as AgentProfile))
+    if (data.customers) Object.entries(data.customers).forEach(([k, v]) => stores.customers.set(k, v as CustomerProfile))
+    if (data.transactions) Object.entries(data.transactions).forEach(([k, v]) => stores.transactions.set(k, v as Transaction))
+    if (data.floatRequests) Object.entries(data.floatRequests).forEach(([k, v]) => stores.floatRequests.set(k, v as FloatRequest))
+    if (data.floatExchanges) Object.entries(data.floatExchanges).forEach(([k, v]) => stores.floatExchanges.set(k, v as FloatExchange))
+  }
+} catch {}
+
+// Save to localStorage
+function persist() {
+  try {
+    localStorage.setItem('capacitor-store', JSON.stringify({
+      agents: Object.fromEntries(stores.agents),
+      customers: Object.fromEntries(stores.customers),
+      transactions: Object.fromEntries(stores.transactions),
+      floatRequests: Object.fromEntries(stores.floatRequests),
+      floatExchanges: Object.fromEntries(stores.floatExchanges),
+    }))
+  } catch {}
+}
 
 function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; customerId?: string } | { id?: string }): boolean {
   if ('isTestAccount' in item && item.isTestAccount) return true
@@ -21,66 +59,52 @@ function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; cu
   return false
 }
 
-function getStoreName(baseName: string, isTest: boolean): string {
-  return isTest ? `test-${baseName}` : baseName
-}
-
 // ── Agents ──────────────────────────────────────────────────────────────────
 
 export async function getAgentProfile(id: string): Promise<AgentProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('agents', isTest))
-  return store.get(id, { type: 'json' })
+  return stores.agents.get(id) || null
 }
 
 export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
-  const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('agents', isTest))
-  await store.setJSON(profile.id, profile)
+  stores.agents.set(profile.id, profile)
+  persist()
 }
 
 export async function listAgents(testOnly?: boolean): Promise<AgentProfile[]> {
-  const store = getStore(testOnly ? 'test-agents' : 'agents')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<AgentProfile>)
-  )
-  return results.filter(Boolean)
+  const all = Array.from(stores.agents.values())
+  return testOnly ? all.filter(isTestEntity) : all.filter(a => !isTestEntity(a))
 }
 
 export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: AgentProfile[] }> {
-  const [real, test] = await Promise.all([listAgents(false), listAgents(true)])
-  return { real, test }
+  const all = Array.from(stores.agents.values())
+  return {
+    real: all.filter(a => !isTestEntity(a)),
+    test: all.filter(isTestEntity),
+  }
 }
 
 // ── Customers ────────────────────────────────────────────────────────────────
 
 export async function getCustomerProfile(id: string): Promise<CustomerProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('customers', isTest))
-  return store.get(id, { type: 'json' })
+  return stores.customers.get(id) || null
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {
-  const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('customers', isTest))
-  await store.setJSON(profile.id, profile)
+  stores.customers.set(profile.id, profile)
+  persist()
 }
 
 export async function listCustomers(testOnly?: boolean): Promise<CustomerProfile[]> {
-  const store = getStore(testOnly ? 'test-customers' : 'customers')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<CustomerProfile>)
-  )
-  return results.filter(Boolean)
+  const all = Array.from(stores.customers.values())
+  return testOnly ? all.filter(isTestEntity) : all.filter(c => !isTestEntity(c))
 }
 
 export async function listAllCustomers(): Promise<{ real: CustomerProfile[]; test: CustomerProfile[] }> {
-  const [real, test] = await Promise.all([listCustomers(false), listCustomers(true)])
-  return { real, test }
+  const all = Array.from(stores.customers.values())
+  return {
+    real: all.filter(c => !isTestEntity(c)),
+    test: all.filter(isTestEntity),
+  }
 }
 
 export async function listCustomersByTier(tier: 'd2d' | 'premier', testOnly?: boolean): Promise<CustomerProfile[]> {
@@ -91,32 +115,29 @@ export async function listCustomersByTier(tier: 'd2d' | 'premier', testOnly?: bo
 // ── Transactions ─────────────────────────────────────────────────────────────
 
 export async function getTransaction(id: string): Promise<Transaction | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('transactions', isTest))
-  return store.get(id, { type: 'json' })
+  return stores.transactions.get(id) || null
 }
 
 export async function saveTransaction(tx: Transaction): Promise<void> {
-  const isTest = isTestEntity(tx)
-  const store = getStore(getStoreName('transactions', isTest))
-  await store.setJSON(tx.id, tx)
+  stores.transactions.set(tx.id, tx)
+  persist()
 }
 
 export async function listTransactions(testOnly?: boolean): Promise<Transaction[]> {
-  const store = getStore(testOnly ? 'test-transactions' : 'transactions')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<Transaction>)
-  )
-  return results.filter(Boolean).sort(
+  const all = Array.from(stores.transactions.values()).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
+  return testOnly ? all.filter(isTestEntity) : all.filter(t => !isTestEntity(t))
 }
 
 export async function listAllTransactions(): Promise<{ real: Transaction[]; test: Transaction[] }> {
-  const [real, test] = await Promise.all([listTransactions(false), listTransactions(true)])
-  return { real, test }
+  const all = Array.from(stores.transactions.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+  return {
+    real: all.filter(t => !isTestEntity(t)),
+    test: all.filter(isTestEntity),
+  }
 }
 
 export async function listTransactionsByAgent(agentId: string): Promise<Transaction[]> {
@@ -136,35 +157,32 @@ export async function listTransactionsByTier(tier: 'd2d' | 'premier', testOnly?:
   return all.filter(t => t.customerTier === tier)
 }
 
-// ── Float Requests (legacy) ──────────────────────────────────────────────────
+// ── Float Requests ──────────────────────────────────────────────────────────
 
 export async function getFloatRequest(id: string): Promise<FloatRequest | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-requests', isTest))
-  return store.get(id, { type: 'json' })
+  return stores.floatRequests.get(id) || null
 }
 
 export async function saveFloatRequest(req: FloatRequest): Promise<void> {
-  const isTest = isTestEntity(req)
-  const store = getStore(getStoreName('float-requests', isTest))
-  await store.setJSON(req.id, req)
+  stores.floatRequests.set(req.id, req)
+  persist()
 }
 
 export async function listFloatRequests(testOnly?: boolean): Promise<FloatRequest[]> {
-  const store = getStore(testOnly ? 'test-float-requests' : 'float-requests')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<FloatRequest>)
-  )
-  return results.filter(Boolean).sort(
+  const all = Array.from(stores.floatRequests.values()).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
+  return testOnly ? all.filter(isTestEntity) : all.filter(r => !isTestEntity(r))
 }
 
 export async function listAllFloatRequests(): Promise<{ real: FloatRequest[]; test: FloatRequest[] }> {
-  const [real, test] = await Promise.all([listFloatRequests(false), listFloatRequests(true)])
-  return { real, test }
+  const all = Array.from(stores.floatRequests.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+  return {
+    real: all.filter(r => !isTestEntity(r)),
+    test: all.filter(isTestEntity),
+  }
 }
 
 export async function listFloatRequestsByAgent(agentId: string): Promise<FloatRequest[]> {
@@ -173,35 +191,32 @@ export async function listFloatRequestsByAgent(agentId: string): Promise<FloatRe
   return all.filter(r => r.agentId === agentId)
 }
 
-// ── Float Exchange (Agent) ───────────────────────────────────────────────────
+// ── Float Exchange ───────────────────────────────────────────────────────────
 
 export async function getFloatExchange(id: string): Promise<FloatExchange | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  return store.get(id, { type: 'json' })
+  return stores.floatExchanges.get(id) || null
 }
 
 export async function saveFloatExchange(exchange: FloatExchange): Promise<void> {
-  const isTest = isTestEntity(exchange)
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  await store.setJSON(exchange.id, exchange)
+  stores.floatExchanges.set(exchange.id, exchange)
+  persist()
 }
 
 export async function listFloatExchanges(testOnly?: boolean): Promise<FloatExchange[]> {
-  const store = getStore(testOnly ? 'test-float-exchanges' : 'float-exchanges')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<FloatExchange>)
-  )
-  return results.filter(Boolean).sort(
+  const all = Array.from(stores.floatExchanges.values()).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
+  return testOnly ? all.filter(isTestEntity) : all.filter(e => !isTestEntity(e))
 }
 
 export async function listAllFloatExchanges(): Promise<{ real: FloatExchange[]; test: FloatExchange[] }> {
-  const [real, test] = await Promise.all([listFloatExchanges(false), listFloatExchanges(true)])
-  return { real, test }
+  const all = Array.from(stores.floatExchanges.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+  return {
+    real: all.filter(e => !isTestEntity(e)),
+    test: all.filter(isTestEntity),
+  }
 }
 
 export async function listFloatExchangesByAgent(agentId: string): Promise<FloatExchange[]> {
@@ -213,7 +228,6 @@ export async function listFloatExchangesByAgent(agentId: string): Promise<FloatE
 // ── Credit Portfolios ────────────────────────────────────────────────────────
 
 export async function getCreditPortfolio(customerId: string): Promise<CreditPortfolio | null> {
-  const isTest = customerId.startsWith('test-')
   const customer = await getCustomerProfile(customerId)
   if (!customer) return null
   const txs = await listTransactionsByCustomer(customerId)
@@ -248,53 +262,48 @@ export async function listCreditPortfolios(testOnly?: boolean): Promise<CreditPo
   return portfolios
 }
 
-// ── Admin-only deletion (production safety) ──────────────────────────────────
-// These functions are intended to be called only from admin-authenticated
-// server functions. They permanently remove records from the store.
+// ── Admin-only deletion ──────────────────────────────────────────────────────
 
 export async function deleteAgent(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('agents', isTest))
-  await store.delete(id)
+  stores.agents.delete(id)
+  persist()
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('customers', isTest))
-  await store.delete(id)
+  stores.customers.delete(id)
+  persist()
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('transactions', isTest))
-  await store.delete(id)
+  stores.transactions.delete(id)
+  persist()
 }
 
 export async function deleteFloatRequest(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-requests', isTest))
-  await store.delete(id)
+  stores.floatRequests.delete(id)
+  persist()
 }
 
 export async function deleteFloatExchange(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  await store.delete(id)
+  stores.floatExchanges.delete(id)
+  persist()
 }
 
-// ── Test data cleanup ────────────────────────────────────────────────────────
-// Admin can wipe all test data at once without touching real records.
-
 export async function clearAllTestData(): Promise<void> {
-  const testStores = [
-    'test-agents', 'test-customers', 'test-transactions',
-    'test-float-requests', 'test-float-exchanges',
-  ]
-  for (const name of testStores) {
-    const store = getStore(name)
-    const { blobs } = await store.list()
-    for (const b of blobs) {
-      await store.delete(b.key)
-    }
+  for (const [key, agent] of stores.agents.entries()) {
+    if (isTestEntity(agent)) stores.agents.delete(key)
   }
+  for (const [key, customer] of stores.customers.entries()) {
+    if (isTestEntity(customer)) stores.customers.delete(key)
+  }
+  for (const [key, tx] of stores.transactions.entries()) {
+    if (isTestEntity(tx)) stores.transactions.delete(key)
+  }
+  for (const [key, req] of stores.floatRequests.entries()) {
+    if (isTestEntity(req)) stores.floatRequests.delete(key)
+  }
+  for (const [key, ex] of stores.floatExchanges.entries()) {
+    if (isTestEntity(ex)) stores.floatExchanges.delete(key)
+  }
+  persist()
 }

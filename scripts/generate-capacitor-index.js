@@ -1,11 +1,11 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-const distDir = join(process.cwd(), 'dist/client')
+const distDir = join(process.cwd(), 'dist/capacitor')
 const assetsDir = join(distDir, 'assets')
 
 if (!existsSync(assetsDir)) {
-  console.error('Assets directory not found. Run `npm run build` first.')
+  console.error('Assets directory not found. Run `npm run build:capacitor` first.')
   process.exit(1)
 }
 
@@ -13,7 +13,6 @@ const files = readdirSync(assetsDir)
 const jsFiles = files.filter(f => f.endsWith('.js'))
 const cssFiles = files.filter(f => f.endsWith('.css'))
 
-// Find the largest JS file (main bundle)
 let mainJs = ''
 let maxSize = 0
 for (const file of jsFiles) {
@@ -24,7 +23,6 @@ for (const file of jsFiles) {
   }
 }
 
-// Find the largest CSS file (main styles)
 let mainCss = ''
 maxSize = 0
 for (const file of cssFiles) {
@@ -52,11 +50,11 @@ const html = `<!DOCTYPE html>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>The Order-Reagizo Service Company</title>
-    ${mainCss ? `<link rel="stylesheet" crossorigin href="/assets/${mainCss}" />` : ''}
+    ${mainCss ? `<link rel="stylesheet" crossorigin href="./assets/${mainCss}" />` : ''}
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" crossorigin src="/assets/${mainJs}"></script>
+    <script type="module" crossorigin src="./assets/${mainJs}"></script>
   </body>
 </html>
 `

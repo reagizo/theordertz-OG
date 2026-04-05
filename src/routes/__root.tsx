@@ -10,6 +10,9 @@ export const Route = createRootRoute({
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: 'The Order-Reagizo Service Company' },
     ],
+    links: [
+      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+    ],
   }),
   shellComponent: RootDocument,
 })

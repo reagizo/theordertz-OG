@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">theordertz</string>
-    <string name="title_activity_main">theordertz</string>
+    <string name="app_name">The Order</string>
+    <string name="title_activity_main">The Order</string>
     <string name="package_name">com.theordertz.app</string>
     <string name="custom_url_scheme">com.theordertz.app</string>
 </resources>

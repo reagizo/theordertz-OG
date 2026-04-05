@@ -19,7 +19,7 @@ workflows:
         script: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
     artifacts:
       - android/app/build/outputs/**/*.apk
     cache:

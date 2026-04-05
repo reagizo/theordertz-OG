@@ -10,7 +10,9 @@ workflows:
       - name: Install dependencies
         script: npm ci --prefer-offline
       - name: Build Capacitor app
-        script: npm run build:capacitor
+        script: |
+          npm run build:capacitor
+          node scripts/generate-capacitor-index.js
       - name: Sync Capacitor
         script: npx cap sync android
       - name: Build Android APK

@@ -45,7 +45,7 @@ const customerNav: NavItem[] = [
 ]
 
 interface SidebarProps {
-  role: 'admin' | 'agent' | 'customer'
+  role: 'admin' | 'agent' | 'customer' | 'test'
 }
 
 function AvatarWithPicture({ picture, name, size = 'md' }: { picture?: string; name: string; size?: 'sm' | 'md' | 'lg' }) {
@@ -77,7 +77,7 @@ export function Sidebar({ role }: SidebarProps) {
   const router = useRouter()
 
   const nav = role === 'admin' ? adminNav : role === 'agent' ? agentNav : customerNav
-  const roleLabel = role === 'admin' ? 'Administrator' : role === 'agent' ? 'Agent' : 'Customer'
+  const roleLabel = role === 'admin' ? 'Administrator' : role === 'agent' ? 'Agent' : role === 'test' ? 'Test' : 'Customer'
 
   const handleLogout = async () => {
     await logout()

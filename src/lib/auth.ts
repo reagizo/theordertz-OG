@@ -10,7 +10,10 @@ export type User = {
 const MOCK_USERS: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> = []
 
 // Test accounts — unlimited usage, isolated demo data, no real audit trail pollution
-const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name?: string }> = []
+const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name?: string }> = [
+  { email: 'rkaijage@gmail.com', password: '@Eva0191!', role: 'admin', name: 'REAGAN ROBERT KAIJAGE' },
+  { email: 'admin@example.com', password: 'admin', role: 'admin', name: 'Owner - Administrator' },
+]
 
 // Helper to safely access localStorage only in the browser
 const getLocalStorage = () => {

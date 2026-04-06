@@ -52,7 +52,7 @@ function loadSettings(): SettingsState {
     superAgentName: 'Super Agent',
     users: [
       { id: 'seed-admin-1', name: 'REAGAN ROBERT KAIJAGE', email: 'rkaijage@gmail.com', role: 'Admin', password: '@Eva0191!', createdAt: new Date().toISOString() },
-      { id: 'seed-admin-2', name: 'Owner - Administrator', email: 'admin@example.com', role: 'Admin', password: 'admin', createdAt: new Date().toISOString() },
+      { id: 'seed-admin-2', name: 'Owner - Administrator', email: 'admin@example.com', role: 'Test', password: 'admin', createdAt: new Date().toISOString() },
     ],
     registrationAlerts: [],
   }

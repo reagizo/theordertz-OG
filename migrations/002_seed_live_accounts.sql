@@ -6,7 +6,7 @@
 -- across all deployments and updates.
 -- ═══════════════════════════════════════════════════════════════════════════════
 
--- Insert REAGAN ROBERT KAIJAGE admin account
+-- Insert REAGAN ROBERT KAIJAGE admin account (ONLY ADMINISTRATOR)
 INSERT INTO users (id, email, password_hash, full_name, role, is_test_account, is_active)
 VALUES (
   'a1b2c3d4-0001-0000-0000-000000000001',
@@ -18,14 +18,14 @@ VALUES (
   TRUE
 ) ON CONFLICT (email) DO NOTHING;
 
--- Insert Owner - Administrator account
+-- Insert Owner - Test Account (TEST role - not administrator)
 INSERT INTO users (id, email, password_hash, full_name, role, is_test_account, is_active)
 VALUES (
   'a1b2c3d4-0001-0000-0000-000000000002',
   'admin@example.com',
   crypt('admin', gen_salt('bf')),
   'Owner - Administrator',
-  'admin',
-  FALSE,
+  'test',
+  TRUE,
   TRUE
 ) ON CONFLICT (email) DO NOTHING;

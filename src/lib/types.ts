@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'agent' | 'customer' | 'guest'
+export type UserRole = 'admin' | 'supervisor' | 'clerk' | 'agent' | 'customer' | 'test' | 'guest'
 export type CustomerTier = 'd2d' | 'premier'
 export type Status = 'pending' | 'approved' | 'rejected'
 export type ServiceType = 'cash_send' | 'cash_withdrawal' | 'utility_bills' | 'airtime_bundle' | 'tv_subscriptions' | 'internet_subscriptions' | 'all_payments'

@@ -76,7 +76,7 @@ export function Sidebar({ role }: SidebarProps) {
   const { settings } = useSettings()
   const router = useRouter()
 
-  const nav = role === 'admin' ? adminNav : role === 'agent' ? agentNav : customerNav
+  const nav = (role === 'admin' || role === 'test') ? adminNav : role === 'agent' ? agentNav : customerNav
   const roleLabel = role === 'admin' ? 'Administrator' : role === 'agent' ? 'Agent' : role === 'test' ? 'Test' : 'Customer'
 
   const handleLogout = async () => {

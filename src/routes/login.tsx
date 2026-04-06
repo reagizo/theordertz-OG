@@ -33,10 +33,6 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ffd4b8] via-[#f8b4d9] via-[#d4a5e5] to-[#c9b1ff] flex items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Translucent logo watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-        <img src="/logo.svg" alt="" className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-[0.06] scale-110" aria-hidden="true" />
-      </div>
       {/* Decorative circular elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
         {/* Top-left circles */}
@@ -50,9 +46,24 @@ function LoginPage() {
       <div className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo & Brand */}
         <div className="mb-8 flex flex-col items-center">
-          <img src="/logo.svg" alt="The Order - Reagizo Service Company" className="w-20 h-20 sm:w-24 sm:h-24 mb-2 drop-shadow-lg" />
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1E3A5F] text-center" style={{ fontFamily: 'Playfair Display, serif' }}>The Order-Reagizo</h1>
-          <p className="text-sm text-[#1E3A5F]/70 text-center">Service Company</p>
+          {/* Chevron logo */}
+          <svg width="180" height="120" viewBox="0 0 200 140" className="mb-3 drop-shadow-md" aria-hidden="true">
+            {/* Top chevron - dark navy */}
+            <polygon points="100,10 180,45 170,60 100,30 30,60 20,45" fill="#1a1a3e" />
+            {/* Middle chevron - deep pink/magenta */}
+            <polygon points="100,35 165,65 155,78 100,52 45,78 35,65" fill="#e8346a" />
+            {/* Bottom chevron - orange */}
+            <polygon points="100,62 140,82 132,92 100,76 68,92 60,82" fill="#fbb040" />
+          </svg>
+          <h1 className="text-5xl sm:text-6xl text-[#1a1a3e] text-center mb-1" style={{ fontFamily: 'Great Vibes, cursive' }}>
+            The Order
+          </h1>
+          <p className="text-sm text-[#e8346a] tracking-[0.2em] uppercase text-center font-semibold" style={{ fontFamily: 'Playfair Display, Georgia, serif' }}>
+            SERVICE COMPANY
+          </p>
+          <p className="text-xs text-[#e8346a] tracking-[0.15em] uppercase text-center mt-1 font-medium">
+            SERVICE INTERFACE PORTAL SYSTEM
+          </p>
         </div>
 
         {/* Login Card */}

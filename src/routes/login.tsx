@@ -21,7 +21,6 @@ function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      // Small delay to let auth state propagate before navigation
       await new Promise(resolve => setTimeout(resolve, 300))
       router.navigate({ to: '/' })
     } catch (err: unknown) {
@@ -33,37 +32,67 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFD4B8] via-[#FFD6E0] to-[#C9B1FF] flex items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Decorative thin arcs */}
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#ff6b8a] to-[#ff9a5c] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Starry/sparkle background effect */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-[300px] h-[300px] rounded-full border border-orange-300/40" />
-        <div className="absolute -top-12 -left-12 w-[250px] h-[250px] rounded-full border border-orange-300/25" />
-        <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full border border-purple-300/30" />
-        <div className="absolute -bottom-16 -right-16 w-[300px] h-[300px] rounded-full border border-purple-300/20" />
+        {/* Stars/sparkles */}
+        <div className="absolute top-[10%] left-[15%] w-1 h-1 bg-white rounded-full opacity-60" />
+        <div className="absolute top-[20%] left-[70%] w-1.5 h-1.5 bg-white rounded-full opacity-40" />
+        <div className="absolute top-[35%] left-[25%] w-1 h-1 bg-white rounded-full opacity-50" />
+        <div className="absolute top-[15%] left-[85%] w-1 h-1 bg-white rounded-full opacity-70" />
+        <div className="absolute top-[45%] left-[10%] w-1.5 h-1.5 bg-white rounded-full opacity-30" />
+        <div className="absolute top-[8%] left-[45%] w-1 h-1 bg-white rounded-full opacity-55" />
+        <div className="absolute top-[25%] left-[55%] w-1 h-1 bg-white rounded-full opacity-45" />
+        <div className="absolute top-[50%] left-[80%] w-1 h-1 bg-white rounded-full opacity-60" />
+        <div className="absolute top-[5%] left-[30%] w-1.5 h-1.5 bg-white rounded-full opacity-35" />
+        <div className="absolute top-[40%] left-[65%] w-1 h-1 bg-white rounded-full opacity-50" />
+        <div className="absolute top-[60%] left-[20%] w-1 h-1 bg-white rounded-full opacity-40" />
+        <div className="absolute top-[70%] left-[75%] w-1.5 h-1.5 bg-white rounded-full opacity-55" />
+        <div className="absolute top-[30%] left-[40%] w-1 h-1 bg-white rounded-full opacity-65" />
+        <div className="absolute top-[55%] left-[50%] w-1 h-1 bg-white rounded-full opacity-45" />
+        <div className="absolute top-[75%] left-[35%] w-1 h-1 bg-white rounded-full opacity-50" />
+        <div className="absolute top-[85%] left-[60%] w-1.5 h-1.5 bg-white rounded-full opacity-40" />
+        <div className="absolute top-[90%] left-[15%] w-1 h-1 bg-white rounded-full opacity-55" />
+        <div className="absolute top-[95%] left-[80%] w-1 h-1 bg-white rounded-full opacity-45" />
+        {/* Subtle hexagonal overlay */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-10">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <polygon points="100,10 190,60 190,140 100,190 10,140 10,60" fill="none" stroke="white" strokeWidth="0.5" />
+            <polygon points="100,30 170,65 170,135 100,170 30,135 30,65" fill="none" stroke="white" strokeWidth="0.5" />
+            <polygon points="100,50 150,75 150,125 100,150 50,125 50,75" fill="none" stroke="white" strokeWidth="0.5" />
+          </svg>
+        </div>
       </div>
 
       <div className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo & Brand */}
-        <div className="mb-6 flex flex-col items-center">
+        <div className="mb-8 flex flex-col items-center">
           {/* Chevron logo */}
-          <svg width="120" height="80" viewBox="0 0 120 80" className="mb-2 drop-shadow-md" aria-hidden="true">
-            <polygon points="60,5 95,25 85,35 60,20 35,35 25,25" fill="#2D2B55" />
-            <polygon points="60,20 95,40 85,50 60,35 35,50 25,40" fill="#E8346A" />
-            <polygon points="60,38 80,50 75,58 60,48 45,58 40,50" fill="#FBB040" />
+          <svg width="180" height="120" viewBox="0 0 200 140" className="mb-3 drop-shadow-lg" aria-hidden="true">
+            {/* Top chevron - dark navy */}
+            <polygon points="100,10 180,45 170,60 100,30 30,60 20,45" fill="#1a1a3e" />
+            {/* Middle chevron - deep pink/magenta */}
+            <polygon points="100,35 165,65 155,78 100,52 45,78 35,65" fill="#e8346a" />
+            {/* Bottom chevron - orange */}
+            <polygon points="100,62 140,82 132,92 100,76 68,92 60,82" fill="#fbb040" />
           </svg>
-          <h1 className="text-3xl sm:text-4xl text-[#2D2B55] text-center" style={{ fontFamily: 'Great Vibes, cursive, Playfair Display, serif' }}>
+          <h1 className="text-5xl sm:text-6xl text-[#1a1a3e] text-center mb-1" style={{ fontFamily: 'Great Vibes, cursive' }}>
             The Order
           </h1>
-          <p className="text-xs text-[#F97316] tracking-[0.2em] uppercase text-center mt-0.5">Service Company</p>
-          <p className="text-xs text-[#F97316]/80 tracking-[0.15em] uppercase text-center mt-0.5">Service Interface Portal System</p>
+          <p className="text-sm text-[#fbb040] tracking-[0.2em] uppercase text-center font-medium" style={{ fontFamily: 'Playfair Display, Georgia, serif' }}>
+            SERVICE COMPANY
+          </p>
+          <p className="text-xs text-[#e8346a] tracking-[0.15em] uppercase text-center mt-1 font-medium">
+            SERVICE INTERFACE PORTAL SYSTEM
+          </p>
         </div>
 
         {/* Login Card */}
-        <div className="w-full bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg p-8 sm:p-10">
-          <h2 className="text-xl font-semibold text-[#3D3B6E] mb-1">
+        <div className="w-full bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-[#2d2b55] mb-1">
             Welcome back
           </h2>
-          <p className="text-gray-400 text-sm mb-6">Sign in to your account to continue</p>
+          <p className="text-[#6b6b8d] text-sm mb-6">Sign in to your account to continue</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">
@@ -76,14 +105,14 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-[#3D3B6E] mb-2">Email Address</label>
+              <label className="block text-sm font-semibold text-[#2d2b55] mb-2">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#E8346A]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e8346a]" />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8346A]/30 focus:border-[#E8346A] text-sm transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e8346a]/30 focus:border-[#e8346a] text-sm transition-all"
                   placeholder="you@example.com"
                   required
                 />
@@ -91,14 +120,14 @@ function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#3D3B6E] mb-2">Password</label>
+              <label className="block text-sm font-semibold text-[#2d2b55] mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#E8346A]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e8346a]" />
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8346A]/30 focus:border-[#E8346A] text-sm transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e8346a]/30 focus:border-[#e8346a] text-sm transition-all"
                   placeholder="•••••"
                   required
                 />
@@ -108,7 +137,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#FBB040] to-[#E8346A] text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-gradient-to-r from-[#ff9a5c] to-[#e8346a] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -135,17 +164,17 @@ function LoginPage() {
           </div>
 
           <div className="flex items-center justify-center gap-4 text-sm">
-            <Link to="/register/agent" className="text-[#E8346A] font-medium hover:text-[#E8346A]/80 underline underline-offset-4 transition-colors">
+            <Link to="/register/agent" className="text-[#e8346a] font-medium hover:text-[#e8346a]/80 underline underline-offset-4 transition-colors">
               Register as Agent
             </Link>
-            <Link to="/register/customer" className="text-[#E8346A] font-medium hover:text-[#E8346A]/80 underline underline-offset-4 transition-colors">
+            <Link to="/register/customer" className="text-[#e8346a] font-medium hover:text-[#e8346a]/80 underline underline-offset-4 transition-colors">
               Register as Customer
             </Link>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-gray-400 text-xs mt-6">
+        <p className="text-center text-white/80 text-sm mt-8">
           © 2026 The Order Service Company. All rights reserved.
         </p>
       </div>

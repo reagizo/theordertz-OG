@@ -28,7 +28,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  DollarSign,
   Activity,
   Search,
   ChevronDown,
@@ -620,8 +619,8 @@ function AdminDashboard() {
           color="bg-indigo-500"
         />
         <KPICard
-          icon={DollarSign}
-          label="Total Revenue"
+          icon={() => <span className="text-white font-bold text-sm">TZS</span>}
+          label="Total Amount"
           value={formatTZS(kpis.totalRevenue)}
           sub={`${kpis.rejectedCount} rejected`}
           color="bg-green-500"

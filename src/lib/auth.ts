@@ -21,6 +21,20 @@ const getLocalStorage = () => {
   return window.localStorage
 }
 
+function getUserFromSettings(email: string): { name?: string; profilePicture?: string } {
+  const ls = getLocalStorage()
+  if (!ls) return {}
+  try {
+    const raw = ls.getItem('app_settings_v3')
+    if (!raw) return {}
+    const settings = JSON.parse(raw) as { users?: Array<{ email: string; name?: string; profilePicture?: string }> }
+    const found = settings.users?.find(u => u.email === email)
+    return { name: found?.name, profilePicture: found?.profilePicture }
+  } catch {
+    return {}
+  }
+}
+
 export async function login(email: string, password: string): Promise<User> {
   const found = MOCK_USERS.find(u => u.email === email && u.password === password)
   const testFound = TEST_ACCOUNTS.find(u => u.email === email && u.password === password)
@@ -33,12 +47,14 @@ export async function login(email: string, password: string): Promise<User> {
 
   const source = found || testFound!
   const isTest = !!testFound
+  const { name: settingsName, profilePicture } = getUserFromSettings(email)
 
   const user: User = {
     id: (isTest ? 'test-' : 'mock-') + email,
     email,
     name: source.name,
     app_metadata: { roles: [source.role], isTestAccount: isTest },
+    user_metadata: { full_name: settingsName ?? source.name, profilePicture },
   }
   
   const ls = getLocalStorage()
@@ -85,11 +101,13 @@ export async function approveRegistration(email: string): Promise<User | null> {
   if (foundIndex === -1) return null
   const p = pending[foundIndex]
   const isTest = !!p.isTestAccount
+  const { name: settingsName, profilePicture } = getUserFromSettings(email)
   const newUser: User = {
     id: (isTest ? 'test-' : 'mock-') + email,
     email,
     name: p.name,
     app_metadata: { roles: [p.role], isTestAccount: isTest },
+    user_metadata: { full_name: settingsName ?? p.name, profilePicture },
   }
   MOCK_USERS.push({ email: email, password: 'Temp123!', role: p.role, name: p.name, isTestAccount: isTest })
   pending.splice(foundIndex, 1)
@@ -106,7 +124,7 @@ export async function signup(email: string, _password: string, meta: Record<stri
     email,
     name: meta?.name as string | undefined,
     app_metadata: { roles: ['customer'], isTestAccount: isTest },
-    user_metadata: { full_name: meta?.name as string | undefined },
+    user_metadata: { full_name: meta?.name as string | undefined, profilePicture: meta?.profilePicture as string | undefined },
   }
   const ls = getLocalStorage()
   if (ls) ls.setItem('mock.user', JSON.stringify(user))
@@ -119,7 +137,13 @@ export function getCurrentUser(): User | null {
   const raw = ls.getItem('mock.user')
   if (!raw) return null
   try {
-    return JSON.parse(raw) as User
+    const user = JSON.parse(raw) as User
+    const { name: settingsName, profilePicture } = getUserFromSettings(user.email)
+    user.user_metadata = {
+      full_name: settingsName ?? user.user_metadata?.full_name,
+      profilePicture: profilePicture ?? user.user_metadata?.profilePicture,
+    }
+    return user
   } catch {
     return null
   }

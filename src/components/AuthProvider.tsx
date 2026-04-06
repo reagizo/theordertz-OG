@@ -4,7 +4,9 @@ import { login as mockLogin, signup as mockSignup, getCurrentUser, setCurrentUse
 interface UserLike {
   id: string
   email: string
+  name?: string
   app_metadata?: { roles?: string[] }
+  user_metadata?: { full_name?: string; profilePicture?: string }
 }
 
 interface AuthContextType {

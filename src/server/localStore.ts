@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { existsSync, readFileSync, mkdirSync } from 'fs'
+import { existsSync, readFileSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import path from 'path'
 
 type BlobEntry = { key: string }
@@ -21,8 +21,8 @@ class SimpleStore {
       }
       // Test write access
       const testFile = path.join(dataDir, '.write_test')
-      fs.writeFileSync(testFile, 'test')
-      fs.unlinkSync(testFile)
+      writeFileSync(testFile, 'test')
+      unlinkSync(testFile)
     } catch (err) {
       console.warn(`Warning: Data directory is read-only. Using memory store only for ${name}.`)
       this.isWritable = false

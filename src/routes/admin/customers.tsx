@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { listCustomersFn, saveCustomerProfileFn, listTransactionsByCustomerFn, getCreditPortfolioFn } from '@/server/db.functions'
 import { formatTZS, formatDate, statusColor, tierLabel } from '@/lib/utils'
-import { CheckCircle, XCircle, Clock, User, CreditCard, TrendingUp } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, User, CreditCard } from 'lucide-react'
 import type { CustomerProfile, Transaction, CreditPortfolio } from '@/lib/types'
 
 export const Route = createFileRoute('/admin/customers')({

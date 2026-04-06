@@ -22,12 +22,10 @@ import {
   AIRTIME_PROVIDERS,
   TV_PROVIDERS,
   CARRIER_NETWORKS,
-  UTILITY_BILL_TYPES,
-  ALL_PAYMENT_TYPES,
   GOVERNMENT_PROVIDERS,
   ELECTRICITY_PROVIDERS,
 } from '@/lib/types'
-import { ArrowUpRight, Zap, Send, FileText } from 'lucide-react'
+import { Zap, Send, FileText } from 'lucide-react'
 
 export const Route = createFileRoute('/customer/services')({
   loader: async () => listAgentsFn(),

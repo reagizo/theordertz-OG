@@ -4,9 +4,8 @@ export type User = {
   email: string
   name?: string
   app_metadata?: { roles?: string[]; isTestAccount?: boolean }
+  user_metadata?: { full_name?: string; profilePicture?: string }
 }
-
-type StoredUser = User
 
 const MOCK_USERS: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> = []
 
@@ -97,13 +96,14 @@ export async function approveRegistration(email: string): Promise<User | null> {
   return newUser
 }
 
-export async function signup(email: string, password: string, meta: Record<string, unknown>): Promise<User> {
+export async function signup(email: string, _password: string, meta: Record<string, unknown>): Promise<User> {
   const isTest = !!meta?.isTestAccount
   const user: User = {
     id: (isTest ? 'test-' : 'mock-') + email,
     email,
     name: meta?.name as string | undefined,
-    app_metadata: { roles: ['customer'], tier: meta?.tier as string | undefined, isTestAccount: isTest },
+    app_metadata: { roles: ['customer'], isTestAccount: isTest },
+    user_metadata: { full_name: meta?.name as string | undefined },
   }
   const ls = getLocalStorage()
   if (ls) ls.setItem('mock.user', JSON.stringify(user))
@@ -143,7 +143,7 @@ export function getTestAccounts() {
 // Seed live data (live onboarding flow) for testing without demo seeds
 export async function seedLiveData(): Promise<void> {
   const pending = loadPending()
-  const seedPending = [
+  const seedPending: Array<{ email: string; role: 'agent' | 'customer'; name?: string }> = [
     { email: 'live-agent1@example.com', role: 'agent', name: 'Live Agent One' },
     { email: 'live-customer1@example.com', role: 'customer', name: 'Live Customer One' },
   ]

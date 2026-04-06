@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { getAgentProfileFn, listTransactionsByAgentFn, listFloatExchangesByAgentFn } from '@/server/db.functions'
-import { formatTZS, formatDate, statusColor, serviceLabel } from '@/lib/utils'
+import { formatTZS, formatDate, statusColor } from '@/lib/utils'
 import { TrendingUp, ArrowLeftRight, DollarSign, Clock, Upload, X } from 'lucide-react'
 import type { AgentProfile, Transaction, FloatExchange } from '@/lib/types'
 

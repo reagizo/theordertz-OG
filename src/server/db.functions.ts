@@ -5,7 +5,6 @@ import type {
   Transaction,
   FloatRequest,
   FloatExchange,
-  CreditPortfolio,
 } from '@/lib/types'
 import {
   getAgentProfile,

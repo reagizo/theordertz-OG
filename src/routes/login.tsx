@@ -33,46 +33,37 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-200 via-pink-100 to-purple-300 flex items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Translucent logo watermark background */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-        <img
-          src="/logo.svg"
-          alt=""
-          className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-[0.06] scale-110"
-          aria-hidden="true"
-        />
-      </div>
-
-      {/* Decorative arcs */}
+    <div className="min-h-screen bg-gradient-to-br from-[#FFD4B8] via-[#FFD6E0] to-[#C9B1FF] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Decorative thin arcs */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full border-[3px] border-orange-300/30" />
-        <div className="absolute -top-20 -left-20 w-[400px] h-[400px] rounded-full border-[2px] border-orange-400/20" />
-        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full border-[3px] border-purple-300/30" />
-        <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full border-[2px] border-purple-400/20" />
+        <div className="absolute -top-24 -left-24 w-[300px] h-[300px] rounded-full border border-orange-300/40" />
+        <div className="absolute -top-12 -left-12 w-[250px] h-[250px] rounded-full border border-orange-300/25" />
+        <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full border border-purple-300/30" />
+        <div className="absolute -bottom-16 -right-16 w-[300px] h-[300px] rounded-full border border-purple-300/20" />
       </div>
-
-      {/* Soft glow overlays */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-orange-200/40 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/40 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
       <div className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo & Brand */}
-        <div className="mb-4 flex flex-col items-center">
-          <img src="/logo.svg" alt="The Order-Reagizo Service Company" className="w-28 h-28 sm:w-32 sm:h-32 mb-2 drop-shadow-lg" />
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1E3A5F] text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
-            The Order-Reagizo
+        <div className="mb-6 flex flex-col items-center">
+          {/* Chevron logo */}
+          <svg width="120" height="80" viewBox="0 0 120 80" className="mb-2 drop-shadow-md" aria-hidden="true">
+            <polygon points="60,5 95,25 85,35 60,20 35,35 25,25" fill="#2D2B55" />
+            <polygon points="60,20 95,40 85,50 60,35 35,50 25,40" fill="#E8346A" />
+            <polygon points="60,38 80,50 75,58 60,48 45,58 40,50" fill="#FBB040" />
+          </svg>
+          <h1 className="text-3xl sm:text-4xl text-[#2D2B55] text-center" style={{ fontFamily: 'Great Vibes, cursive, Playfair Display, serif' }}>
+            The Order
           </h1>
-          <p className="text-sm text-[#1E3A5F]/70 text-center mt-0.5">Service Company</p>
-          <p className="text-xs text-[#1E3A5F]/50 text-center mt-0.5">Mobile Wallet Transfer System</p>
+          <p className="text-xs text-[#F97316] tracking-[0.2em] uppercase text-center mt-0.5">Service Company</p>
+          <p className="text-xs text-[#F97316]/80 tracking-[0.15em] uppercase text-center mt-0.5">Service Interface Portal System</p>
         </div>
 
         {/* Login Card */}
-        <div className="w-full bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6 sm:p-8 border border-white/60">
-          <h2 className="text-xl font-bold text-[#1E3A5F] mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>
+        <div className="w-full bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg p-8 sm:p-10">
+          <h2 className="text-xl font-semibold text-[#3D3B6E] mb-1">
             Welcome back
           </h2>
-          <p className="text-gray-500 text-sm mb-6">Sign in to your account to continue</p>
+          <p className="text-gray-400 text-sm mb-6">Sign in to your account to continue</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">
@@ -83,16 +74,16 @@ function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Email Address</label>
+              <label className="block text-sm font-semibold text-[#3D3B6E] mb-2">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#E8346A]" />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8346A]/30 focus:border-[#E8346A] text-sm transition-all"
                   placeholder="you@example.com"
                   required
                 />
@@ -100,15 +91,15 @@ function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Password</label>
+              <label className="block text-sm font-semibold text-[#3D3B6E] mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#E8346A]" />
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
-                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8346A]/30 focus:border-[#E8346A] text-sm transition-all"
+                  placeholder="•••••"
                   required
                 />
               </div>
@@ -117,7 +108,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-[#FBB040] to-[#E8346A] text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -136,23 +127,26 @@ function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-center text-sm text-gray-500 mb-3">Don't have an account?</p>
-            <div className="flex items-center justify-center gap-3 text-sm">
-              <Link to="/register/agent" className="text-[#1E3A5F] font-medium hover:text-[#EC4899] underline underline-offset-4 transition-colors">
-                Register as Agent
-              </Link>
-              <span className="text-gray-300">|</span>
-              <Link to="/register/customer" className="text-[#1E3A5F] font-medium hover:text-[#EC4899] underline underline-offset-4 transition-colors">
-                Register as Customer
-              </Link>
-            </div>
+          {/* Divider with text */}
+          <div className="mt-6 mb-4 flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 whitespace-nowrap">Don't have an account?</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          <div className="flex items-center justify-center gap-4 text-sm">
+            <Link to="/register/agent" className="text-[#E8346A] font-medium hover:text-[#E8346A]/80 underline underline-offset-4 transition-colors">
+              Register as Agent
+            </Link>
+            <Link to="/register/customer" className="text-[#E8346A] font-medium hover:text-[#E8346A]/80 underline underline-offset-4 transition-colors">
+              Register as Customer
+            </Link>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[#1E3A5F]/50 text-xs mt-6">
-          © {new Date().getFullYear()} The Order-Reagizo Service Company. All rights reserved.
+        <p className="text-center text-gray-400 text-xs mt-6">
+          © 2026 The Order Service Company Company. All rights reserved.
         </p>
       </div>
     </div>

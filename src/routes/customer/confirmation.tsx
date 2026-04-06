@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import React from 'react'
 import BrandLayout from '../../components/BrandLayout'
 import { SettingsProvider, useSettings } from '../../contexts/SettingsContext'
 

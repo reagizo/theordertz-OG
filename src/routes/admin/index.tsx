@@ -21,10 +21,9 @@ import {
   listFloatRequestsFn,
 } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
-import type { Transaction, AgentProfile, CustomerProfile } from '@/lib/types'
+import type { Transaction } from '@/lib/types'
 import { SettingsProvider, useSettings } from '@/contexts/SettingsContext'
 import {
-  TrendingUp,
   Users,
   Clock,
   CheckCircle,
@@ -34,7 +33,6 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  Eye,
 } from 'lucide-react'
 
 ChartJS.register(

@@ -213,7 +213,6 @@ export async function listFloatExchangesByAgent(agentId: string): Promise<FloatE
 // ── Credit Portfolios ────────────────────────────────────────────────────────
 
 export async function getCreditPortfolio(customerId: string): Promise<CreditPortfolio | null> {
-  const isTest = customerId.startsWith('test-')
   const customer = await getCustomerProfile(customerId)
   if (!customer) return null
   const txs = await listTransactionsByCustomer(customerId)

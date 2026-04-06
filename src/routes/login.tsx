@@ -33,6 +33,10 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ffd4b8] via-[#f8b4d9] via-[#d4a5e5] to-[#c9b1ff] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Translucent logo watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+        <img src="/logo.svg" alt="" className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-[0.06] scale-110" aria-hidden="true" />
+      </div>
       {/* Decorative circular elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
         {/* Top-left circles */}
@@ -41,36 +45,14 @@ function LoginPage() {
         {/* Bottom-right circles */}
         <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full border border-pink-300/30" />
         <div className="absolute -bottom-20 -right-20 w-[300px] h-[300px] rounded-full border border-pink-300/20" />
-        {/* Subtle hexagonal overlay behind logo */}
-        <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] opacity-15">
-          <svg viewBox="0 0 200 200" className="w-full h-full">
-            <polygon points="100,10 190,60 190,140 100,190 10,140 10,60" fill="none" stroke="#e8346a" strokeWidth="0.5" />
-            <polygon points="100,30 170,65 170,135 100,170 30,135 30,65" fill="none" stroke="#e8346a" strokeWidth="0.5" />
-          </svg>
-        </div>
       </div>
 
       <div className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo & Brand */}
         <div className="mb-8 flex flex-col items-center">
-          {/* Chevron logo */}
-          <svg width="180" height="120" viewBox="0 0 200 140" className="mb-3 drop-shadow-md" aria-hidden="true">
-            {/* Top chevron - dark navy */}
-            <polygon points="100,10 180,45 170,60 100,30 30,60 20,45" fill="#1a1a3e" />
-            {/* Middle chevron - deep pink/magenta */}
-            <polygon points="100,35 165,65 155,78 100,52 45,78 35,65" fill="#e8346a" />
-            {/* Bottom chevron - orange */}
-            <polygon points="100,62 140,82 132,92 100,76 68,92 60,82" fill="#fbb040" />
-          </svg>
-          <h1 className="text-5xl sm:text-6xl text-[#1a1a3e] text-center mb-1" style={{ fontFamily: 'Great Vibes, cursive' }}>
-            The Order
-          </h1>
-          <p className="text-sm text-[#e8346a] tracking-[0.2em] uppercase text-center font-semibold" style={{ fontFamily: 'Playfair Display, Georgia, serif' }}>
-            SERVICE COMPANY
-          </p>
-          <p className="text-xs text-[#e8346a] tracking-[0.15em] uppercase text-center mt-1 font-medium">
-            SERVICE INTERFACE PORTAL SYSTEM
-          </p>
+          <img src="/logo.svg" alt="The Order - Reagizo Service Company" className="w-20 h-20 sm:w-24 sm:h-24 mb-2 drop-shadow-lg" />
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1E3A5F] text-center" style={{ fontFamily: 'Playfair Display, serif' }}>The Order-Reagizo</h1>
+          <p className="text-sm text-[#1E3A5F]/70 text-center">Service Company</p>
         </div>
 
         {/* Login Card */}

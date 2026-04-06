@@ -76,6 +76,8 @@ function AdminSettings() {
   const [newUserRole, setNewUserRole] = useState<UserRole>('Clerk')
   const [newUserTier, setNewUserTier] = useState<CustomerTier>('d2d')
   const [newUserPicture, setNewUserPicture] = useState('')
+  const [newUserPassword, setNewUserPassword] = useState('')
+  const [newUserConfirmPassword, setNewUserConfirmPassword] = useState('')
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editEmail, setEditEmail] = useState('')
@@ -102,8 +104,10 @@ function AdminSettings() {
 
   const handleAddUser = () => {
     if (!newUserName.trim() || !newUserEmail.trim()) return
-    addUser({ name: newUserName.trim(), email: newUserEmail.trim(), role: newUserRole, profilePicture: newUserPicture || undefined })
-    setNewUserName(''); setNewUserEmail(''); setNewUserRole('Clerk'); setNewUserTier('d2d'); setNewUserPicture(''); setShowAddUser(false)
+    if (!newUserPassword || newUserPassword.length < 6) { alert('Password must be at least 6 characters.'); return }
+    if (newUserPassword !== newUserConfirmPassword) { alert('Passwords do not match.'); return }
+    addUser({ name: newUserName.trim(), email: newUserEmail.trim(), role: newUserRole, profilePicture: newUserPicture || undefined, password: newUserPassword })
+    setNewUserName(''); setNewUserEmail(''); setNewUserRole('Clerk'); setNewUserTier('d2d'); setNewUserPicture(''); setNewUserPassword(''); setNewUserConfirmPassword(''); setShowAddUser(false)
   }
 
   const startEdit = (u: AppUser) => { setEditingUserId(u.id); setEditName(u.name); setEditEmail(u.email); setEditRole(u.role); setEditPicture(u.profilePicture ?? '') }
@@ -234,6 +238,16 @@ function AdminSettings() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input type="email" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="email@example.com" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="Min. 6 characters" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                        <input type="password" value={newUserConfirmPassword} onChange={(e) => setNewUserConfirmPassword(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="Re-enter password" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -467,7 +481,6 @@ function AdminSettings() {
                 <button
                   onClick={() => {
                     if (confirm('Are you sure you want to clear ALL test data? This cannot be undone.')) {
-                      // Clear test data from localStorage stores
                       const testStores = ['test-agents', 'test-customers', 'test-transactions', 'test-float-requests', 'test-float-exchanges']
                       testStores.forEach(store => {
                         const keys = Object.keys(localStorage).filter(k => k.startsWith(store))

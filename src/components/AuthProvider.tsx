@@ -12,7 +12,7 @@ interface UserLike {
 interface AuthContextType {
   user: UserLike | null
   loading: boolean
-  role: string | null
+  role: string
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   signup: (email: string, password: string, meta: Record<string, unknown>) => Promise<UserLike>
@@ -21,7 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  role: null,
+  role: 'guest',
   login: async () => {},
   logout: async () => {},
   signup: async () => { throw new Error('Not initialized') },
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return u as unknown as UserLike
   }, [])
 
-  const role = user?.app_metadata?.roles?.[0] ?? null
+  const role = user?.app_metadata?.roles?.[0] ?? 'guest'
 
   return (
     <AuthContext.Provider value={{ user, loading, role, login, logout, signup }}>

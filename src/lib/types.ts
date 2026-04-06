@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'agent' | 'customer'
+export type UserRole = 'admin' | 'agent' | 'customer' | 'guest'
 export type CustomerTier = 'd2d' | 'premier'
 export type Status = 'pending' | 'approved' | 'rejected'
 export type ServiceType = 'cash_send' | 'cash_withdrawal' | 'utility_bills' | 'airtime_bundle' | 'tv_subscriptions' | 'internet_subscriptions' | 'all_payments'
@@ -147,4 +147,38 @@ export interface Notification {
   type: 'info' | 'success' | 'warning' | 'error'
   read: boolean
   createdAt: string
+}
+
+export interface RbacPolicy {
+  role: string
+  permissions: string[]
+  restrictions: string[]
+  responsibilities: string[]
+}
+
+export interface AccessLogEntry {
+  timestamp: string
+  userId: string
+  role: string
+  action: string
+  resource: string
+  allowed: boolean
+  details?: string
+}
+
+export interface RbacPolicy {
+  role: string
+  permissions: string[]
+  restrictions: string[]
+  responsibilities: string[]
+}
+
+export interface AccessLogEntry {
+  timestamp: string
+  userId: string
+  role: string
+  action: string
+  resource: string
+  allowed: boolean
+  details?: string
 }

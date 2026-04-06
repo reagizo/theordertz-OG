@@ -9,6 +9,7 @@ export type AppUser = {
   email: string
   role: UserRole
   profilePicture?: string
+  password?: string
   createdAt: string
 }
 
@@ -50,7 +51,8 @@ function loadSettings(): SettingsState {
   return {
     superAgentName: 'Super Agent',
     users: [
-      { id: 'seed-admin', name: 'Admin User', email: 'admin@example.com', role: 'Admin', createdAt: new Date().toISOString() },
+      { id: 'seed-admin-1', name: 'REAGAN ROBERT KAIJAGE', email: 'rkaijage@gmail.com', role: 'Admin', password: '@Eva0191!', createdAt: new Date().toISOString() },
+      { id: 'seed-admin-2', name: 'Owner - Administrator', email: 'admin@example.com', role: 'Admin', password: 'admin', createdAt: new Date().toISOString() },
     ],
     registrationAlerts: [],
   }

@@ -146,7 +146,7 @@ function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-gray-400 text-xs mt-6">
-          © 2026 The Order Service Company Company. All rights reserved.
+          © 2026 The Order Service Company. All rights reserved.
         </p>
       </div>
     </div>

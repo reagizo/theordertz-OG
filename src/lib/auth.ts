@@ -8,20 +8,10 @@ export type User = {
 
 type StoredUser = User
 
-const MOCK_USERS: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> = [
-  { email: 'rkaijage@gmail.com', password: '@Eva0191!', role: 'admin', name: 'Admin User' },
-  { email: 'admin@example.com', password: 'admin', role: 'admin', name: 'Admin User' },
-  { email: 'agent@example.com', password: 'agent', role: 'agent', name: 'Agent User' },
-  { email: 'customer@example.com', password: 'customer', role: 'customer', name: 'Customer User' },
-]
+const MOCK_USERS: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> = []
 
 // Test accounts — unlimited usage, isolated demo data, no real audit trail pollution
-const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name?: string }> = [
-  { email: 'test-admin@test.com', password: 'test', role: 'admin', name: 'Test Admin' },
-  { email: 'test-agent@test.com', password: 'test', role: 'agent', name: 'Test Agent' },
-  { email: 'test-customer@test.com', password: 'test', role: 'customer', name: 'Test Customer' },
-  { email: 'test-premier@test.com', password: 'test', role: 'customer', name: 'Test Premier Customer' },
-]
+const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name?: string }> = []
 
 // Helper to safely access localStorage only in the browser
 const getLocalStorage = () => {

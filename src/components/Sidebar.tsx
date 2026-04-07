@@ -90,15 +90,20 @@ export function Sidebar({ role }: SidebarProps) {
       if (data?.profile_picture) {
         setUserPicture(data.profile_picture)
       } else {
-        // Fallback: check localStorage for old profile pictures
+        // Check localStorage for old profile pictures and sync to Supabase
         try {
           const raw = localStorage.getItem('app_settings_v3')
           if (raw) {
             const settings = JSON.parse(raw)
             const found = settings.users?.find((u: any) => u.email === user.email)
             if (found?.profilePicture) {
-              console.log('Sidebar: found profile picture in localStorage')
+              console.log('Sidebar: found profile picture in localStorage, syncing to Supabase...')
               setUserPicture(found.profilePicture)
+              // Save to Supabase so it syncs across devices
+              supabase.from('app_users').update({ profile_picture: found.profilePicture }).eq('email', user.email).then(({ error }) => {
+                if (error) console.error('Sidebar: failed to sync profile picture to Supabase:', error)
+                else console.log('Sidebar: profile picture synced to Supabase')
+              })
             }
           }
         } catch { /* ignore */ }

@@ -253,6 +253,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (updates.profilePicture !== undefined) updateData.profile_picture = updates.profilePicture
       if (updates.password !== undefined) updateData.password = updates.password
       await supabase.from('app_users').update(updateData).eq('id', id)
+      
+      // Also update localStorage auth metadata for the current user
+      if (updates.profilePicture !== undefined) {
+        try {
+          const raw = localStorage.getItem('theordertz_current_user')
+          if (raw) {
+            const cu = JSON.parse(raw)
+            if (cu && (cu.id === id || cu.email === updates.email)) {
+              cu.user_metadata = cu.user_metadata || {}
+              cu.user_metadata.profilePicture = updates.profilePicture
+              localStorage.setItem('theordertz_current_user', JSON.stringify(cu))
+            }
+          }
+        } catch { /* ignore localStorage errors */ }
+      }
     } catch (e) { console.error('Failed to update user:', e) }
   }, [])
 

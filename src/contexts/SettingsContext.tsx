@@ -81,11 +81,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       const { data: usersData } = await supabase.from('app_users').select('*').order('created_at', { ascending: false })
-      if (usersData) {
+      if (usersData && usersData.length > 0) {
         users = usersData.map(u => ({
           id: u.id, name: u.name, email: u.email, role: u.role as UserRole,
           profilePicture: u.profile_picture, password: u.password, createdAt: u.created_at,
         }))
+      } else {
+        // Seed admin user if table is empty
+        const adminUser: AppUser = {
+          id: 'seed-admin-1',
+          name: 'REAGAN ROBERT KAIJAGE',
+          email: 'rkaijage@gmail.com',
+          role: 'Admin',
+          password: '@Eva0191!',
+          createdAt: new Date().toISOString(),
+        }
+        users = [adminUser]
+        await supabase.from('app_users').upsert({
+          id: adminUser.id,
+          name: adminUser.name,
+          email: adminUser.email,
+          role: adminUser.role,
+          password: adminUser.password,
+          created_at: adminUser.createdAt,
+        }, { onConflict: 'email' })
       }
     } catch (e) { console.error('Failed to load users:', e) }
 

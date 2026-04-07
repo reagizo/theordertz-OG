@@ -131,13 +131,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => { loadFromSupabase() }, [loadFromSupabase])
 
-  // Poll Supabase every 5 seconds for cross-device sync
-  useEffect(() => {
-    const interval = setInterval(() => { loadFromSupabase() }, 5000)
-    return () => clearInterval(interval)
-  }, [loadFromSupabase])
-
-  // Real-time subscriptions as primary (if replication is enabled)
+  // Real-time subscriptions for cross-device sync
   useEffect(() => {
     const channel = supabase.channel('settings-sync')
       .on(
@@ -221,16 +215,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSuperAgentName = useCallback(async (name: string) => {
     setState(prev => ({ ...prev, superAgentName: name }))
     try {
-      // First try to update existing row
-      const { data: existing } = await supabase.from('app_settings').select('id').eq('key', 'super_agent_name').maybeSingle()
-      let result
-      if (existing) {
-        result = await supabase.from('app_settings').update({ value: name }).eq('key', 'super_agent_name')
-      } else {
-        result = await supabase.from('app_settings').insert({ key: 'super_agent_name', value: name })
+      // Try update first
+      const { data: updateData, error: updateError } = await supabase
+        .from('app_settings')
+        .update({ value: name })
+        .eq('key', 'super_agent_name')
+        .select()
+      
+      if (updateError) {
+        console.error('Supabase update error:', updateError.code, updateError.message)
       }
-      if (result.error) {
-        console.error('Supabase error:', result.error.code, result.error.message, result.error.details)
+      
+      // If no rows updated, insert instead
+      if (!updateError && (!updateData || updateData.length === 0)) {
+        const { error: insertError } = await supabase
+          .from('app_settings')
+          .insert({ key: 'super_agent_name', value: name })
+        if (insertError) {
+          console.error('Supabase insert error:', insertError.code, insertError.message)
+        }
       }
     } catch (e) { console.error('Failed to update super agent name:', e) }
   }, [])

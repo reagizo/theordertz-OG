@@ -79,6 +79,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (settingData?.value) {
         const v = settingData.value
         superAgentName = typeof v === 'string' ? v.replace(/^"|"$/g, '') : String(v)
+      } else {
+        await supabase.from('app_settings').insert({ key: 'super_agent_name', value: JSON.stringify('Super Agent') })
       }
     } catch (e) { /* ignore */ }
 
@@ -222,8 +224,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSuperAgentName = useCallback(async (name: string) => {
     setState(prev => ({ ...prev, superAgentName: name }))
     try {
-      const { error } = await supabase.from('app_settings').upsert({ key: 'super_agent_name', value: name })
-      if (error) throw error
+      const { error } = await supabase.from('app_settings').upsert(
+        { key: 'super_agent_name', value: JSON.stringify(name) },
+        { onConflict: 'key' }
+      )
+      if (error) console.error('Supabase upsert error:', error.message, error.details)
     } catch (e) { console.error('Failed to update super agent name:', e) }
   }, [])
 

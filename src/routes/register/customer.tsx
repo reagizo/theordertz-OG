@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { useSettings } from '@/contexts/SettingsContext'
 import { saveCustomerProfileFn } from '@/server/db.functions'
 import { generateId } from '@/lib/utils'
-import { Mail, Lock, User, Phone, MapPin, ArrowRight } from 'lucide-react'
+import { Mail, Lock, User, Phone, MapPin, ArrowRight, Upload, X, Camera } from 'lucide-react'
 import type { CustomerTier } from '@/lib/types'
 
 export const Route = createFileRoute('/register/customer')({
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/register/customer')({
 
 function CustomerRegisterPage() {
   const { signup } = useAuth()
-  const { addRegistrationAlert } = useSettings()
+  const { addRegistrationAlert, updateUser } = useSettings()
   const router = useRouter()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,6 +21,17 @@ function CustomerRegisterPage() {
     fullName: '', email: '', phone: '', nationalId: '', address: '',
     tier: 'd2d' as CustomerTier, password: '', confirmPassword: '',
   })
+  const [profilePicture, setProfilePicture] = useState<string>('')
+  const pictureInputRef = useRef<HTMLInputElement>(null)
+
+  const handlePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { setError('Image must be less than 2MB'); return }
+    const reader = new FileReader()
+    reader.onload = (ev) => { if (ev.target?.result) setProfilePicture(ev.target.result as string) }
+    reader.readAsDataURL(file)
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -47,6 +58,9 @@ function CustomerRegisterPage() {
           isTestAccount: isTestProfile, adminRequestedBy: adminEmail,
         },
       })
+      if (profilePicture && user.id) {
+        await updateUser(user.id, { profilePicture })
+      }
       const alertMessage = `New ${isTestProfile ? 'TEST ' : ''}${form.tier === 'premier' ? 'Premier' : 'D2D'} customer registration from ${form.phone || form.email}. ${isTestProfile ? `Linked to admin ${adminEmail}. ` : ''}Awaiting admin approval.`
       addRegistrationAlert({
         type: 'customer',
@@ -95,6 +109,41 @@ function CustomerRegisterPage() {
         <div className="w-full bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6 sm:p-8 border border-white/60">
           <h2 className="text-xl font-bold text-[#1E3A5F] mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>Register as Customer</h2>
           <p className="text-gray-500 text-sm mb-6">Create your account to access wallet services</p>
+
+          {/* Profile Picture Upload */}
+          <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+            <div className="relative">
+              {profilePicture ? (
+                <img src={profilePicture} alt="Profile" className="w-16 h-16 rounded-full object-cover shadow ring-2 ring-gray-200" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-xl shadow ring-2 ring-gray-200">
+                  {form.fullName[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => pictureInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shadow hover:bg-indigo-700 transition-colors"
+              >
+                <Camera className="w-3 h-3 text-white" />
+              </button>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700">Profile Photo</p>
+              <p className="text-xs text-gray-400 mb-2">JPG, PNG. Max 2MB.</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => pictureInputRef.current?.click()} className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-600 bg-indigo-50 rounded hover:bg-indigo-100 transition-colors">
+                  <Upload className="w-3 h-3" /> Upload
+                </button>
+                {profilePicture && (
+                  <button type="button" onClick={() => setProfilePicture('')} className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">
+                    <X className="w-3 h-3" /> Remove
+                  </button>
+                )}
+              </div>
+            </div>
+            <input ref={pictureInputRef} type="file" accept="image/*" onChange={handlePictureUpload} className="hidden" />
+          </div>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">

@@ -57,6 +57,7 @@ type SettingsContextValue = {
   removeRegistrationAlert: (email: string) => Promise<void>
   addAuditEntry: (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => Promise<AuditEntry>
   refresh: () => Promise<void>
+  getUserPicture: (email: string) => string | undefined
 }
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined)
@@ -310,6 +311,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return newEntry
   }, [])
 
+  const getUserPicture = useCallback((email: string) => {
+    const u = state.users.find(u => u.email === email)
+    return u?.profilePicture
+  }, [state.users])
+
   const value = useMemo(() => ({
     settings: state,
     setSuperAgentName,
@@ -322,7 +328,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     removeRegistrationAlert,
     addAuditEntry,
     refresh,
-  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts, removeRegistrationAlert, addAuditEntry, refresh])
+    getUserPicture,
+  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts, removeRegistrationAlert, addAuditEntry, refresh, getUserPicture])
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }

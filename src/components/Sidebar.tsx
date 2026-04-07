@@ -73,7 +73,7 @@ function AvatarWithPicture({ picture, name, size = 'md' }: { picture?: string; n
 export function Sidebar({ role }: SidebarProps) {
   const [open, setOpen] = useState(false)
   const { user, logout } = useAuth()
-  const { settings } = useSettings()
+  const { settings, getUserPicture } = useSettings()
   const router = useRouter()
 
   const nav = (role === 'admin' || role === 'test') ? adminNav : role === 'agent' ? agentNav : customerNav
@@ -85,7 +85,7 @@ export function Sidebar({ role }: SidebarProps) {
   }
 
   const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'User'
-  const userPicture = user?.user_metadata?.profilePicture
+  const userPicture = getUserPicture(user?.email ?? '') ?? user?.user_metadata?.profilePicture
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

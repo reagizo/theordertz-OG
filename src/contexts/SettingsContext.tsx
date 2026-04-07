@@ -55,6 +55,7 @@ type SettingsContextValue = {
   clearAllAlerts: () => Promise<void>
   removeRegistrationAlert: (email: string) => Promise<void>
   addAuditEntry: (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => Promise<AuditEntry>
+  refresh: () => Promise<void>
 }
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined)
@@ -67,186 +68,62 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     auditTrail: [],
   })
 
-  // Load all settings from Supabase on mount
-  useEffect(() => {
-    async function loadFromSupabase() {
-      try {
-        // Load super agent name
-        const { data: settingData } = await supabase
-          .from('app_settings')
-          .select('value')
-          .eq('key', 'super_agent_name')
-          .single()
-        
-        // Load users
-        const { data: usersData } = await supabase
-          .from('app_users')
-          .select('*')
-          .order('created_at', { ascending: false })
-        
-        // Load registration alerts
-        const { data: alertsData } = await supabase
-          .from('registration_alerts')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100)
-        
-        // Load audit trail
-        const { data: auditData } = await supabase
-          .from('audit_trail')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(200)
+  const loadFromSupabase = useCallback(async () => {
+    try {
+      const [settingRes, usersRes, alertsRes, auditRes] = await Promise.all([
+        supabase.from('app_settings').select('value').eq('key', 'super_agent_name').single(),
+        supabase.from('app_users').select('*').order('created_at', { ascending: false }),
+        supabase.from('registration_alerts').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('audit_trail').select('*').order('created_at', { ascending: false }).limit(200),
+      ])
 
-        const users: AppUser[] = (usersData || []).map(u => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          role: u.role as UserRole,
-          profilePicture: u.profile_picture,
-          password: u.password,
-          createdAt: u.created_at,
-        }))
+      const users: AppUser[] = (usersRes.data || []).map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role as UserRole,
+        profilePicture: u.profile_picture,
+        password: u.password,
+        createdAt: u.created_at,
+      }))
 
-        const alerts: RegistrationAlert[] = (alertsData || []).map(a => ({
-          id: a.id,
-          type: a.type,
-          name: a.name,
-          email: a.email,
-          tier: a.tier,
-          message: a.message,
-          read: a.is_read,
-          createdAt: a.created_at,
-          isTestAccount: a.is_test_account,
-          adminRequestedBy: a.admin_requested_by,
-        }))
+      const alerts: RegistrationAlert[] = (alertsRes.data || []).map(a => ({
+        id: a.id,
+        type: a.type,
+        name: a.name,
+        email: a.email,
+        tier: a.tier,
+        message: a.message,
+        read: a.is_read,
+        createdAt: a.created_at,
+        isTestAccount: a.is_test_account,
+        adminRequestedBy: a.admin_requested_by,
+      }))
 
-        const auditTrail: AuditEntry[] = (auditData || []).map(a => ({
-          id: a.id,
-          timestamp: a.created_at,
-          action: a.action,
-          entityType: a.entity_type,
-          entityName: a.entity_name,
-          details: a.details,
-          actor: a.actor,
-        }))
+      const auditTrail: AuditEntry[] = (auditRes.data || []).map(a => ({
+        id: a.id,
+        timestamp: a.created_at,
+        action: a.action,
+        entityType: a.entity_type,
+        entityName: a.entity_name,
+        details: a.details,
+        actor: a.actor,
+      }))
 
-        setState({
-          superAgentName: settingData?.value || 'Super Agent',
-          users,
-          registrationAlerts: alerts,
-          auditTrail,
-        })
-      } catch (e) {
-        console.error('Failed to load settings from Supabase:', e)
-      }
-    }
-
-    loadFromSupabase()
-  }, [])
-
-  // Real-time subscription for settings changes
-  useEffect(() => {
-    const channel = supabase
-      .channel('settings-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'app_settings' },
-        async (payload) => {
-          const newPayload = payload.new as { key?: string; value?: string }
-          if (newPayload.key === 'super_agent_name') {
-            setState(prev => ({ ...prev, superAgentName: newPayload.value || 'Super Agent' }))
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'app_users' },
-        async () => {
-          const { data } = await supabase.from('app_users').select('*').order('created_at', { ascending: false })
-          if (data) {
-            const users: AppUser[] = data.map(u => ({
-              id: u.id,
-              name: u.name,
-              email: u.email,
-              role: u.role as UserRole,
-              profilePicture: u.profile_picture,
-              password: u.password,
-              createdAt: u.created_at,
-            }))
-            setState(prev => ({ ...prev, users }))
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'registration_alerts' },
-        async (payload) => {
-          const a = payload.new
-          const alert: RegistrationAlert = {
-            id: a.id,
-            type: a.type,
-            name: a.name,
-            email: a.email,
-            tier: a.tier,
-            message: a.message,
-            read: a.is_read,
-            createdAt: a.created_at,
-            isTestAccount: a.is_test_account,
-            adminRequestedBy: a.admin_requested_by,
-          }
-          setState(prev => ({ ...prev, registrationAlerts: [alert, ...prev.registrationAlerts] }))
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'registration_alerts' },
-        async (payload) => {
-          setState(prev => ({
-            ...prev,
-            registrationAlerts: prev.registrationAlerts.filter(a => a.id !== payload.old.id),
-          }))
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'registration_alerts' },
-        async (payload) => {
-          const a = payload.new
-          setState(prev => ({
-            ...prev,
-            registrationAlerts: prev.registrationAlerts.map(alert =>
-              alert.id === a.id ? {
-                ...alert,
-                read: a.is_read,
-              } : alert
-            ),
-          }))
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'audit_trail' },
-        async (payload) => {
-          const a = payload.new
-          const entry: AuditEntry = {
-            id: a.id,
-            timestamp: a.created_at,
-            action: a.action,
-            entityType: a.entity_type,
-            entityName: a.entity_name,
-            details: a.details,
-            actor: a.actor,
-          }
-          setState(prev => ({ ...prev, auditTrail: [entry, ...prev.auditTrail] }))
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
+      setState({
+        superAgentName: settingRes.data?.value || 'Super Agent',
+        users,
+        registrationAlerts: alerts,
+        auditTrail,
+      })
+    } catch (e) {
+      console.error('Failed to load settings from Supabase:', e)
     }
   }, [])
+
+  useEffect(() => { loadFromSupabase() }, [loadFromSupabase])
+
+  const refresh = useCallback(async () => { await loadFromSupabase() }, [loadFromSupabase])
 
   const setSuperAgentName = useCallback(async (name: string) => {
     try {
@@ -406,7 +283,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     clearAllAlerts,
     removeRegistrationAlert,
     addAuditEntry,
-  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts, removeRegistrationAlert, addAuditEntry])
+    refresh,
+  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts, removeRegistrationAlert, addAuditEntry, refresh])
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }

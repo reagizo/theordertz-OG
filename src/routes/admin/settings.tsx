@@ -357,15 +357,25 @@ function AdminSettings() {
                           const isEditing = editingUserId === u.id
                           return (
                             <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                              {isEditing ? (
-                                <>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                      <AvatarWithPicture picture={editPicture} name={editName} size="sm" />
-                                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
-                                        className="px-2 py-1 border border-gray-200 rounded text-sm w-32 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
-                                    </div>
-                                  </td>
+                               {isEditing ? (
+                                 <>
+                                   <td className="px-4 py-3">
+                                     <div className="flex items-center gap-3">
+                                       <AvatarWithPicture picture={editPicture} name={editName} size="sm" />
+                                       <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
+                                         className="px-2 py-1 border border-gray-200 rounded text-sm w-32 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
+                                       <label className="cursor-pointer p-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Change photo">
+                                         <Upload className="w-4 h-4" />
+                                         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                           const file = e.target.files?.[0]
+                                           if (!file) return
+                                           const reader = new FileReader()
+                                           reader.onload = (ev) => { if (ev.target?.result) setEditPicture(ev.target.result as string) }
+                                           reader.readAsDataURL(file)
+                                         }} />
+                                       </label>
+                                     </div>
+                                   </td>
                                   <td className="px-4 py-3">
                                     <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
                                       className="px-2 py-1 border border-gray-200 rounded text-sm w-40 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />

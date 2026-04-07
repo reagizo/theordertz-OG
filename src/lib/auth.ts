@@ -79,7 +79,7 @@ export async function login(email: string, password: string): Promise<User> {
   const { name: settingsName, profilePicture } = getUserFromSettings(email)
 
   const user: User = {
-    id: (isTest ? 'test-' : 'mock-') + email,
+    id: (isTest ? 'test-' : 'mock-') + crypto.randomUUID(),
     email,
     name: source.name,
     app_metadata: { roles: [source.role], isTestAccount: isTest },
@@ -131,7 +131,7 @@ export async function approveRegistration(email: string): Promise<User | null> {
   const isTest = !!p.isTestAccount
   const { name: settingsName, profilePicture } = getUserFromSettings(email)
   const newUser: User = {
-    id: (isTest ? 'test-' : 'mock-') + email,
+    id: (isTest ? 'test-' : 'mock-') + crypto.randomUUID(),
     email,
     name: p.name,
     app_metadata: { roles: [p.role], isTestAccount: isTest },
@@ -154,7 +154,7 @@ export async function signup(email: string, password: string, meta: Record<strin
   const isTest = !!meta?.isTestAccount
   const role = (meta?.role as string) ?? 'customer'
   const user: User = {
-    id: (isTest ? 'test-' : 'mock-') + email,
+    id: isTest ? `test-${crypto.randomUUID()}` : crypto.randomUUID(),
     email,
     name: meta?.name as string | undefined,
     app_metadata: { roles: [role], isTestAccount: isTest },

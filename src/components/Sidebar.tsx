@@ -80,8 +80,29 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (!user?.email) return
-    supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle().then(({ data }) => {
-      if (data?.profile_picture) setUserPicture(data.profile_picture)
+    console.log('Sidebar: fetching profile picture for', user.email)
+    supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle().then(({ data, error }) => {
+      if (error) {
+        console.error('Sidebar: Supabase error fetching profile picture:', error)
+        return
+      }
+      console.log('Sidebar: profile_picture from Supabase:', data?.profile_picture ? 'present' : 'null')
+      if (data?.profile_picture) {
+        setUserPicture(data.profile_picture)
+      } else {
+        // Fallback: check localStorage for old profile pictures
+        try {
+          const raw = localStorage.getItem('app_settings_v3')
+          if (raw) {
+            const settings = JSON.parse(raw)
+            const found = settings.users?.find((u: any) => u.email === user.email)
+            if (found?.profilePicture) {
+              console.log('Sidebar: found profile picture in localStorage')
+              setUserPicture(found.profilePicture)
+            }
+          }
+        } catch { /* ignore */ }
+      }
     })
   }, [user?.email])
 

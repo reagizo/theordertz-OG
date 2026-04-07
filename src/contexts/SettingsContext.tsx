@@ -76,7 +76,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       const { data: settingData } = await supabase.from('app_settings').select('value').eq('key', 'super_agent_name').maybeSingle()
-      if (settingData?.value) superAgentName = String(settingData.value)
+      if (settingData?.value) {
+        // JSONB value may be stored as a JSON string (with quotes) or plain string
+        const v = settingData.value
+        superAgentName = typeof v === 'string' ? v.replace(/^"|"$/g, '') : String(v)
+      }
     } catch (e) { console.error('Failed to load settings:', e) }
 
     try {
@@ -137,13 +141,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const refresh = useCallback(async () => { await loadFromSupabase() }, [loadFromSupabase])
 
   const setSuperAgentName = useCallback(async (name: string) => {
+    setState(prev => ({ ...prev, superAgentName: name }))
     try {
       const { error } = await supabase.from('app_settings').upsert({
         key: 'super_agent_name',
         value: name,
       })
-      if (error) throw error
-      setState(prev => ({ ...prev, superAgentName: name }))
+      if (error) {
+        console.error('Supabase upsert error:', error.message, error.details)
+        throw error
+      }
     } catch (e) {
       console.error('Failed to update super agent name:', e)
     }

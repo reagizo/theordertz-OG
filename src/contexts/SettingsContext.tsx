@@ -132,7 +132,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => { loadFromSupabase() }, [loadFromSupabase])
 
-  // Real-time subscriptions: ALL .on() calls BEFORE .subscribe()
+  // Poll Supabase every 5 seconds for cross-device sync
+  useEffect(() => {
+    const interval = setInterval(() => { loadFromSupabase() }, 5000)
+    return () => clearInterval(interval)
+  }, [loadFromSupabase])
+
+  // Real-time subscriptions as primary (if replication is enabled)
   useEffect(() => {
     const channel = supabase.channel('settings-sync')
       .on(
@@ -216,35 +222,26 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSuperAgentName = useCallback(async (name: string) => {
     setState(prev => ({ ...prev, superAgentName: name }))
     try {
-      const { error } = await supabase.from('app_settings').upsert({
-        key: 'super_agent_name',
-        value: name,
-      })
+      const { error } = await supabase.from('app_settings').upsert({ key: 'super_agent_name', value: name })
       if (error) throw error
-    } catch (e) {
-      console.error('Failed to update super agent name:', e)
-    }
+    } catch (e) { console.error('Failed to update super agent name:', e) }
   }, [])
 
   const addUser = useCallback(async (user: Omit<AppUser, 'id' | 'createdAt'>) => {
-    const newUser: AppUser = {
-      ...user,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    }
+    const newUser: AppUser = { ...user, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+    setState(prev => ({ ...prev, users: [newUser, ...prev.users] }))
     try {
       await supabase.from('app_users').insert({
         id: newUser.id, name: newUser.name, email: newUser.email,
         role: newUser.role, profile_picture: newUser.profilePicture || null,
         password: newUser.password || null, created_at: newUser.createdAt,
       })
-    } catch (e) {
-      console.error('Failed to add user:', e)
-    }
+    } catch (e) { console.error('Failed to add user:', e) }
     return newUser
   }, [])
 
   const updateUser = useCallback(async (id: string, updates: Partial<AppUser>) => {
+    setState(prev => ({ ...prev, users: prev.users.map(u => u.id === id ? { ...u, ...updates } : u) }))
     try {
       const updateData: any = {}
       if (updates.name !== undefined) updateData.name = updates.name
@@ -253,26 +250,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (updates.profilePicture !== undefined) updateData.profile_picture = updates.profilePicture
       if (updates.password !== undefined) updateData.password = updates.password
       await supabase.from('app_users').update(updateData).eq('id', id)
-    } catch (e) {
-      console.error('Failed to update user:', e)
-    }
+    } catch (e) { console.error('Failed to update user:', e) }
   }, [])
 
   const removeUser = useCallback(async (id: string) => {
+    setState(prev => ({ ...prev, users: prev.users.filter(u => u.id !== id) }))
     try {
       await supabase.from('app_users').delete().eq('id', id)
-    } catch (e) {
-      console.error('Failed to remove user:', e)
-    }
+    } catch (e) { console.error('Failed to remove user:', e) }
   }, [])
 
   const addRegistrationAlert = useCallback(async (alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => {
-    const newAlert: RegistrationAlert = {
-      ...alert,
-      id: crypto.randomUUID(),
-      read: false,
-      createdAt: new Date().toISOString(),
-    }
+    const newAlert: RegistrationAlert = { ...alert, id: crypto.randomUUID(), read: false, createdAt: new Date().toISOString() }
+    setState(prev => ({ ...prev, registrationAlerts: [newAlert, ...prev.registrationAlerts] }))
     try {
       await supabase.from('registration_alerts').insert({
         id: newAlert.id, type: newAlert.type, name: newAlert.name, email: newAlert.email,
@@ -280,51 +270,41 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         created_at: newAlert.createdAt, is_test_account: newAlert.isTestAccount || false,
         admin_requested_by: newAlert.adminRequestedBy || null,
       })
-    } catch (e) {
-      console.error('Failed to add registration alert:', e)
-    }
+    } catch (e) { console.error('Failed to add registration alert:', e) }
     return newAlert
   }, [])
 
   const markAlertRead = useCallback(async (id: string) => {
+    setState(prev => ({ ...prev, registrationAlerts: prev.registrationAlerts.map(a => a.id === id ? { ...a, read: true } : a) }))
     try {
       await supabase.from('registration_alerts').update({ is_read: true }).eq('id', id)
-    } catch (e) {
-      console.error('Failed to mark alert read:', e)
-    }
+    } catch (e) { console.error('Failed to mark alert read:', e) }
   }, [])
 
   const clearAllAlerts = useCallback(async () => {
+    setState(prev => ({ ...prev, registrationAlerts: [] }))
     try {
       await supabase.from('registration_alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    } catch (e) {
-      console.error('Failed to clear alerts:', e)
-    }
+    } catch (e) { console.error('Failed to clear alerts:', e) }
   }, [])
 
   const removeRegistrationAlert = useCallback(async (email: string) => {
+    setState(prev => ({ ...prev, registrationAlerts: prev.registrationAlerts.filter(a => a.email !== email) }))
     try {
       await supabase.from('registration_alerts').delete().eq('email', email)
-    } catch (e) {
-      console.error('Failed to remove registration alert:', e)
-    }
+    } catch (e) { console.error('Failed to remove registration alert:', e) }
   }, [])
 
   const addAuditEntry = useCallback(async (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => {
-    const newEntry: AuditEntry = {
-      ...entry,
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-    }
+    const newEntry: AuditEntry = { ...entry, id: crypto.randomUUID(), timestamp: new Date().toISOString() }
+    setState(prev => ({ ...prev, auditTrail: [newEntry, ...prev.auditTrail] }))
     try {
       await supabase.from('audit_trail').insert({
         id: newEntry.id, action: newEntry.action, entity_type: newEntry.entityType,
         entity_name: newEntry.entityName, details: newEntry.details, actor: newEntry.actor,
         created_at: newEntry.timestamp,
       })
-    } catch (e) {
-      console.error('Failed to add audit entry:', e)
-    }
+    } catch (e) { console.error('Failed to add audit entry:', e) }
     return newEntry
   }, [])
 

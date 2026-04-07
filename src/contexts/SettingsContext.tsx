@@ -219,10 +219,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const refresh = useCallback(async () => { await loadFromSupabase() }, [loadFromSupabase])
 
   const setSuperAgentName = useCallback(async (name: string) => {
+    console.log('setSuperAgentName called with:', name)
     setState(prev => ({ ...prev, superAgentName: name }))
     try {
       await saveSettingFn({ data: { key: 'super_agent_name', value: name } })
-    } catch (e) { console.error('Failed to update super agent name:', e) }
+      console.log('saveSettingFn succeeded')
+    } catch (e) {
+      console.error('Failed to update super agent name:', e)
+    }
   }, [])
 
   const addUser = useCallback(async (user: Omit<AppUser, 'id' | 'createdAt'>) => {

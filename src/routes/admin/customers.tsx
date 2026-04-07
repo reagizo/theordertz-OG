@@ -22,7 +22,7 @@ function AdminCustomers() {
   const [selectedPortfolio, setSelectedPortfolio] = useState<CreditPortfolio | null>(null)
   const [customerTransactions, setCustomerTransactions] = useState<Transaction[]>([])
   const [showPortfolio, setShowPortfolio] = useState(false)
-  const { removeRegistrationAlert } = useSettings()
+  const { removeRegistrationAlert, addAuditEntry } = useSettings()
 
   const displayedCustomers = showTestOnly ? testCustomers : customers
 
@@ -39,6 +39,22 @@ function AdminCustomers() {
       if (selected?.id === c.id) setSelected(updated)
       if (status === 'approved') {
         removeRegistrationAlert(c.email)
+        addAuditEntry({
+          action: `Customer ${status}`,
+          entityType: 'Customer',
+          entityName: c.fullName,
+          details: `Tier: ${tierLabel(c.tier)} | Wallet: ${formatTZS(c.walletBalance)}`,
+          actor: c.fullName,
+        })
+      } else if (status === 'rejected') {
+        removeRegistrationAlert(c.email)
+        addAuditEntry({
+          action: `Customer ${status}`,
+          entityType: 'Customer',
+          entityName: c.fullName,
+          details: `Registration rejected`,
+          actor: c.fullName,
+        })
       }
       setMessage(`Customer ${status} successfully`)
       setTimeout(() => setMessage(''), 3000)

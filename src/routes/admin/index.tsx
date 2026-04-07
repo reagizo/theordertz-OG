@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -80,65 +80,12 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'audit', label: 'Audit Trail' },
 ]
 
-type AuditEntry = {
-  id: string
-  timestamp: string
-  action: string
-  entityType: string
-  entityName: string
-  details: string
-  actor: string
-}
-
 function AdminDashboard() {
   const { transactions, agents, customers, floatRequests } = Route.useLoaderData()
+  const { settings } = useSettings()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
-  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([])
-
-  // Build audit trail from transactions
-  useEffect(() => {
-    const entries: AuditEntry[] = transactions
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .map((tx) => ({
-        id: `audit-${tx.id}-${tx.status}`,
-        timestamp: tx.updatedAt,
-        action: `Transaction ${tx.status}`,
-        entityType: 'Transaction',
-        entityName: `${tx.customerName} → ${tx.agentName}`,
-        details: `${serviceLabel(tx.serviceType)} — ${formatTZS(tx.amount)} (${tierLabel(tx.customerTier)})`,
-        actor: tx.agentName,
-      }))
-
-    const agentEntries: AuditEntry[] = agents
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .map((a) => ({
-        id: `audit-agent-${a.id}`,
-        timestamp: a.updatedAt,
-        action: `Agent ${a.status}`,
-        entityType: 'Agent',
-        entityName: a.fullName,
-        details: `Float: ${formatTZS(a.floatBalance)} | Commission: ${a.commissionRate}%`,
-        actor: a.fullName,
-      }))
-
-    const customerEntries: AuditEntry[] = customers
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .map((c) => ({
-        id: `audit-customer-${c.id}`,
-        timestamp: c.updatedAt,
-        action: `Customer ${c.status}`,
-        entityType: 'Customer',
-        entityName: c.fullName,
-        details: `Tier: ${tierLabel(c.tier)} | Wallet: ${formatTZS(c.walletBalance)}`,
-        actor: c.fullName,
-      }))
-
-    setAuditTrail([...entries, ...agentEntries, ...customerEntries].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    ))
-  }, [transactions, agents, customers])
 
   // KPI calculations
   const kpis = useMemo(() => {
@@ -594,8 +541,6 @@ function AdminDashboard() {
     </div>
   )
 
-  const { settings } = useSettings()
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -793,13 +738,13 @@ function AdminDashboard() {
           {activeTab === 'audit' && (
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                Audit Trail ({auditTrail.length} entries)
+                Audit Trail ({settings.auditTrail.length} entries)
               </h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {auditTrail.length === 0 ? (
+                {settings.auditTrail.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">No audit entries yet</p>
                 ) : (
-                  auditTrail.map((entry) => (
+                  settings.auditTrail.map((entry) => (
                     <div
                       key={entry.id}
                       className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"

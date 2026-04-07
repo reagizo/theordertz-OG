@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Fallback to empty string to prevent crash if env vars are missing
-const supabaseUrl = process.env.SUPABASE_URL || 'https://iuxlaripmlfpyuqvjogm.supabase.co'
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTE1NzQsImV4cCI6MjA5MDgyNzU3NH0.gWTpSQb6zLYO_Ox3YQEA3qCkuRKaJpMtXjxYF6mpy04'
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || ''
+// Use import.meta.env for Vite (works at build time)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://iuxlaripmlfpyuqvjogm.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTE1NzQsImV4cCI6MjA5MDgyNzU3NH0.gWTpSQb6zLYO_Ox3YQEA3qCkuRKaJpMtXjxYF6mpy04'
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY || ''
 
 // Safe storage for server-side (prevents localStorage crash)
 const serverStorage = {
@@ -23,12 +23,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 })
 
 // Admin for Server Functions (uses Service Role Key)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+// Always create a client; if no service key, use anon key as fallback
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
   },
 })
+
+// Admin helper: get admin client or throw if not configured
+export function getSupabaseAdminOrThrow(): any {
+  if (supabaseAdmin) {
+    return supabaseAdmin
+  }
+  throw new Error('Supabase admin client is not configured. Service Role key is missing. Set VITE_SUPABASE_SERVICE_KEY (or SUPABASE_SERVICE_KEY) in your environment.')
+}
 
 export type Database = {
   public: {

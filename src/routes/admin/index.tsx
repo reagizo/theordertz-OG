@@ -22,7 +22,7 @@ import {
 } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
 import type { Transaction } from '@/lib/types'
-import { SettingsProvider, useSettings } from '@/contexts/SettingsContext'
+import { useSettings } from '@/contexts/SettingsContext'
 import {
   Users,
   Clock,
@@ -61,11 +61,7 @@ export const Route = createFileRoute('/admin/')({
 })
 
 function AdminDashboardPage() {
-  return (
-    <SettingsProvider>
-      <AdminDashboard />
-    </SettingsProvider>
-  )
+  return <AdminDashboard />
 }
 
 type TabId = 'overview' | 'completed' | 'pending' | 'agents' | 'd2d' | 'premier' | 'audit'

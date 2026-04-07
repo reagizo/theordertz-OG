@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import BrandLayout from '../../components/BrandLayout'
-import { SettingsProvider, useSettings } from '../../contexts/SettingsContext'
+import { useSettings } from '../../contexts/SettingsContext'
 
 export const Route = createFileRoute('/customer/confirmation')({
   component: CustomerConfirmationPage,
 })
 
-function CustomerConfirmationInner() {
+function CustomerConfirmationPage() {
   const { settings } = useSettings()
   return (
     <BrandLayout>
@@ -16,13 +16,5 @@ function CustomerConfirmationInner() {
         <p>We will contact you shortly with next steps.</p>
       </section>
     </BrandLayout>
-  )
-}
-
-function CustomerConfirmationPage() {
-  return (
-    <SettingsProvider>
-      <CustomerConfirmationInner />
-    </SettingsProvider>
   )
 }

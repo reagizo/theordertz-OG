@@ -161,8 +161,10 @@ function CustomerServices() {
         },
       })
       setSuccess(true)
-    } catch {
-      setError('Failed to submit request. Please try again.')
+    } catch (err: unknown) {
+      const e = err as { message?: string }
+      console.error('Transaction submission error:', err)
+      setError(e?.message ?? 'Failed to submit request. Please try again.')
     } finally {
       setLoading(false)
     }

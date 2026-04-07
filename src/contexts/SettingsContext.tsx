@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Test'
@@ -47,54 +47,143 @@ type SettingsState = {
 type SettingsContextValue = {
   settings: SettingsState
   setSuperAgentName: (name: string) => void
-  addUser: (user: Omit<AppUser, 'id' | 'createdAt'>) => AppUser
-  updateUser: (id: string, updates: Partial<AppUser>) => void
-  removeUser: (id: string) => void
-  addRegistrationAlert: (alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => void
-  markAlertRead: (id: string) => void
-  clearAllAlerts: () => void
-  removeRegistrationAlert: (email: string) => void
-  addAuditEntry: (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => void
+  addUser: (user: Omit<AppUser, 'id' | 'createdAt'>) => Promise<AppUser>
+  updateUser: (id: string, updates: Partial<AppUser>) => Promise<void>
+  removeUser: (id: string) => Promise<void>
+  addRegistrationAlert: (alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => Promise<RegistrationAlert>
+  markAlertRead: (id: string) => Promise<void>
+  clearAllAlerts: () => Promise<void>
+  removeRegistrationAlert: (email: string) => Promise<void>
+  addAuditEntry: (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => Promise<AuditEntry>
 }
 
-const SETTINGS_KEY = 'app_settings_v3'
-
-function loadSettings(): SettingsState {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as SettingsState
-      return { ...parsed, auditTrail: parsed.auditTrail || [] }
-    }
-  } catch { /* ignore */ }
-  return {
-    superAgentName: 'Super Agent',
-    users: [
-      { id: 'seed-admin-1', name: 'REAGAN ROBERT KAIJAGE', email: 'rkaijage@gmail.com', role: 'Admin', password: '@Eva0191!', createdAt: new Date().toISOString() },
-      { id: 'seed-admin-2', name: 'Test Account', email: 'admin@example.com', role: 'Test', password: 'admin', createdAt: new Date().toISOString() },
-    ],
-    registrationAlerts: [],
-    auditTrail: [],
-  }
-}
-
-function saveSettings(s: SettingsState) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s))
-}
-
-const SettingsContext = React.createContext<SettingsContextValue | undefined>(undefined)
+const SettingsContext = createContext<SettingsContextValue | undefined>(undefined)
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = React.useState<SettingsState>(loadSettings)
+  const [state, setState] = useState<SettingsState>({
+    superAgentName: 'Super Agent',
+    users: [],
+    registrationAlerts: [],
+    auditTrail: [],
+  })
 
-  // Sync from Supabase on mount
-  React.useEffect(() => {
-    async function syncFromSupabase() {
+  // Load all settings from Supabase on mount
+  useEffect(() => {
+    async function loadFromSupabase() {
       try {
-        // Fetch alerts from Supabase
-        const { data: alerts } = await supabase.from('registration_alerts').select('*').order('created_at', { ascending: false }).limit(50)
-        if (alerts && alerts.length > 0) {
-          const syncedAlerts: RegistrationAlert[] = alerts.map(a => ({
+        // Load super agent name
+        const { data: settingData } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'super_agent_name')
+          .single()
+        
+        // Load users
+        const { data: usersData } = await supabase
+          .from('app_users')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        // Load registration alerts
+        const { data: alertsData } = await supabase
+          .from('registration_alerts')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100)
+        
+        // Load audit trail
+        const { data: auditData } = await supabase
+          .from('audit_trail')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(200)
+
+        const users: AppUser[] = (usersData || []).map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role as UserRole,
+          profilePicture: u.profile_picture,
+          password: u.password,
+          createdAt: u.created_at,
+        }))
+
+        const alerts: RegistrationAlert[] = (alertsData || []).map(a => ({
+          id: a.id,
+          type: a.type,
+          name: a.name,
+          email: a.email,
+          tier: a.tier,
+          message: a.message,
+          read: a.is_read,
+          createdAt: a.created_at,
+          isTestAccount: a.is_test_account,
+          adminRequestedBy: a.admin_requested_by,
+        }))
+
+        const auditTrail: AuditEntry[] = (auditData || []).map(a => ({
+          id: a.id,
+          timestamp: a.created_at,
+          action: a.action,
+          entityType: a.entity_type,
+          entityName: a.entity_name,
+          details: a.details,
+          actor: a.actor,
+        }))
+
+        setState({
+          superAgentName: settingData?.value || 'Super Agent',
+          users,
+          registrationAlerts: alerts,
+          auditTrail,
+        })
+      } catch (e) {
+        console.error('Failed to load settings from Supabase:', e)
+      }
+    }
+
+    loadFromSupabase()
+  }, [])
+
+  // Real-time subscription for settings changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('settings-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_settings' },
+        async (payload) => {
+          const newPayload = payload.new as { key?: string; value?: string }
+          if (newPayload.key === 'super_agent_name') {
+            setState(prev => ({ ...prev, superAgentName: newPayload.value || 'Super Agent' }))
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_users' },
+        async () => {
+          const { data } = await supabase.from('app_users').select('*').order('created_at', { ascending: false })
+          if (data) {
+            const users: AppUser[] = data.map(u => ({
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              role: u.role as UserRole,
+              profilePicture: u.profile_picture,
+              password: u.password,
+              createdAt: u.created_at,
+            }))
+            setState(prev => ({ ...prev, users }))
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'registration_alerts' },
+        async (payload) => {
+          const a = payload.new
+          const alert: RegistrationAlert = {
             id: a.id,
             type: a.type,
             name: a.name,
@@ -103,122 +192,210 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             message: a.message,
             read: a.is_read,
             createdAt: a.created_at,
-          }))
-          // Merge with localStorage alerts (local first, then add new from Supabase)
-          const localAlerts = state.registrationAlerts
-          const merged = [...localAlerts]
-          for (const alert of syncedAlerts) {
-            if (!merged.find(a => a.id === alert.id)) {
-              merged.unshift(alert)
-            }
+            isTestAccount: a.is_test_account,
+            adminRequestedBy: a.admin_requested_by,
           }
-          setState(prev => ({ ...prev, registrationAlerts: merged }))
+          setState(prev => ({ ...prev, registrationAlerts: [alert, ...prev.registrationAlerts] }))
         }
-      } catch (e) {
-        console.error('Failed to sync from Supabase:', e)
-      }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'registration_alerts' },
+        async (payload) => {
+          setState(prev => ({
+            ...prev,
+            registrationAlerts: prev.registrationAlerts.filter(a => a.id !== payload.old.id),
+          }))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'registration_alerts' },
+        async (payload) => {
+          const a = payload.new
+          setState(prev => ({
+            ...prev,
+            registrationAlerts: prev.registrationAlerts.map(alert =>
+              alert.id === a.id ? {
+                ...alert,
+                read: a.is_read,
+              } : alert
+            ),
+          }))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'audit_trail' },
+        async (payload) => {
+          const a = payload.new
+          const entry: AuditEntry = {
+            id: a.id,
+            timestamp: a.created_at,
+            action: a.action,
+            entityType: a.entity_type,
+            entityName: a.entity_name,
+            details: a.details,
+            actor: a.actor,
+          }
+          setState(prev => ({ ...prev, auditTrail: [entry, ...prev.auditTrail] }))
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
-    syncFromSupabase()
   }, [])
 
-  const setSuperAgentName = React.useCallback((name: string) => {
-    setState(prev => {
-      const next = { ...prev, superAgentName: name }
-      saveSettings(next)
-      return next
-    })
+  const setSuperAgentName = useCallback(async (name: string) => {
+    try {
+      await supabase.from('app_settings').upsert({
+        key: 'super_agent_name',
+        value: name,
+        updated_at: new Date().toISOString(),
+      })
+      setState(prev => ({ ...prev, superAgentName: name }))
+    } catch (e) {
+      console.error('Failed to update super agent name:', e)
+    }
   }, [])
 
-  const addUser = React.useCallback((user: Omit<AppUser, 'id' | 'createdAt'>) => {
+  const addUser = useCallback(async (user: Omit<AppUser, 'id' | 'createdAt'>) => {
     const newUser: AppUser = {
       ...user,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     }
-    setState(prev => {
-      const next = { ...prev, users: [...prev.users, newUser] }
-      saveSettings(next)
-      return next
-    })
+    try {
+      await supabase.from('app_users').insert({
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        profile_picture: newUser.profilePicture || null,
+        password: newUser.password || null,
+        created_at: newUser.createdAt,
+      })
+      setState(prev => ({ ...prev, users: [newUser, ...prev.users] }))
+    } catch (e) {
+      console.error('Failed to add user:', e)
+    }
     return newUser
   }, [])
 
-  const updateUser = React.useCallback((id: string, updates: Partial<AppUser>) => {
-    setState(prev => {
-      const next = {
+  const updateUser = useCallback(async (id: string, updates: Partial<AppUser>) => {
+    try {
+      const updateData: any = { updated_at: new Date().toISOString() }
+      if (updates.name !== undefined) updateData.name = updates.name
+      if (updates.email !== undefined) updateData.email = updates.email
+      if (updates.role !== undefined) updateData.role = updates.role
+      if (updates.profilePicture !== undefined) updateData.profile_picture = updates.profilePicture
+      if (updates.password !== undefined) updateData.password = updates.password
+
+      await supabase.from('app_users').update(updateData).eq('id', id)
+      setState(prev => ({
         ...prev,
         users: prev.users.map(u => u.id === id ? { ...u, ...updates } : u),
-      }
-      saveSettings(next)
-      return next
-    })
+      }))
+    } catch (e) {
+      console.error('Failed to update user:', e)
+    }
   }, [])
 
-  const removeUser = React.useCallback((id: string) => {
-    setState(prev => {
-      const next = { ...prev, users: prev.users.filter(u => u.id !== id) }
-      saveSettings(next)
-      return next
-    })
+  const removeUser = useCallback(async (id: string) => {
+    try {
+      await supabase.from('app_users').delete().eq('id', id)
+      setState(prev => ({ ...prev, users: prev.users.filter(u => u.id !== id) }))
+    } catch (e) {
+      console.error('Failed to remove user:', e)
+    }
   }, [])
 
-  const addRegistrationAlert = React.useCallback((alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => {
+  const addRegistrationAlert = useCallback(async (alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => {
     const newAlert: RegistrationAlert = {
       ...alert,
       id: crypto.randomUUID(),
       read: false,
       createdAt: new Date().toISOString(),
     }
-    setState(prev => {
-      const next = { ...prev, registrationAlerts: [newAlert, ...prev.registrationAlerts] }
-      saveSettings(next)
-      return next
-    })
+    try {
+      await supabase.from('registration_alerts').insert({
+        id: newAlert.id,
+        type: newAlert.type,
+        name: newAlert.name,
+        email: newAlert.email,
+        tier: newAlert.tier || null,
+        message: newAlert.message,
+        is_read: false,
+        created_at: newAlert.createdAt,
+        is_test_account: newAlert.isTestAccount || false,
+        admin_requested_by: newAlert.adminRequestedBy || null,
+      })
+      setState(prev => ({ ...prev, registrationAlerts: [newAlert, ...prev.registrationAlerts] }))
+    } catch (e) {
+      console.error('Failed to add registration alert:', e)
+    }
     return newAlert
   }, [])
 
-  const markAlertRead = React.useCallback((id: string) => {
-    setState(prev => {
-      const next = {
+  const markAlertRead = useCallback(async (id: string) => {
+    try {
+      await supabase.from('registration_alerts').update({ is_read: true }).eq('id', id)
+      setState(prev => ({
         ...prev,
         registrationAlerts: prev.registrationAlerts.map(a => a.id === id ? { ...a, read: true } : a),
-      }
-      saveSettings(next)
-      return next
-    })
+      }))
+    } catch (e) {
+      console.error('Failed to mark alert read:', e)
+    }
   }, [])
 
-  const clearAllAlerts = React.useCallback(() => {
-    setState(prev => {
-      const next = { ...prev, registrationAlerts: [] }
-      saveSettings(next)
-      return next
-    })
+  const clearAllAlerts = useCallback(async () => {
+    try {
+      await supabase.from('registration_alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      setState(prev => ({ ...prev, registrationAlerts: [] }))
+    } catch (e) {
+      console.error('Failed to clear alerts:', e)
+    }
   }, [])
 
-  const removeRegistrationAlert = React.useCallback((email: string) => {
-    setState(prev => {
-      const next = { ...prev, registrationAlerts: prev.registrationAlerts.filter(a => a.email !== email) }
-      saveSettings(next)
-      return next
-    })
+  const removeRegistrationAlert = useCallback(async (email: string) => {
+    try {
+      await supabase.from('registration_alerts').delete().eq('email', email)
+      setState(prev => ({
+        ...prev,
+        registrationAlerts: prev.registrationAlerts.filter(a => a.email !== email),
+      }))
+    } catch (e) {
+      console.error('Failed to remove registration alert:', e)
+    }
   }, [])
 
-  const addAuditEntry = React.useCallback((entry: Omit<AuditEntry, 'id' | 'timestamp'>) => {
+  const addAuditEntry = useCallback(async (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => {
     const newEntry: AuditEntry = {
       ...entry,
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
     }
-    setState(prev => {
-      const next = { ...prev, auditTrail: [newEntry, ...prev.auditTrail] }
-      saveSettings(next)
-      return next
-    })
+    try {
+      await supabase.from('audit_trail').insert({
+        id: newEntry.id,
+        action: newEntry.action,
+        entity_type: newEntry.entityType,
+        entity_name: newEntry.entityName,
+        details: newEntry.details,
+        actor: newEntry.actor,
+        created_at: newEntry.timestamp,
+      })
+      setState(prev => ({ ...prev, auditTrail: [newEntry, ...prev.auditTrail] }))
+    } catch (e) {
+      console.error('Failed to add audit entry:', e)
+    }
     return newEntry
   }, [])
 
-  const value = React.useMemo(() => ({
+  const value = useMemo(() => ({
     settings: state,
     setSuperAgentName,
     addUser,

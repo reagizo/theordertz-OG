@@ -69,56 +69,48 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   })
 
   const loadFromSupabase = useCallback(async () => {
+    let superAgentName = 'Super Agent'
+    let users: AppUser[] = []
+    let alerts: RegistrationAlert[] = []
+    let auditTrail: AuditEntry[] = []
+
     try {
-      const [settingRes, usersRes, alertsRes, auditRes] = await Promise.all([
-        supabase.from('app_settings').select('value').eq('key', 'super_agent_name').single(),
-        supabase.from('app_users').select('*').order('created_at', { ascending: false }),
-        supabase.from('registration_alerts').select('*').order('created_at', { ascending: false }).limit(100),
-        supabase.from('audit_trail').select('*').order('created_at', { ascending: false }).limit(200),
-      ])
+      const { data: settingData } = await supabase.from('app_settings').select('value').eq('key', 'super_agent_name').maybeSingle()
+      if (settingData?.value) superAgentName = String(settingData.value)
+    } catch (e) { console.error('Failed to load settings:', e) }
 
-      const users: AppUser[] = (usersRes.data || []).map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role as UserRole,
-        profilePicture: u.profile_picture,
-        password: u.password,
-        createdAt: u.created_at,
-      }))
+    try {
+      const { data: usersData } = await supabase.from('app_users').select('*').order('created_at', { ascending: false })
+      if (usersData) {
+        users = usersData.map(u => ({
+          id: u.id, name: u.name, email: u.email, role: u.role as UserRole,
+          profilePicture: u.profile_picture, password: u.password, createdAt: u.created_at,
+        }))
+      }
+    } catch (e) { console.error('Failed to load users:', e) }
 
-      const alerts: RegistrationAlert[] = (alertsRes.data || []).map(a => ({
-        id: a.id,
-        type: a.type,
-        name: a.name,
-        email: a.email,
-        tier: a.tier,
-        message: a.message,
-        read: a.is_read,
-        createdAt: a.created_at,
-        isTestAccount: a.is_test_account,
-        adminRequestedBy: a.admin_requested_by,
-      }))
+    try {
+      const { data: alertsData } = await supabase.from('registration_alerts').select('*').order('created_at', { ascending: false }).limit(100)
+      if (alertsData) {
+        alerts = alertsData.map(a => ({
+          id: a.id, type: a.type, name: a.name, email: a.email, tier: a.tier,
+          message: a.message, read: a.is_read, createdAt: a.created_at,
+          isTestAccount: a.is_test_account, adminRequestedBy: a.admin_requested_by,
+        }))
+      }
+    } catch (e) { console.error('Failed to load alerts:', e) }
 
-      const auditTrail: AuditEntry[] = (auditRes.data || []).map(a => ({
-        id: a.id,
-        timestamp: a.created_at,
-        action: a.action,
-        entityType: a.entity_type,
-        entityName: a.entity_name,
-        details: a.details,
-        actor: a.actor,
-      }))
+    try {
+      const { data: auditData } = await supabase.from('audit_trail').select('*').order('created_at', { ascending: false }).limit(200)
+      if (auditData) {
+        auditTrail = auditData.map(a => ({
+          id: a.id, timestamp: a.created_at, action: a.action, entityType: a.entity_type,
+          entityName: a.entity_name, details: a.details, actor: a.actor,
+        }))
+      }
+    } catch (e) { console.error('Failed to load audit trail:', e) }
 
-      setState({
-        superAgentName: settingRes.data?.value || 'Super Agent',
-        users,
-        registrationAlerts: alerts,
-        auditTrail,
-      })
-    } catch (e) {
-      console.error('Failed to load settings from Supabase:', e)
-    }
+    setState({ superAgentName, users, registrationAlerts: alerts, auditTrail })
   }, [])
 
   useEffect(() => { loadFromSupabase() }, [loadFromSupabase])

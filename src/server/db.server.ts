@@ -569,6 +569,6 @@ export async function getSetting(key: string): Promise<any> {
 export async function saveSetting(key: string, value: any): Promise<void> {
   const { error } = await supabaseAdmin
     .from('app_settings')
-    .upsert({ key, value })
+    .upsert({ key, value }, { onConflict: 'key' })
   if (error) throw error
 }

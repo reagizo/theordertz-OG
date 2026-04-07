@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Use import.meta.env for Vite (works at build time)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dlgtwwknvlncprphejaj.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTE1NzQsImV4cCI6MjA5MDgyNzU3NH0.gWTpSQb6zLYO_Ox3YQEA3qCkuRKaJpMtXjxYF6mpy04'
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY || ''
+// Hardcoded correct URL + env var fallback
+const supabaseUrl = 'https://dlgtwwknvlncprphejaj.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTE1NzQsImV4cCI6MjA5MDgyNzU3NH0.gWTpSQb6zLYO_Ox3YQEA3qCkuRKaJpMtXjxYF6mpy04'
+const supabaseServiceKey = ''
 
 // Safe storage for server-side (prevents localStorage crash)
 const serverStorage = {

@@ -138,11 +138,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setSuperAgentName = useCallback(async (name: string) => {
     try {
-      await supabase.from('app_settings').upsert({
+      const { error } = await supabase.from('app_settings').upsert({
         key: 'super_agent_name',
         value: name,
-        updated_at: new Date().toISOString(),
       })
+      if (error) throw error
       setState(prev => ({ ...prev, superAgentName: name }))
     } catch (e) {
       console.error('Failed to update super agent name:', e)

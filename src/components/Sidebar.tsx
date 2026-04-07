@@ -13,9 +13,10 @@ import {
   Menu,
   X,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from './AuthProvider'
 import { useSettings } from '@/contexts/SettingsContext'
+import { supabase } from '@/lib/supabase'
 
 interface NavItem {
   label: string
@@ -73,8 +74,16 @@ function AvatarWithPicture({ picture, name, size = 'md' }: { picture?: string; n
 export function Sidebar({ role }: SidebarProps) {
   const [open, setOpen] = useState(false)
   const { user, logout } = useAuth()
-  const { settings, getUserPicture } = useSettings()
+  const { settings } = useSettings()
   const router = useRouter()
+  const [userPicture, setUserPicture] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (!user?.email) return
+    supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle().then(({ data }) => {
+      if (data?.profile_picture) setUserPicture(data.profile_picture)
+    })
+  }, [user?.email])
 
   const nav = (role === 'admin' || role === 'test') ? adminNav : role === 'agent' ? agentNav : customerNav
   const roleLabel = role === 'admin' ? 'Administrator' : role === 'agent' ? 'Agent' : role === 'test' ? 'Test' : 'Customer'
@@ -85,7 +94,6 @@ export function Sidebar({ role }: SidebarProps) {
   }
 
   const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'User'
-  const userPicture = getUserPicture(user?.email ?? '') ?? user?.user_metadata?.profilePicture
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

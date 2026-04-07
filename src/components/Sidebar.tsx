@@ -91,22 +91,36 @@ export function Sidebar({ role }: SidebarProps) {
         setUserPicture(data.profile_picture)
       } else {
         // Check localStorage for old profile pictures and sync to Supabase
+        let foundPicture: string | undefined
         try {
+          // Check app_settings_v3
           const raw = localStorage.getItem('app_settings_v3')
           if (raw) {
             const settings = JSON.parse(raw)
             const found = settings.users?.find((u: any) => u.email === user.email)
-            if (found?.profilePicture) {
-              console.log('Sidebar: found profile picture in localStorage, syncing to Supabase...')
-              setUserPicture(found.profilePicture)
-              // Save to Supabase so it syncs across devices
-              supabase.from('app_users').update({ profile_picture: found.profilePicture }).eq('email', user.email).then(({ error }) => {
-                if (error) console.error('Sidebar: failed to sync profile picture to Supabase:', error)
-                else console.log('Sidebar: profile picture synced to Supabase')
-              })
+            if (found?.profilePicture) foundPicture = found.profilePicture
+          }
+          // Check mock.user
+          if (!foundPicture) {
+            const muRaw = localStorage.getItem('mock.user')
+            if (muRaw) {
+              const mu = JSON.parse(muRaw)
+              if (mu?.user_metadata?.profilePicture) foundPicture = mu.user_metadata.profilePicture
             }
           }
         } catch { /* ignore */ }
+
+        if (foundPicture) {
+          console.log('Sidebar: found profile picture in localStorage, syncing to Supabase...')
+          setUserPicture(foundPicture)
+          // Save to Supabase so it syncs across devices
+          supabase.from('app_users').update({ profile_picture: foundPicture }).eq('email', user.email).then(({ error }) => {
+            if (error) console.error('Sidebar: failed to sync profile picture to Supabase:', error)
+            else console.log('Sidebar: profile picture synced to Supabase')
+          })
+        } else {
+          console.log('Sidebar: no profile picture found anywhere')
+        }
       }
     })
   }, [user?.email])

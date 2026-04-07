@@ -12,9 +12,11 @@ DROP POLICY IF EXISTS "transactions_insert" ON transactions;
 DROP POLICY IF EXISTS "transactions_update" ON transactions;
 DROP POLICY IF EXISTS "transactions_delete" ON transactions;
 
--- Alter columns from UUID to TEXT to accept mock IDs
+-- Alter columns from UUID to TEXT
 ALTER TABLE transactions ALTER COLUMN agent_id TYPE TEXT;
 ALTER TABLE transactions ALTER COLUMN customer_id TYPE TEXT;
+ALTER TABLE transactions ALTER COLUMN agent_id DROP NOT NULL;
+ALTER TABLE transactions ALTER COLUMN customer_id DROP NOT NULL;
 
 -- Add missing columns
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS customer_tier TEXT NOT NULL DEFAULT 'd2d';

@@ -1,33 +1,60 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { listCustomersFn, saveCustomerProfileFn, listTransactionsByCustomerFn, getCreditPortfolioFn } from '@/server/db.functions'
+import { listAllCustomersFn, saveCustomerProfileFn, listTransactionsByCustomerFn, getCreditPortfolioFn, deleteCustomerFn } from '@/server/db.functions'
 import { formatTZS, formatDate, statusColor, tierLabel } from '@/lib/utils'
-import { CheckCircle, XCircle, Clock, User, CreditCard } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, User, CreditCard, FlaskConical, Trash2 } from 'lucide-react'
 import type { CustomerProfile, Transaction, CreditPortfolio } from '@/lib/types'
+import { useSettings } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/customers')({
-  loader: () => listCustomersFn(),
+  loader: () => listAllCustomersFn(),
   component: AdminCustomers,
 })
 
 function AdminCustomers() {
-  const initial = Route.useLoaderData() as CustomerProfile[]
-  const [customers, setCustomers] = useState(initial)
+  const initial = Route.useLoaderData() as { real: CustomerProfile[]; test: CustomerProfile[] }
+  const [customers, setCustomers] = useState(initial.real)
+  const [testCustomers, setTestCustomers] = useState(initial.test)
+  const [showTestOnly, setShowTestOnly] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [selected, setSelected] = useState<CustomerProfile | null>(null)
   const [selectedPortfolio, setSelectedPortfolio] = useState<CreditPortfolio | null>(null)
   const [customerTransactions, setCustomerTransactions] = useState<Transaction[]>([])
   const [showPortfolio, setShowPortfolio] = useState(false)
+  const { removeRegistrationAlert } = useSettings()
+
+  const displayedCustomers = showTestOnly ? testCustomers : customers
 
   const updateStatus = async (c: CustomerProfile, status: 'approved' | 'rejected') => {
     setLoading(c.id)
     try {
       const updated = { ...c, status, updatedAt: new Date().toISOString() }
       await saveCustomerProfileFn({ data: updated })
-      setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      if (c.isTestAccount) {
+        setTestCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      } else {
+        setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      }
       if (selected?.id === c.id) setSelected(updated)
+      if (status === 'approved') {
+        removeRegistrationAlert(c.email)
+      }
       setMessage(`Customer ${status} successfully`)
+      setTimeout(() => setMessage(''), 3000)
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleDeleteTestCustomer = async (c: CustomerProfile) => {
+    if (!confirm(`Delete test customer "${c.fullName}"? This cannot be undone.`)) return
+    setLoading(c.id)
+    try {
+      await deleteCustomerFn({ data: { id: c.id } })
+      setTestCustomers(prev => prev.filter(x => x.id !== c.id))
+      if (selected?.id === c.id) setSelected(null)
+      setMessage('Test customer deleted successfully')
       setTimeout(() => setMessage(''), 3000)
     } finally {
       setLoading(null)
@@ -39,7 +66,11 @@ function AdminCustomers() {
     try {
       const updated = { ...c, walletBalance: Math.max(0, c.walletBalance + delta), updatedAt: new Date().toISOString() }
       await saveCustomerProfileFn({ data: updated })
-      setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      if (c.isTestAccount) {
+        setTestCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      } else {
+        setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      }
       if (selected?.id === c.id) setSelected(updated)
     } finally {
       setLoading(null)
@@ -51,7 +82,11 @@ function AdminCustomers() {
     try {
       const updated = { ...c, creditLimit: newLimit, updatedAt: new Date().toISOString() }
       await saveCustomerProfileFn({ data: updated })
-      setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      if (c.isTestAccount) {
+        setTestCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      } else {
+        setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
+      }
       if (selected?.id === c.id) setSelected(updated)
       if (selectedPortfolio) {
         const portfolio = await getCreditPortfolioFn({ data: { customerId: c.id } })
@@ -97,6 +132,18 @@ function AdminCustomers() {
           <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
             {customers.filter(c => c.tier === 'premier').length} Premier
           </span>
+          {testCustomers.length > 0 && (
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+              {testCustomers.length} Test
+            </span>
+          )}
+          <button
+            onClick={() => setShowTestOnly(!showTestOnly)}
+            className={`px-3 py-1 rounded-full font-medium transition-colors flex items-center gap-1 ${showTestOnly ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          >
+            <FlaskConical className="w-3 h-3" />
+            {showTestOnly ? 'Show All' : 'Test Only'}
+          </button>
         </div>
       </div>
 
@@ -120,14 +167,22 @@ function AdminCustomers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {customers.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No customers yet</td></tr>
+                {displayedCustomers.length === 0 ? (
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">{showTestOnly ? 'No test customers registered yet' : 'No customers yet'}</td></tr>
                 ) : (
-                  customers.map(c => (
-                    <tr key={c.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => viewDetails(c)}>
+                  displayedCustomers.map(c => (
+                    <tr key={c.id} className={`hover:bg-gray-50 cursor-pointer ${c.isTestAccount ? 'bg-blue-50/30' : ''}`} onClick={() => viewDetails(c)}>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-800">{c.fullName}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-gray-800">{c.fullName}</div>
+                          {c.isTestAccount && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700">
+                              <FlaskConical className="w-2.5 h-2.5" /> TEST
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-400">{c.email}</div>
+                        {c.adminRequestedBy && <div className="text-xs text-blue-500">Linked: {c.adminRequestedBy}</div>}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.tier === 'premier' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
@@ -156,6 +211,12 @@ function AdminCustomers() {
                             <button onClick={e => { e.stopPropagation(); updateStatus(c, 'rejected') }} disabled={loading === c.id}
                               className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded disabled:opacity-50">Suspend</button>
                           )}
+                          {c.isTestAccount && (
+                            <button onClick={e => { e.stopPropagation(); handleDeleteTestCustomer(c) }} disabled={loading === c.id}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50" title="Delete test customer">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -172,11 +233,18 @@ function AdminCustomers() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${selected.tier === 'premier' ? 'bg-purple-100' : 'bg-blue-100'}`}>
-                    <User className={`w-6 h-6 ${selected.tier === 'premier' ? 'text-purple-600' : 'text-blue-600'}`} />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${selected.isTestAccount ? 'bg-blue-100' : selected.tier === 'premier' ? 'bg-purple-100' : 'bg-blue-100'}`}>
+                    <User className={`w-6 h-6 ${selected.isTestAccount ? 'text-blue-600' : selected.tier === 'premier' ? 'text-purple-600' : 'text-blue-600'}`} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{selected.fullName}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{selected.fullName}</h3>
+                      {selected.isTestAccount && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700">
+                          <FlaskConical className="w-2.5 h-2.5" /> TEST
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor(selected.status)}`}>{selected.status}</span>
                     <span className={`ml-1 text-xs px-2 py-0.5 rounded-full ${selected.tier === 'premier' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                       {tierLabel(selected.tier)}
@@ -205,6 +273,9 @@ function AdminCustomers() {
                   <div className="flex justify-between"><span className="text-gray-500">Phone</span><span className="font-medium">{selected.phone}</span></div>
                   <div className="flex justify-between"><span className="text-gray-500">National ID</span><span className="font-medium">{selected.nationalId}</span></div>
                   <div className="flex justify-between"><span className="text-gray-500">Address</span><span className="font-medium text-right max-w-32 truncate">{selected.address}</span></div>
+                  {selected.adminRequestedBy && (
+                    <div className="flex justify-between"><span className="text-gray-500">Linked Admin</span><span className="font-medium text-blue-600">{selected.adminRequestedBy}</span></div>
+                  )}
                   <div className="border-t pt-2 space-y-2">
                     <div className="flex justify-between"><span className="text-gray-500">Wallet Balance</span><span className="font-bold text-green-600">{formatTZS(selected.walletBalance)}</span></div>
                     {selected.tier === 'premier' && (
@@ -239,6 +310,16 @@ function AdminCustomers() {
                           </button>
                         ))}
                       </div>
+                    </div>
+                  )}
+                  {selected.isTestAccount && (
+                    <div className="border-t pt-3">
+                      <button
+                        onClick={() => handleDeleteTestCustomer(selected)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete Test Account
+                      </button>
                     </div>
                   )}
                 </div>

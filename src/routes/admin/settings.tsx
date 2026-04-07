@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useSettings, type UserRole, type AppUser, type CustomerTier } from '@/contexts/SettingsContext'
+import { listAllAgentsFn, listAllCustomersFn, deleteAgentFn, deleteCustomerFn } from '@/server/db.functions'
+import type { AgentProfile, CustomerProfile } from '@/lib/types'
 import {
   UserPlus, Save, Trash2, Edit2, Upload, X, Check, Shield, KeyRound, User,
   Bell, BellOff, AlertTriangle, Activity, FlaskConical,
@@ -85,7 +87,67 @@ function AdminSettings() {
   const [editPicture, setEditPicture] = useState('')
   const [settingsTab, setSettingsTab] = useState<'general' | 'alerts' | 'audit' | 'test-accounts'>('general')
 
+  const [testAgents, setTestAgents] = useState<AgentProfile[]>([])
+  const [testCustomers, setTestCustomers] = useState<CustomerProfile[]>([])
+  const [testDataLoading, setTestDataLoading] = useState(false)
+
   const unreadAlerts = settings.registrationAlerts.filter(a => !a.read)
+
+  useEffect(() => {
+    if (settingsTab === 'test-accounts') {
+      loadTestData()
+    }
+  }, [settingsTab])
+
+  const loadTestData = async () => {
+    setTestDataLoading(true)
+    try {
+      const [agentsData, customersData] = await Promise.all([
+        listAllAgentsFn(),
+        listAllCustomersFn(),
+      ])
+      setTestAgents(agentsData.test ?? [])
+      setTestCustomers(customersData.test ?? [])
+    } catch (err) {
+      console.error('Failed to load test data:', err)
+    } finally {
+      setTestDataLoading(false)
+    }
+  }
+
+  const handleDeleteTestAgent = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this test agent?')) return
+    try {
+      await deleteAgentFn({ data: { id } })
+      setTestAgents(prev => prev.filter(a => a.id !== id))
+    } catch (err) {
+      console.error('Failed to delete test agent:', err)
+    }
+  }
+
+  const handleDeleteTestCustomer = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this test customer?')) return
+    try {
+      await deleteCustomerFn({ data: { id } })
+      setTestCustomers(prev => prev.filter(c => c.id !== id))
+    } catch (err) {
+      console.error('Failed to delete test customer:', err)
+    }
+  }
+
+  const handleClearAllTestData = async () => {
+    if (!confirm('Are you sure you want to clear ALL test data? This cannot be undone.')) return
+    try {
+      await Promise.all([
+        ...testAgents.map(a => deleteAgentFn({ data: { id: a.id } })),
+        ...testCustomers.map(c => deleteCustomerFn({ data: { id: c.id } })),
+      ])
+      setTestAgents([])
+      setTestCustomers([])
+    } catch (err) {
+      console.error('Failed to clear test data:', err)
+    }
+  }
 
   const handleSaveSuperAgent = () => {
     setSuperAgentName(superAgentNameInput)
@@ -464,36 +526,184 @@ function AdminSettings() {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Test Accounts</h2>
                 <p className="text-sm text-gray-500">
-                  Test account functionality is currently disabled.
+                  View and manage test agent and customer accounts.
                 </p>
               </div>
 
-              {/* Clear Test Data */}
-              <div className="bg-red-50 border border-red-200 rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4" />
-                  Clear All Test Data
-                </h3>
-                <p className="text-xs text-red-600 mb-3">
-                  This will permanently delete ALL test account data (transactions, profiles, float exchanges).
-                  Real production data will NOT be affected. This action cannot be undone.
-                </p>
-                <button
-                  onClick={() => {
-                    if (confirm('Are you sure you want to clear ALL test data? This cannot be undone.')) {
-                      const testStores = ['test-agents', 'test-customers', 'test-transactions', 'test-float-requests', 'test-float-exchanges']
-                      testStores.forEach(store => {
-                        const keys = Object.keys(localStorage).filter(k => k.startsWith(store))
-                        keys.forEach(k => localStorage.removeItem(k))
-                      })
-                      alert('All test data has been cleared.')
-                    }
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg text-sm hover:bg-red-700 transition-colors"
-                >
-                  Clear All Test Data
-                </button>
-              </div>
+              {testDataLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-3"></div>
+                    <p className="text-gray-500 text-sm">Loading test accounts...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Test Agents Table */}
+                  <div className="bg-gray-50 rounded-xl p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-orange-100 rounded-lg"><Shield className="w-5 h-5 text-orange-600" /></div>
+                      <h3 className="text-lg font-semibold text-gray-900">Test Agents ({testAgents.length})</h3>
+                    </div>
+                    {testAgents.length === 0 ? (
+                      <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                        <Shield className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No test agents found.</p>
+                        <p className="text-xs text-gray-400 mt-1">Test agents will appear here when created.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3">Name</th>
+                              <th className="px-4 py-3">Email</th>
+                              <th className="px-4 py-3">Phone</th>
+                              <th className="px-4 py-3">Status</th>
+                              <th className="px-4 py-3">Registered</th>
+                              <th className="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {testAgents.map((agent) => (
+                              <tr key={agent.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                      {agent.fullName[0]?.toUpperCase() ?? '?'}
+                                    </div>
+                                    <span className="font-medium text-gray-900">{agent.fullName}</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">{agent.email}</td>
+                                <td className="px-4 py-3 text-gray-600">{agent.phone ?? '—'}</td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    agent.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                    agent.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {agent.status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-500 text-xs">{new Date(agent.createdAt).toLocaleDateString()}</td>
+                                <td className="px-4 py-3 text-right">
+                                  <button
+                                    onClick={() => handleDeleteTestAgent(agent.id)}
+                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Test Customers Table */}
+                  <div className="bg-gray-50 rounded-xl p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-green-100 rounded-lg"><User className="w-5 h-5 text-green-600" /></div>
+                      <h3 className="text-lg font-semibold text-gray-900">Test Customers ({testCustomers.length})</h3>
+                    </div>
+                    {testCustomers.length === 0 ? (
+                      <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                        <User className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No test customers found.</p>
+                        <p className="text-xs text-gray-400 mt-1">Test customers will appear here when created.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3">Name</th>
+                              <th className="px-4 py-3">Email</th>
+                              <th className="px-4 py-3">Tier</th>
+                              <th className="px-4 py-3">Status</th>
+                              <th className="px-4 py-3">Registered</th>
+                              <th className="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {testCustomers.map((customer) => (
+                              <tr key={customer.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                      {customer.fullName[0]?.toUpperCase() ?? '?'}
+                                    </div>
+                                    <span className="font-medium text-gray-900">{customer.fullName}</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">{customer.email}</td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    customer.tier === 'premier' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                                  }`}>
+                                    {customer.tier === 'premier' ? 'Premier' : 'D2D'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    customer.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                    customer.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {customer.status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-500 text-xs">{new Date(customer.createdAt).toLocaleDateString()}</td>
+                                <td className="px-4 py-3 text-right">
+                                  <button
+                                    onClick={() => handleDeleteTestCustomer(customer.id)}
+                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Summary & Clear All */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-1">Summary</h3>
+                        <div className="flex gap-6 text-sm">
+                          <span className="text-gray-600">
+                            Test Agents: <span className="font-semibold text-gray-900">{testAgents.length}</span>
+                          </span>
+                          <span className="text-gray-600">
+                            Test Customers: <span className="font-semibold text-gray-900">{testCustomers.length}</span>
+                          </span>
+                          <span className="text-gray-600">
+                            Total: <span className="font-semibold text-gray-900">{testAgents.length + testCustomers.length}</span>
+                          </span>
+                        </div>
+                      </div>
+                      {(testAgents.length > 0 || testCustomers.length > 0) && (
+                        <button
+                          onClick={handleClearAllTestData}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white font-medium rounded-lg text-sm hover:bg-red-700 transition-colors"
+                        >
+                          <AlertTriangle className="w-4 h-4" /> Clear All Test Data
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

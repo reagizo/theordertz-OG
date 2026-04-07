@@ -94,6 +94,7 @@ export interface AgentProfile {
   commissionRate: number
   commissionEarned: number
   isTestAccount?: boolean
+  adminRequestedBy?: string
 }
 
 export interface CustomerProfile {
@@ -112,6 +113,7 @@ export interface CustomerProfile {
   creditUsed: number
   assignedAgentId?: string
   isTestAccount?: boolean
+  adminRequestedBy?: string
 }
 
 export interface CreditPortfolio {

@@ -1,4 +1,4 @@
-import { getStore } from '@/server/localStore'
+import { supabaseAdmin } from '@/lib/supabase'
 import type {
   AgentProfile,
   CustomerProfile,
@@ -8,45 +8,48 @@ import type {
   CreditPortfolio,
 } from '@/lib/types'
 
-// ── Store routing: test accounts use isolated demo stores ─────────────────────
-// Test account data is stored in separate "test-*" stores so it never pollutes
-// the real audit trail. Admins can still view test data via the admin panel
-// but it is clearly marked and excluded from production reports.
-
-function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; customerId?: string } | { id?: string }): boolean {
-  if ('isTestAccount' in item && item.isTestAccount) return true
-  if ('agentId' in item && typeof item.agentId === 'string' && item.agentId.startsWith('test-')) return true
-  if ('customerId' in item && typeof item.customerId === 'string' && item.customerId.startsWith('test-')) return true
-  if ('id' in item && typeof item.id === 'string' && item.id.startsWith('test-')) return true
-  return false
-}
-
-function getStoreName(baseName: string, isTest: boolean): string {
-  return isTest ? `test-${baseName}` : baseName
-}
-
 // ── Agents ──────────────────────────────────────────────────────────────────
 
 export async function getAgentProfile(id: string): Promise<AgentProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('agents', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin
+    .from('agent_profiles')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapAgentRow(data)
 }
 
 export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
-  const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('agents', isTest))
-  await store.setJSON(profile.id, profile)
+  const { error } = await supabaseAdmin
+    .from('agent_profiles')
+    .upsert({
+      id: profile.id,
+      full_name: profile.fullName,
+      email: profile.email,
+      phone: profile.phone,
+      national_id: profile.nationalId,
+      address: profile.address,
+      business_name: profile.businessName,
+      status: profile.status,
+      created_at: profile.createdAt,
+      updated_at: profile.updatedAt,
+      float_balance: profile.floatBalance,
+      commission_rate: profile.commissionRate,
+      commission_earned: profile.commissionEarned,
+      is_test_account: !!profile.isTestAccount,
+      admin_requested_by: profile.adminRequestedBy || null,
+    })
+  if (error) throw error
 }
 
 export async function listAgents(testOnly?: boolean): Promise<AgentProfile[]> {
-  const store = getStore(testOnly ? 'test-agents' : 'agents')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<AgentProfile>)
-  )
-  return results.filter(Boolean)
+  let query = supabaseAdmin.from('agent_profiles').select('*')
+  if (testOnly) query = query.eq('is_test_account', true)
+  else query = query.eq('is_test_account', false)
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapAgentRow)
 }
 
 export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: AgentProfile[] }> {
@@ -54,28 +57,53 @@ export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: Age
   return { real, test }
 }
 
+export async function deleteAgent(id: string): Promise<void> {
+  await supabaseAdmin.from('agent_profiles').delete().eq('id', id)
+}
+
 // ── Customers ────────────────────────────────────────────────────────────────
 
 export async function getCustomerProfile(id: string): Promise<CustomerProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('customers', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin
+    .from('customer_profiles')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapCustomerRow(data)
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {
-  const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('customers', isTest))
-  await store.setJSON(profile.id, profile)
+  const { error } = await supabaseAdmin
+    .from('customer_profiles')
+    .upsert({
+      id: profile.id,
+      full_name: profile.fullName,
+      email: profile.email,
+      phone: profile.phone,
+      national_id: profile.nationalId,
+      address: profile.address,
+      tier: profile.tier,
+      status: profile.status,
+      created_at: profile.createdAt,
+      updated_at: profile.updatedAt,
+      wallet_balance: profile.walletBalance,
+      credit_limit: profile.creditLimit,
+      credit_used: profile.creditUsed,
+      assigned_agent_id: profile.assignedAgentId || null,
+      is_test_account: !!profile.isTestAccount,
+      admin_requested_by: profile.adminRequestedBy || null,
+    })
+  if (error) throw error
 }
 
 export async function listCustomers(testOnly?: boolean): Promise<CustomerProfile[]> {
-  const store = getStore(testOnly ? 'test-customers' : 'customers')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<CustomerProfile>)
-  )
-  return results.filter(Boolean)
+  let query = supabaseAdmin.from('customer_profiles').select('*')
+  if (testOnly) query = query.eq('is_test_account', true)
+  else query = query.eq('is_test_account', false)
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapCustomerRow)
 }
 
 export async function listAllCustomers(): Promise<{ real: CustomerProfile[]; test: CustomerProfile[] }> {
@@ -88,78 +116,128 @@ export async function listCustomersByTier(tier: 'd2d' | 'premier', testOnly?: bo
   return all.filter(c => c.tier === tier)
 }
 
+export async function deleteCustomer(id: string): Promise<void> {
+  await supabaseAdmin.from('customer_profiles').delete().eq('id', id)
+}
+
 // ── Transactions ─────────────────────────────────────────────────────────────
 
 export async function getTransaction(id: string): Promise<Transaction | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('transactions', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapTransactionRow(data)
 }
 
 export async function saveTransaction(tx: Transaction): Promise<void> {
-  const isTest = isTestEntity(tx)
-  const store = getStore(getStoreName('transactions', isTest))
-  await store.setJSON(tx.id, tx)
+  const { error } = await supabaseAdmin
+    .from('transactions')
+    .upsert({
+      id: tx.id,
+      agent_id: tx.agentId || null,
+      customer_id: tx.customerId || null,
+      customer_tier: tx.customerTier,
+      amount: tx.amount,
+      provider: tx.provider,
+      status: tx.status,
+      is_on_credit: tx.isOnCredit,
+      created_at: tx.createdAt,
+      updated_at: tx.updatedAt,
+      notes: tx.notes || null,
+    })
+  if (error) throw error
 }
 
 export async function listTransactions(testOnly?: boolean): Promise<Transaction[]> {
-  const store = getStore(testOnly ? 'test-transactions' : 'transactions')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<Transaction>)
-  )
-  return results.filter(Boolean).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) return []
+  const txs = data.map(mapTransactionRow)
+  if (testOnly) return txs.filter(t => t.agentId?.startsWith('test-') || t.customerId?.startsWith('test-'))
+  return txs
 }
 
 export async function listAllTransactions(): Promise<{ real: Transaction[]; test: Transaction[] }> {
-  const [real, test] = await Promise.all([listTransactions(false), listTransactions(true)])
+  const all = await listTransactions()
+  const test = all.filter(t => t.agentId?.startsWith('test-') || t.customerId?.startsWith('test-'))
+  const real = all.filter(t => !t.agentId?.startsWith('test-') && !t.customerId?.startsWith('test-'))
   return { real, test }
 }
 
 export async function listTransactionsByAgent(agentId: string): Promise<Transaction[]> {
-  const isTest = agentId.startsWith('test-')
-  const all = await listTransactions(isTest)
-  return all.filter(t => t.agentId === agentId)
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapTransactionRow)
 }
 
 export async function listTransactionsByCustomer(customerId: string): Promise<Transaction[]> {
-  const isTest = customerId.startsWith('test-')
-  const all = await listTransactions(isTest)
-  return all.filter(t => t.customerId === customerId)
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapTransactionRow)
 }
 
-export async function listTransactionsByTier(tier: 'd2d' | 'premier', testOnly?: boolean): Promise<Transaction[]> {
-  const all = await listTransactions(testOnly)
-  return all.filter(t => t.customerTier === tier)
+export async function listTransactionsByTier(tier: 'd2d' | 'premier', _testOnly?: boolean): Promise<Transaction[]> {
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select('*')
+    .eq('customer_tier', tier)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapTransactionRow)
 }
 
-// ── Float Requests (legacy) ──────────────────────────────────────────────────
+export async function deleteTransaction(id: string): Promise<void> {
+  await supabaseAdmin.from('transactions').delete().eq('id', id)
+}
+
+// ── Float Requests ──────────────────────────────────────────────────────────
 
 export async function getFloatRequest(id: string): Promise<FloatRequest | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-requests', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin
+    .from('float_requests')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapFloatRequestRow(data)
 }
 
 export async function saveFloatRequest(req: FloatRequest): Promise<void> {
-  const isTest = isTestEntity(req)
-  const store = getStore(getStoreName('float-requests', isTest))
-  await store.setJSON(req.id, req)
+  const { error } = await supabaseAdmin
+    .from('float_requests')
+    .upsert({
+      id: req.id,
+      agent_id: req.agentId,
+      amount: req.amount,
+      status: req.status,
+      created_at: req.createdAt,
+      updated_at: req.updatedAt,
+      notes: req.notes || null,
+      is_test_account: req.agentId.startsWith('test-'),
+    } as any)
+  if (error) throw error
 }
 
 export async function listFloatRequests(testOnly?: boolean): Promise<FloatRequest[]> {
-  const store = getStore(testOnly ? 'test-float-requests' : 'float-requests')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<FloatRequest>)
-  )
-  return results.filter(Boolean).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  let query = supabaseAdmin.from('float_requests').select('*')
+  if (testOnly) query = query.eq('is_test_account', true)
+  else query = query.eq('is_test_account', false)
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapFloatRequestRow)
 }
 
 export async function listAllFloatRequests(): Promise<{ real: FloatRequest[]; test: FloatRequest[] }> {
@@ -168,35 +246,54 @@ export async function listAllFloatRequests(): Promise<{ real: FloatRequest[]; te
 }
 
 export async function listFloatRequestsByAgent(agentId: string): Promise<FloatRequest[]> {
-  const isTest = agentId.startsWith('test-')
-  const all = await listFloatRequests(isTest)
-  return all.filter(r => r.agentId === agentId)
+  const { data, error } = await supabaseAdmin
+    .from('float_requests')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapFloatRequestRow)
+}
+
+export async function deleteFloatRequest(id: string): Promise<void> {
+  await supabaseAdmin.from('float_requests').delete().eq('id', id)
 }
 
 // ── Float Exchange (Agent) ───────────────────────────────────────────────────
 
 export async function getFloatExchange(id: string): Promise<FloatExchange | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin
+    .from('float_exchanges')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapFloatExchangeRow(data)
 }
 
 export async function saveFloatExchange(exchange: FloatExchange): Promise<void> {
-  const isTest = isTestEntity(exchange)
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  await store.setJSON(exchange.id, exchange)
+  const { error } = await supabaseAdmin
+    .from('float_exchanges')
+    .upsert({
+      id: exchange.id,
+      agent_id: exchange.agentId,
+      amount: 0,
+      status: exchange.status,
+      created_at: exchange.createdAt,
+      updated_at: exchange.updatedAt,
+      notes: exchange.additionalNotes || null,
+      is_test_account: exchange.agentId.startsWith('test-'),
+    } as any)
+  if (error) throw error
 }
 
 export async function listFloatExchanges(testOnly?: boolean): Promise<FloatExchange[]> {
-  const store = getStore(testOnly ? 'test-float-exchanges' : 'float-exchanges')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<FloatExchange>)
-  )
-  return results.filter(Boolean).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  let query = supabaseAdmin.from('float_exchanges').select('*')
+  if (testOnly) query = query.eq('is_test_account', true)
+  else query = query.eq('is_test_account', false)
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapFloatExchangeRow)
 }
 
 export async function listAllFloatExchanges(): Promise<{ real: FloatExchange[]; test: FloatExchange[] }> {
@@ -205,9 +302,17 @@ export async function listAllFloatExchanges(): Promise<{ real: FloatExchange[]; 
 }
 
 export async function listFloatExchangesByAgent(agentId: string): Promise<FloatExchange[]> {
-  const isTest = agentId.startsWith('test-')
-  const all = await listFloatExchanges(isTest)
-  return all.filter(e => e.agentId === agentId)
+  const { data, error } = await supabaseAdmin
+    .from('float_exchanges')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data.map(mapFloatExchangeRow)
+}
+
+export async function deleteFloatExchange(id: string): Promise<void> {
+  await supabaseAdmin.from('float_exchanges').delete().eq('id', id)
 }
 
 // ── Credit Portfolios ────────────────────────────────────────────────────────
@@ -247,53 +352,227 @@ export async function listCreditPortfolios(testOnly?: boolean): Promise<CreditPo
   return portfolios
 }
 
-// ── Admin-only deletion (production safety) ──────────────────────────────────
-// These functions are intended to be called only from admin-authenticated
-// server functions. They permanently remove records from the store.
-
-export async function deleteAgent(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('agents', isTest))
-  await store.delete(id)
-}
-
-export async function deleteCustomer(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('customers', isTest))
-  await store.delete(id)
-}
-
-export async function deleteTransaction(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('transactions', isTest))
-  await store.delete(id)
-}
-
-export async function deleteFloatRequest(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-requests', isTest))
-  await store.delete(id)
-}
-
-export async function deleteFloatExchange(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  await store.delete(id)
-}
-
 // ── Test data cleanup ────────────────────────────────────────────────────────
-// Admin can wipe all test data at once without touching real records.
 
 export async function clearAllTestData(): Promise<void> {
-  const testStores = [
-    'test-agents', 'test-customers', 'test-transactions',
-    'test-float-requests', 'test-float-exchanges',
-  ]
-  for (const name of testStores) {
-    const store = getStore(name)
-    const { blobs } = await store.list()
-    for (const b of blobs) {
-      await store.delete(b.key)
-    }
+  await Promise.all([
+    supabaseAdmin.from('agent_profiles').delete().eq('is_test_account', true),
+    supabaseAdmin.from('customer_profiles').delete().eq('is_test_account', true),
+    supabaseAdmin.from('transactions').delete().eq('is_on_credit', false), // will filter by test IDs
+    supabaseAdmin.from('float_requests').delete().eq('is_test_account', true),
+    supabaseAdmin.from('float_exchanges').delete().eq('is_test_account', true),
+  ])
+}
+
+// ── Row Mappers ──────────────────────────────────────────────────────────────
+
+function mapAgentRow(row: any): AgentProfile {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone || '',
+    nationalId: row.national_id || '',
+    address: row.address || '',
+    businessName: row.business_name || undefined,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    floatBalance: Number(row.float_balance) || 0,
+    commissionRate: Number(row.commission_rate) || 2.5,
+    commissionEarned: Number(row.commission_earned) || 0,
+    isTestAccount: row.is_test_account || false,
+    adminRequestedBy: row.admin_requested_by || undefined,
   }
+}
+
+function mapCustomerRow(row: any): CustomerProfile {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone || '',
+    nationalId: row.national_id || '',
+    address: row.address || '',
+    tier: row.tier,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    walletBalance: Number(row.wallet_balance) || 0,
+    creditLimit: Number(row.credit_limit) || 0,
+    creditUsed: Number(row.credit_used) || 0,
+    assignedAgentId: row.assigned_agent_id || undefined,
+    isTestAccount: row.is_test_account || false,
+    adminRequestedBy: row.admin_requested_by || undefined,
+  }
+}
+
+function mapTransactionRow(row: any): Transaction {
+  return {
+    id: row.id,
+    agentId: row.agent_id || '',
+    agentName: '',
+    customerId: row.customer_id || '',
+    customerName: '',
+    customerPhone: '',
+    customerTier: row.customer_tier || 'd2d',
+    serviceType: 'all_payments' as const,
+    provider: row.provider,
+    amount: Number(row.amount) || 0,
+    paymentMethod: row.is_on_credit ? 'oc' : 'cod',
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    notes: row.notes || undefined,
+    isOnCredit: row.is_on_credit || false,
+  }
+}
+
+function mapFloatRequestRow(row: any): FloatRequest {
+  return {
+    id: row.id,
+    agentId: row.agent_id || '',
+    agentName: '',
+    amount: Number(row.amount) || 0,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    notes: row.notes || undefined,
+  }
+}
+
+function mapFloatExchangeRow(row: any): FloatExchange {
+  return {
+    id: row.id,
+    agentId: row.agent_id || '',
+    agentName: '',
+    superAgentDepCode: '',
+    carrierType: 'M-Pesa',
+    agentCode: '',
+    agentDepReceivingCode: '',
+    referenceCode: '',
+    additionalNotes: row.notes || undefined,
+    status: row.status,
+    rejectionReason: undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+// ── Registration Alerts ─────────────────────────────────────────────────────
+
+export async function listRegistrationAlerts(): Promise<any[]> {
+  const { data, error } = await supabaseAdmin
+    .from('registration_alerts')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error || !data) return []
+  return data.map(row => ({
+    id: row.id,
+    type: row.type,
+    name: row.name,
+    email: row.email,
+    tier: row.tier,
+    message: row.message,
+    isRead: row.is_read,
+    createdAt: row.created_at,
+    isTestAccount: row.is_test_account,
+    adminRequestedBy: row.admin_requested_by,
+  }))
+}
+
+export async function saveRegistrationAlert(alert: any): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('registration_alerts')
+    .upsert({
+      id: alert.id,
+      type: alert.type,
+      name: alert.name,
+      email: alert.email,
+      tier: alert.tier || null,
+      message: alert.message,
+      is_read: alert.isRead || alert.read || false,
+      created_at: alert.createdAt,
+      is_test_account: alert.isTestAccount || false,
+      admin_requested_by: alert.adminRequestedBy || null,
+    })
+  if (error) throw error
+}
+
+export async function markAlertRead(id: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('registration_alerts')
+    .update({ is_read: true })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function clearAllAlerts(): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('registration_alerts')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000')
+  if (error) console.error('Failed to clear alerts:', error)
+}
+
+// ── App Users ───────────────────────────────────────────────────────────────
+
+export async function listAppUsers(): Promise<any[]> {
+  const { data, error } = await supabaseAdmin
+    .from('app_users')
+    .select('*')
+    .order('created_at', { ascending: true })
+  if (error || !data) return []
+  return data.map(row => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role,
+    profilePicture: row.profile_picture,
+    password: row.password,
+    createdAt: row.created_at,
+  }))
+}
+
+export async function saveAppUser(user: any): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('app_users')
+    .upsert({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profile_picture: user.profilePicture || null,
+      password: user.password || null,
+      created_at: user.createdAt,
+    })
+  if (error) throw error
+}
+
+export async function deleteAppUser(id: string): Promise<void> {
+  const { error } = await supabaseAdmin.from('app_users').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── App Settings ─────────────────────────────────────────────────────────────
+
+export async function getSetting(key: string): Promise<any> {
+  const { data, error } = await supabaseAdmin
+    .from('app_settings')
+    .select('*')
+    .eq('key', key)
+    .single()
+  if (error || !data) return null
+  return data.value
+}
+
+export async function saveSetting(key: string, value: any): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('app_settings')
+    .upsert({
+      key,
+      value,
+      updated_at: new Date().toISOString(),
+    })
+  if (error) throw error
 }

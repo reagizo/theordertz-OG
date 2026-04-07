@@ -7,7 +7,7 @@ export type User = {
   user_metadata?: { full_name?: string; profilePicture?: string }
 }
 
-const MOCK_USERS: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> = []
+const MOCK_USERS_KEY = 'mock.users.v1'
 
 // Test accounts — unlimited usage, isolated demo data, no real audit trail pollution
 const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name?: string }> = [
@@ -19,6 +19,22 @@ const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name
 const getLocalStorage = () => {
   if (typeof window === 'undefined') return null
   return window.localStorage
+}
+
+function loadMockUsers(): Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> {
+  const ls = getLocalStorage()
+  if (!ls) return []
+  try {
+    const raw = ls.getItem(MOCK_USERS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveMockUsers(users: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }>) {
+  const ls = getLocalStorage()
+  if (ls) ls.setItem(MOCK_USERS_KEY, JSON.stringify(users))
 }
 
 function getUserFromSettings(email: string): { name?: string; profilePicture?: string } {
@@ -36,7 +52,20 @@ function getUserFromSettings(email: string): { name?: string; profilePicture?: s
 }
 
 export async function login(email: string, password: string): Promise<User> {
-  const found = MOCK_USERS.find(u => u.email === email && u.password === password)
+  const ls = getLocalStorage()
+  let found: { email: string; password: string; role: string; name?: string; isTestAccount?: boolean } | undefined
+
+  // Always check localStorage first for persisted registered users
+  if (ls) {
+    try {
+      const raw = ls.getItem(MOCK_USERS_KEY)
+      if (raw) {
+        const users = JSON.parse(raw) as Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }>
+        found = users.find(u => u.email === email && u.password === password)
+      }
+    } catch { /* ignore */ }
+  }
+
   const testFound = TEST_ACCOUNTS.find(u => u.email === email && u.password === password)
 
   if (!found && !testFound) {
@@ -56,10 +85,9 @@ export async function login(email: string, password: string): Promise<User> {
     app_metadata: { roles: [source.role], isTestAccount: isTest },
     user_metadata: { full_name: settingsName ?? source.name, profilePicture },
   }
-  
-  const ls = getLocalStorage()
+
   if (ls) ls.setItem('mock.user', JSON.stringify(user))
-  
+
   return user
 }
 
@@ -109,7 +137,12 @@ export async function approveRegistration(email: string): Promise<User | null> {
     app_metadata: { roles: [p.role], isTestAccount: isTest },
     user_metadata: { full_name: settingsName ?? p.name, profilePicture },
   }
-  MOCK_USERS.push({ email: email, password: 'Temp123!', role: p.role, name: p.name, isTestAccount: isTest })
+  const users = loadMockUsers()
+  const existing = users.find(u => u.email === email)
+  if (!existing) {
+    users.push({ email, password: 'Temp123!', role: p.role, name: p.name, isTestAccount: isTest })
+    saveMockUsers(users)
+  }
   pending.splice(foundIndex, 1)
   savePending(pending)
   const ls = getLocalStorage()
@@ -117,17 +150,25 @@ export async function approveRegistration(email: string): Promise<User | null> {
   return newUser
 }
 
-export async function signup(email: string, _password: string, meta: Record<string, unknown>): Promise<User> {
+export async function signup(email: string, password: string, meta: Record<string, unknown>): Promise<User> {
   const isTest = !!meta?.isTestAccount
+  const role = (meta?.role as string) ?? 'customer'
   const user: User = {
     id: (isTest ? 'test-' : 'mock-') + email,
     email,
     name: meta?.name as string | undefined,
-    app_metadata: { roles: ['customer'], isTestAccount: isTest },
+    app_metadata: { roles: [role], isTestAccount: isTest },
     user_metadata: { full_name: meta?.name as string | undefined, profilePicture: meta?.profilePicture as string | undefined },
   }
   const ls = getLocalStorage()
   if (ls) ls.setItem('mock.user', JSON.stringify(user))
+  // Persist to localStorage so user survives logout/refresh
+  const users = loadMockUsers()
+  const existing = users.find(u => u.email === email)
+  if (!existing) {
+    users.push({ email, password, role, name: meta?.name as string | undefined, isTestAccount: isTest })
+    saveMockUsers(users)
+  }
   return user
 }
 
@@ -178,17 +219,21 @@ export async function seedLiveData(): Promise<void> {
     const exists = pending.find(p => p.email === s.email)
     if (!exists) await requestRegistration(s.email, s.role, { name: s.name })
   }
-  const existsAdmin = MOCK_USERS.find(u => u.email === 'live-admin@example.com')
+  const users = loadMockUsers()
+  const existsAdmin = users.find(u => u.email === 'live-admin@example.com')
   if (!existsAdmin) {
-    MOCK_USERS.push({ email: 'live-admin@example.com', password: 'LivePwd!', role: 'admin', name: 'Live Admin' })
+    users.push({ email: 'live-admin@example.com', password: 'LivePwd!', role: 'admin', name: 'Live Admin' })
+    saveMockUsers(users)
   }
-  const existsAgent = MOCK_USERS.find(u => u.email === 'live-agent1@example.com')
+  const existsAgent = users.find(u => u.email === 'live-agent1@example.com')
   if (!existsAgent) {
-    MOCK_USERS.push({ email: 'live-agent1@example.com', password: 'LivePwd!', role: 'agent', name: 'Live Agent One' })
+    users.push({ email: 'live-agent1@example.com', password: 'LivePwd!', role: 'agent', name: 'Live Agent One' })
+    saveMockUsers(users)
   }
-  const existsCustomer = MOCK_USERS.find(u => u.email === 'live-customer1@example.com')
+  const existsCustomer = users.find(u => u.email === 'live-customer1@example.com')
   if (!existsCustomer) {
-    MOCK_USERS.push({ email: 'live-customer1@example.com', password: 'LivePwd!', role: 'customer', name: 'Live Customer One' })
+    users.push({ email: 'live-customer1@example.com', password: 'LivePwd!', role: 'customer', name: 'Live Customer One' })
+    saveMockUsers(users)
   }
 }
 
@@ -204,19 +249,21 @@ export async function seedProductionLiveData(): Promise<void> {
     const exists = pending.find(p => p.email === a.email)
     if (!exists) await requestRegistration(a.email, a.role, { name: a.name })
   }
+  const users = loadMockUsers()
   const toAdd: Array<{ email: string; password: string; role: 'admin'|'agent'|'customer'; name?: string }> = [
     { email: 'live-admin2@example.com', password: 'LivePwd!', role: 'admin', name: 'Live Admin 2' },
     { email: 'live-agent2@example.com', password: 'LivePwd!', role: 'agent', name: 'Live Agent Two' },
     { email: 'live-customer2@example.com', password: 'LivePwd!', role: 'customer', name: 'Live Customer Two' },
   ]
   for (const u of toAdd) {
-    const exists = MOCK_USERS.find(x => x.email === u.email)
+    const exists = users.find(x => x.email === u.email)
     if (!exists) {
-      MOCK_USERS.push({ email: u.email, password: u.password, role: u.role, name: u.name })
+      users.push({ email: u.email, password: u.password, role: u.role, name: u.name })
+      saveMockUsers(users)
     }
   }
 }
 
 export function getRegisteredAccountsCount(): number {
-  return MOCK_USERS.length
+  return loadMockUsers().length
 }

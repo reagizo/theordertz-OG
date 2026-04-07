@@ -1,4 +1,5 @@
 import React from 'react'
+import { supabase } from '@/lib/supabase'
 
 export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Test'
 export type CustomerTier = 'd2d' | 'premier'
@@ -22,12 +23,25 @@ export type RegistrationAlert = {
   message: string
   read: boolean
   createdAt: string
+  isTestAccount?: boolean
+  adminRequestedBy?: string
+}
+
+export type AuditEntry = {
+  id: string
+  timestamp: string
+  action: string
+  entityType: 'Agent' | 'Customer' | 'Transaction' | 'Float Request'
+  entityName: string
+  details: string
+  actor: string
 }
 
 type SettingsState = {
   superAgentName: string
   users: AppUser[]
   registrationAlerts: RegistrationAlert[]
+  auditTrail: AuditEntry[]
 }
 
 type SettingsContextValue = {
@@ -39,6 +53,8 @@ type SettingsContextValue = {
   addRegistrationAlert: (alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => void
   markAlertRead: (id: string) => void
   clearAllAlerts: () => void
+  removeRegistrationAlert: (email: string) => void
+  addAuditEntry: (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => void
 }
 
 const SETTINGS_KEY = 'app_settings_v3'
@@ -46,7 +62,10 @@ const SETTINGS_KEY = 'app_settings_v3'
 function loadSettings(): SettingsState {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (raw) return JSON.parse(raw) as SettingsState
+    if (raw) {
+      const parsed = JSON.parse(raw) as SettingsState
+      return { ...parsed, auditTrail: parsed.auditTrail || [] }
+    }
   } catch { /* ignore */ }
   return {
     superAgentName: 'Super Agent',
@@ -55,6 +74,7 @@ function loadSettings(): SettingsState {
       { id: 'seed-admin-2', name: 'Test Account', email: 'admin@example.com', role: 'Test', password: 'admin', createdAt: new Date().toISOString() },
     ],
     registrationAlerts: [],
+    auditTrail: [],
   }
 }
 
@@ -66,6 +86,40 @@ const SettingsContext = React.createContext<SettingsContextValue | undefined>(un
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = React.useState<SettingsState>(loadSettings)
+
+  // Sync from Supabase on mount
+  React.useEffect(() => {
+    async function syncFromSupabase() {
+      try {
+        // Fetch alerts from Supabase
+        const { data: alerts } = await supabase.from('registration_alerts').select('*').order('created_at', { ascending: false }).limit(50)
+        if (alerts && alerts.length > 0) {
+          const syncedAlerts: RegistrationAlert[] = alerts.map(a => ({
+            id: a.id,
+            type: a.type,
+            name: a.name,
+            email: a.email,
+            tier: a.tier,
+            message: a.message,
+            read: a.is_read,
+            createdAt: a.created_at,
+          }))
+          // Merge with localStorage alerts (local first, then add new from Supabase)
+          const localAlerts = state.registrationAlerts
+          const merged = [...localAlerts]
+          for (const alert of syncedAlerts) {
+            if (!merged.find(a => a.id === alert.id)) {
+              merged.unshift(alert)
+            }
+          }
+          setState(prev => ({ ...prev, registrationAlerts: merged }))
+        }
+      } catch (e) {
+        console.error('Failed to sync from Supabase:', e)
+      }
+    }
+    syncFromSupabase()
+  }, [])
 
   const setSuperAgentName = React.useCallback((name: string) => {
     setState(prev => {
@@ -142,6 +196,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }, [])
 
+  const removeRegistrationAlert = React.useCallback((email: string) => {
+    setState(prev => {
+      const next = { ...prev, registrationAlerts: prev.registrationAlerts.filter(a => a.email !== email) }
+      saveSettings(next)
+      return next
+    })
+  }, [])
+
+  const addAuditEntry = React.useCallback((entry: Omit<AuditEntry, 'id' | 'timestamp'>) => {
+    const newEntry: AuditEntry = {
+      ...entry,
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+    }
+    setState(prev => {
+      const next = { ...prev, auditTrail: [newEntry, ...prev.auditTrail] }
+      saveSettings(next)
+      return next
+    })
+    return newEntry
+  }, [])
+
   const value = React.useMemo(() => ({
     settings: state,
     setSuperAgentName,
@@ -151,7 +227,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addRegistrationAlert,
     markAlertRead,
     clearAllAlerts,
-  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts])
+    removeRegistrationAlert,
+    addAuditEntry,
+  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts, removeRegistrationAlert, addAuditEntry])
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { useSettings } from '@/contexts/SettingsContext'
 import { saveAgentProfileFn } from '@/server/db.functions'
 import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react'
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/register/agent')({
 
 function AgentRegisterPage() {
   const { signup } = useAuth()
+  const { addRegistrationAlert } = useSettings()
   const router = useRouter()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,6 +24,8 @@ function AgentRegisterPage() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
+  const isTestProfile = form.fullName.toLowerCase().includes('test') || form.email.toLowerCase().includes('test') || form.businessName?.toLowerCase().includes('test')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -29,31 +33,27 @@ function AgentRegisterPage() {
     if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return }
     setLoading(true)
     try {
-      const user = await signup(form.email, form.password, { full_name: form.fullName, role: 'agent' })
+      const adminEmail = 'rkaijage@gmail.com'
+      const userId = isTestProfile ? `test-${crypto.randomUUID()}` : generateId()
+      const user = await signup(form.email, form.password, { full_name: form.fullName, role: 'agent', isTestAccount: isTestProfile, adminRequestedBy: adminEmail })
       const now = new Date().toISOString()
       await saveAgentProfileFn({
         data: {
-          id: user.id || generateId(), fullName: form.fullName, email: form.email, phone: form.phone,
+          id: user.id || userId, fullName: form.fullName, email: form.email, phone: form.phone,
           nationalId: form.nationalId, address: form.address, businessName: form.businessName || undefined,
           status: 'pending', createdAt: now, updatedAt: now, floatBalance: 0, commissionRate: 2.5, commissionEarned: 0,
+          isTestAccount: isTestProfile, adminRequestedBy: adminEmail,
         },
       })
-      // Create registration alert for admin
-      try {
-        const raw = localStorage.getItem('app_settings_v3')
-        const settings = raw ? JSON.parse(raw) : { superAgentName: 'Super Agent', users: [], registrationAlerts: [] }
-        settings.registrationAlerts = settings.registrationAlerts || []
-        settings.registrationAlerts.unshift({
-          id: crypto.randomUUID(),
-          type: 'agent',
-          name: form.fullName,
-          email: form.email,
-          message: `New agent registration from ${form.phone || form.email}. Awaiting admin approval.`,
-          read: false,
-          createdAt: now,
-        })
-        localStorage.setItem('app_settings_v3', JSON.stringify(settings))
-      } catch { /* ignore */ }
+      const alertMessage = `New ${isTestProfile ? 'TEST ' : ''}agent registration from ${form.phone || form.email}. ${isTestProfile ? `Linked to admin ${adminEmail}. ` : ''}Awaiting admin approval.`
+      addRegistrationAlert({
+        type: 'agent',
+        name: form.fullName,
+        email: form.email,
+        message: alertMessage,
+        isTestAccount: isTestProfile,
+        adminRequestedBy: adminEmail,
+      })
       router.navigate({ to: '/agent' })
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string }
@@ -178,6 +178,12 @@ function AgentRegisterPage() {
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-700">
               <strong>Note:</strong> Your registration will be reviewed by an administrator. You may need to confirm your email address before accessing your account.
             </div>
+
+            {isTestProfile && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
+                <strong>Test Profile Detected:</strong> This account will be linked to admin rkaijage@gmail.com for testing and monitoring purposes.
+              </div>
+            )}
 
             <button type="submit" disabled={loading}
               className="w-full py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">

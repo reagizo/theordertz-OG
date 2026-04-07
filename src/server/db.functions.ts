@@ -41,6 +41,15 @@ import {
   deleteFloatRequest,
   deleteFloatExchange,
   clearAllTestData,
+  listRegistrationAlerts,
+  saveRegistrationAlert,
+  markAlertRead,
+  clearAllAlerts,
+  listAppUsers,
+  saveAppUser,
+  deleteAppUser,
+  getSetting,
+  saveSetting,
 } from '@/server/db.server'
 
 // ── Agent Functions ──────────────────────────────────────────────────────────
@@ -170,3 +179,38 @@ export const deleteFloatExchangeFn = createServerFn({ method: 'POST' })
 
 export const clearAllTestDataFn = createServerFn({ method: 'POST' })
   .handler(() => clearAllTestData())
+
+// ── Settings Functions ──────────────────────────────────────────────────────
+
+export const getSettingFn = createServerFn({ method: 'GET' })
+  .inputValidator((data: { key: string }) => data)
+  .handler(({ data }) => getSetting(data.key))
+
+export const saveSettingFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { key: string; value: unknown }) => data)
+  .handler(({ data }) => saveSetting(data.key, data.value))
+
+// ── Registration Alerts Functions ────────────────────────────────────────────
+
+export const listRegistrationAlertsFn = createServerFn().handler(() => listRegistrationAlerts())
+
+export const saveRegistrationAlertFn = createServerFn({ method: 'POST' })
+  .handler(({ data }) => saveRegistrationAlert(data))
+
+export const markAlertReadFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(({ data }) => markAlertRead(data.id))
+
+export const clearAllAlertsFn = createServerFn({ method: 'POST' })
+  .handler(() => clearAllAlerts())
+
+// ── App Users Functions ──────────────────────────────────────────────────────
+
+export const listAppUsersFn = createServerFn().handler(() => listAppUsers())
+
+export const saveAppUserFn = createServerFn({ method: 'POST' })
+  .handler(({ data }) => saveAppUser(data))
+
+export const deleteAppUserFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(({ data }) => deleteAppUser(data.id))

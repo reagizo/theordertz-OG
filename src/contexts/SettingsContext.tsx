@@ -89,7 +89,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else {
         // Seed admin user if table is empty
         const adminUser: AppUser = {
-          id: 'seed-admin-1',
+          id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           name: 'REAGAN ROBERT KAIJAGE',
           email: 'rkaijage@gmail.com',
           role: 'Admin',

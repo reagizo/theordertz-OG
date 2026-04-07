@@ -77,10 +77,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const { data: settingData } = await supabase.from('app_settings').select('value').eq('key', 'super_agent_name').maybeSingle()
       if (settingData?.value) {
-        const v = settingData.value
-        superAgentName = typeof v === 'string' ? v.replace(/^"|"$/g, '') : String(v)
-      } else {
-        await supabase.from('app_settings').insert({ key: 'super_agent_name', value: JSON.stringify('Super Agent') })
+        superAgentName = String(settingData.value)
       }
     } catch (e) { /* ignore */ }
 
@@ -224,11 +221,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSuperAgentName = useCallback(async (name: string) => {
     setState(prev => ({ ...prev, superAgentName: name }))
     try {
-      const { error } = await supabase.from('app_settings').upsert(
-        { key: 'super_agent_name', value: JSON.stringify(name) },
-        { onConflict: 'key' }
-      )
-      if (error) console.error('Supabase upsert error:', error.message, error.details)
+      // First try to update existing row
+      const { data: existing } = await supabase.from('app_settings').select('id').eq('key', 'super_agent_name').maybeSingle()
+      let result
+      if (existing) {
+        result = await supabase.from('app_settings').update({ value: name }).eq('key', 'super_agent_name')
+      } else {
+        result = await supabase.from('app_settings').insert({ key: 'super_agent_name', value: name })
+      }
+      if (result.error) {
+        console.error('Supabase error:', result.error.code, result.error.message, result.error.details)
+      }
     } catch (e) { console.error('Failed to update super agent name:', e) }
   }, [])
 

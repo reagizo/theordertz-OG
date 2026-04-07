@@ -569,10 +569,6 @@ export async function getSetting(key: string): Promise<any> {
 export async function saveSetting(key: string, value: any): Promise<void> {
   const { error } = await supabaseAdmin
     .from('app_settings')
-    .upsert({
-      key,
-      value,
-      updated_at: new Date().toISOString(),
-    })
+    .upsert({ key, value })
   if (error) throw error
 }

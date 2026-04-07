@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { saveSettingFn } from '@/server/db.functions'
 
 export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Test'
 export type CustomerTier = 'd2d' | 'premier'
@@ -77,7 +78,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const { data: settingData } = await supabase.from('app_settings').select('value').eq('key', 'super_agent_name').maybeSingle()
       if (settingData?.value) {
-        superAgentName = String(settingData.value)
+        const v = settingData.value
+        superAgentName = typeof v === 'string' ? v.replace(/^"|"$/g, '') : String(v)
+      } else {
+        // Seed default setting if missing
+        const { error } = await supabase.from('app_settings').insert({ key: 'super_agent_name', value: 'Super Agent' })
+        if (error) console.error('Failed to seed app_settings:', error.message)
       }
     } catch (e) { /* ignore */ }
 
@@ -215,26 +221,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSuperAgentName = useCallback(async (name: string) => {
     setState(prev => ({ ...prev, superAgentName: name }))
     try {
-      // Try update first
-      const { data: updateData, error: updateError } = await supabase
-        .from('app_settings')
-        .update({ value: name })
-        .eq('key', 'super_agent_name')
-        .select()
-      
-      if (updateError) {
-        console.error('Supabase update error:', updateError.code, updateError.message)
-      }
-      
-      // If no rows updated, insert instead
-      if (!updateError && (!updateData || updateData.length === 0)) {
-        const { error: insertError } = await supabase
-          .from('app_settings')
-          .insert({ key: 'super_agent_name', value: name })
-        if (insertError) {
-          console.error('Supabase insert error:', insertError.code, insertError.message)
-        }
-      }
+      await saveSettingFn({ data: { key: 'super_agent_name', value: name } })
     } catch (e) { console.error('Failed to update super agent name:', e) }
   }, [])
 

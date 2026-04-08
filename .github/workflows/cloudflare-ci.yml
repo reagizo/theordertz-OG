@@ -52,9 +52,9 @@ jobs:
       - name: Deploy to Cloudflare
         env:
           CLOUDFLARE: 'true'
-          CF_ENV: ${{ github.event.inputs.cf_env || 'staging' }}
+          CF_ENV: ${{ github.event.inputs.cf_env || 'production' }}
           SKIP_BUILD: 'true'
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

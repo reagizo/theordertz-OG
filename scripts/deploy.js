@@ -29,7 +29,18 @@ if (!fs.existsSync(mainPath)) {
   process.exit(1);
 }
 
-console.log('Starting Cloudflare deployment...');
+// Determine Cloudflare environment up front for pre-deploy steps
 const cfEnv = process.env.CF_ENV || 'production';
+// If Cloudflare is enabled, perform a dedicated build step to catch compile errors early
+if (cfEnv === 'production' || cfEnv === 'staging') {
+  console.log('Running Wrangler build to validate Cloudflare bundle...');
+  const wranglerBuild = spawnSync('wrangler', ['build'], { stdio: 'inherit', shell: true });
+  if (wranglerBuild.status && wranglerBuild.status !== 0) {
+    console.error('Wrangler build failed. Aborting deployment.');
+    process.exit(wranglerBuild.status);
+  }
+}
+
+console.log('Starting Cloudflare deployment...');
 const result = spawnSync('wrangler', ['deploy', '--env', cfEnv], { stdio: 'inherit', shell: true });
 process.exit(result.status ?? 0);

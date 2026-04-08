@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
   // GitHub Pages serves project sites from a subpath, and doesn't support SPA
   // history routing without a 404 fallback. Using a relative base keeps asset
   // paths working regardless of repo name.
-  base: './',
+  base: '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

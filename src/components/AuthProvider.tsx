@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, hasSupabaseConfig } from '@/lib/supabase'
 import { resolveAccessByEmailFn } from '@/server/db.functions'
 import {
@@ -19,6 +19,7 @@ interface UserLike {
 interface AuthContextType {
   user: UserLike | null
   loading: boolean
+  roleLoading: boolean
   role: string
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -28,6 +29,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  roleLoading: false,
   role: 'guest',
   login: async () => {},
   logout: async () => {},
@@ -37,6 +39,9 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserLike | null>(null)
   const [loading, setLoading] = useState(true)
+  const [roleLoading, setRoleLoading] = useState(false)
+  const roleLoadingRef = useRef(roleLoading)
+  roleLoadingRef.current = roleLoading
 
   const hydrateRole = useCallback(async (nextUser: UserLike | null) => {
     if (!nextUser?.email || !hasSupabaseConfig) {
@@ -50,10 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    setRoleLoading(true)
     try {
       const access = await resolveAccessByEmailFn({ data: { email: nextUser.email } })
-      const role = access?.role && access.role !== 'guest' ? access.role : undefined
-      if (!role) {
+      const resolvedRole = access?.role && access.role !== 'guest' ? access.role : undefined
+      if (!resolvedRole) {
         setUser(nextUser)
         return
       }
@@ -61,11 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...nextUser,
         app_metadata: {
           ...(nextUser.app_metadata ?? {}),
-          roles: [role],
+          roles: [resolvedRole],
         },
       })
     } catch {
       setUser(nextUser)
+    } finally {
+      setRoleLoading(false)
     }
   }, [])
 
@@ -118,6 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     })
     if (error) throw error
+
+    // Wait for role resolution to complete before returning
+    await new Promise<void>((resolve) => {
+      const check = () => {
+        if (!roleLoadingRef.current) resolve()
+        else setTimeout(check, 50)
+      }
+      check()
+    })
   }, [])
 
   const logout = useCallback(async () => {
@@ -153,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const role = user?.app_metadata?.roles?.[0] ?? 'guest'
 
   return (
-    <AuthContext.Provider value={{ user, loading, role, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, loading, roleLoading, role, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   )

@@ -22,7 +22,6 @@ function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      await new Promise(resolve => setTimeout(resolve, 300))
       router.navigate({ to: '/' })
     } catch (err: unknown) {
       const e = err as { message?: string }

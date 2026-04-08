@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "theordertz-og",
+  "name": "theordertz",
   "main": "dist/server/server.js",
   "compatibility_date": "2024-09-23",
   "compatibility_flags": ["nodejs_compat_v2"],

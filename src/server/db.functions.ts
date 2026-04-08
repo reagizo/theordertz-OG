@@ -50,6 +50,8 @@ import {
   deleteAppUser,
   getSetting,
   saveSetting,
+  listUsers,
+  resolveAccessByEmail,
 } from '@/server/db.server'
 
 // ── Agent Functions ──────────────────────────────────────────────────────────
@@ -204,7 +206,13 @@ export const markAlertReadFn = createServerFn({ method: 'POST' })
 export const clearAllAlertsFn = createServerFn({ method: 'POST' })
   .handler(() => clearAllAlerts())
 
+export const resolveAccessByEmailFn = createServerFn({ method: 'GET' })
+  .inputValidator((data: { email: string }) => data)
+  .handler(({ data }) => resolveAccessByEmail(data.email))
+
 // ── App Users Functions ──────────────────────────────────────────────────────
+
+export const listUsersFn = createServerFn().handler(() => listUsers())
 
 export const listAppUsersFn = createServerFn().handler(() => listAppUsers())
 

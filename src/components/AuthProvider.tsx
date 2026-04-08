@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { resolveAccessByEmailFn } from '@/server/db.functions'
 
 interface UserLike {
   id: string
@@ -31,11 +32,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserLike | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const hydrateRole = useCallback(async (nextUser: UserLike | null) => {
+    if (!nextUser?.email) {
+      setUser(nextUser)
+      return
+    }
+
+    const existingRole = nextUser.app_metadata?.roles?.[0]
+    if (existingRole && existingRole !== 'guest') {
+      setUser(nextUser)
+      return
+    }
+
+    try {
+      const access = await resolveAccessByEmailFn({ data: { email: nextUser.email } })
+      const role = access?.role && access.role !== 'guest' ? access.role : undefined
+      if (!role) {
+        setUser(nextUser)
+        return
+      }
+      setUser({
+        ...nextUser,
+        app_metadata: {
+          ...(nextUser.app_metadata ?? {}),
+          roles: [role],
+        },
+      })
+    } catch {
+      setUser(nextUser)
+    }
+  }, [])
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser(session.user)
+        void hydrateRole(session.user)
+      } else {
+        setUser(null)
       }
       setLoading(false)
     })
@@ -44,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (session?.user) {
-          setUser(session.user)
+          void hydrateRole(session.user)
         } else {
           setUser(null)
         }
@@ -54,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [hydrateRole])
 
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({

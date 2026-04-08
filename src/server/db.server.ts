@@ -540,6 +540,57 @@ export async function clearAllAlerts(): Promise<void> {
   if (error) console.error('Failed to clear alerts:', error)
 }
 
+// ── public.users (Supabase table) ─────────────────────────────────────────────
+
+/** Rows from `public.users`. Shape depends on your Supabase schema. */
+export async function listUsers(): Promise<Record<string, unknown>[]> {
+  const { data, error } = await supabaseAdmin.from('users').select('*')
+  if (error) throw new Error(error.message)
+  return (data ?? []) as Record<string, unknown>[]
+}
+
+export type ResolvedAccess = {
+  role: 'admin' | 'agent' | 'customer' | 'test' | 'guest'
+  approved: boolean
+}
+
+export async function resolveAccessByEmail(email: string): Promise<ResolvedAccess> {
+  const normalized = email.trim().toLowerCase()
+
+  const { data: appUser } = await supabaseAdmin
+    .from('app_users')
+    .select('role')
+    .eq('email', normalized)
+    .maybeSingle()
+
+  const appRole = (appUser?.role ?? '').toLowerCase()
+  if (appRole === 'admin' || appRole === 'test') {
+    return { role: appRole, approved: true }
+  }
+
+  const { data: customer } = await supabaseAdmin
+    .from('customer_profiles')
+    .select('status')
+    .eq('email', normalized)
+    .maybeSingle()
+  if (customer) {
+    const approved = (customer.status ?? '').toLowerCase() === 'approved'
+    return { role: approved ? 'customer' : 'guest', approved }
+  }
+
+  const { data: agent } = await supabaseAdmin
+    .from('agent_profiles')
+    .select('status')
+    .eq('email', normalized)
+    .maybeSingle()
+  if (agent) {
+    const approved = (agent.status ?? '').toLowerCase() === 'approved'
+    return { role: approved ? 'agent' : 'guest', approved }
+  }
+
+  return { role: 'guest', approved: false }
+}
+
 // ── App Users ───────────────────────────────────────────────────────────────
 
 export async function listAppUsers(): Promise<any[]> {

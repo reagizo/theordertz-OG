@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSupabaseAdminOrThrow } from '@/lib/supabase'
 import type {
   AgentProfile,
   CustomerProfile,
@@ -7,6 +7,8 @@ import type {
   FloatExchange,
   CreditPortfolio,
 } from '@/lib/types'
+
+const supabaseAdmin = getSupabaseAdminOrThrow()
 
 // ── Agents ──────────────────────────────────────────────────────────────────
 

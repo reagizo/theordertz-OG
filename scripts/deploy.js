@@ -3,6 +3,8 @@
 // Deploy only when CLOUDFLARE env var is set to "true"
 
 const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const useCF = (process.env.CLOUDFLARE === 'true');
 
 if (!useCF) {
@@ -20,6 +22,14 @@ if (process.env.SKIP_BUILD !== 'true') {
   }
 }
 
+// Pre-deployment validation: ensure Cloudflare main entry exists for Wrangler
+const mainPath = path.resolve('dist/server/server.js');
+if (!fs.existsSync(mainPath)) {
+  console.error(`Error: Expected Cloudflare main entry not found at ${mainPath}. Ensure the build outputs dist/server/server.js`);
+  process.exit(1);
+}
+
 console.log('Starting Cloudflare deployment...');
-const result = spawnSync('wrangler', ['deploy'], { stdio: 'inherit', shell: true });
+const cfEnv = process.env.CF_ENV || 'production';
+const result = spawnSync('wrangler', ['deploy', '--env', cfEnv], { stdio: 'inherit', shell: true });
 process.exit(result.status ?? 0);

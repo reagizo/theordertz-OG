@@ -15,7 +15,7 @@ import {
   Database,
   Globe,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from './AuthProvider'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -27,27 +27,33 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const adminNav: NavItem[] = [
-  { label: t('navigation.dashboard'), to: '/admin', icon: LayoutDashboard },
-  { label: t('navigation.transactions'), to: '/admin/transactions', icon: ArrowLeftRight },
-  { label: t('navigation.agents'), to: '/admin/agents', icon: UserCheck },
-  { label: t('navigation.customers'), to: '/admin/customers', icon: Users },
-  { label: 'Users (DB)', to: '/admin/users', icon: Database },
-  { label: t('navigation.floatRequests'), to: '/admin/float-requests', icon: TrendingUp },
-  { label: t('navigation.settings'), to: '/admin/settings', icon: Settings },
-]
+function getNavItems(role: SidebarProps['role'], t: (key: string) => string): NavItem[] {
+  if (role === 'admin' || role === 'test') {
+    return [
+      { label: t('navigation.dashboard'), to: '/admin', icon: LayoutDashboard },
+      { label: t('navigation.transactions'), to: '/admin/transactions', icon: ArrowLeftRight },
+      { label: t('navigation.agents'), to: '/admin/agents', icon: UserCheck },
+      { label: t('navigation.customers'), to: '/admin/customers', icon: Users },
+      { label: t('navigation.users'), to: '/admin/users', icon: Database },
+      { label: t('navigation.floatRequests'), to: '/admin/float-requests', icon: TrendingUp },
+      { label: t('navigation.settings'), to: '/admin/settings', icon: Settings },
+    ]
+  }
 
-const agentNav: NavItem[] = [
-  { label: t('navigation.dashboard'), to: '/agent', icon: LayoutDashboard },
-  { label: t('navigation.transactions'), to: '/agent/transactions', icon: ArrowLeftRight },
-  { label: t('navigation.floatExchange'), to: '/agent/float', icon: TrendingUp },
-]
+  if (role === 'agent') {
+    return [
+      { label: t('navigation.dashboard'), to: '/agent', icon: LayoutDashboard },
+      { label: t('navigation.transactions'), to: '/agent/transactions', icon: ArrowLeftRight },
+      { label: t('navigation.floatExchange'), to: '/agent/float', icon: TrendingUp },
+    ]
+  }
 
-const customerNav: NavItem[] = [
-  { label: t('navigation.wallet'), to: '/customer', icon: Wallet },
-  { label: t('navigation.requestService'), to: '/customer/services', icon: CreditCard },
-  { label: t('navigation.history'), to: '/customer/history', icon: History },
-]
+  return [
+    { label: t('navigation.wallet'), to: '/customer', icon: Wallet },
+    { label: t('navigation.requestService'), to: '/customer/services', icon: CreditCard },
+    { label: t('navigation.history'), to: '/customer/history', icon: History },
+  ]
+}
 
 interface SidebarProps {
   role: 'admin' | 'agent' | 'customer' | 'test'
@@ -82,6 +88,7 @@ export function Sidebar({ role }: SidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
   const [userPicture, setUserPicture] = useState<string | undefined>(undefined)
+  const nav = useMemo(() => getNavItems(role, t), [role, t])
 
   useEffect(() => {
     if (!user?.email) return
@@ -130,7 +137,6 @@ export function Sidebar({ role }: SidebarProps) {
     })
   }, [user?.email])
 
-  const nav = (role === 'admin' || role === 'test') ? adminNav : role === 'agent' ? agentNav : customerNav
   const roleLabel = role === 'admin' ? t('navigation.agents') : role === 'agent' ? t('navigation.agents') : role === 'test' ? 'Test' : t('navigation.customers')
 
   const handleLogout = async () => {

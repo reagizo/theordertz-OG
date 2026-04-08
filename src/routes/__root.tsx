@@ -22,6 +22,15 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 })
 
+// GitHub Pages SPA restore: /?/<path> -> <path>
+if (typeof window !== 'undefined') {
+  const search = window.location.search
+  if (search.startsWith('?/')) {
+    const next = search.slice(2)
+    window.history.replaceState(null, '', '/' + next.replace(/^\/+/, ''))
+  }
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en">

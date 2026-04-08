@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Order</title>
+    <script>
+      // GitHub Pages SPA fallback.
+      // When the user refreshes a deep link like /customer, Pages serves 404.html.
+      // This script rewrites the URL to /?/<path> so the SPA can restore it.
+      (function () {
+        var l = window.location
+        var path = l.pathname + l.search + l.hash
+        // Preserve the repository base path if present (e.g. /theordertz-OG/)
+        var parts = l.pathname.split('/').filter(Boolean)
+        var repoBase = parts.length > 0 ? '/' + parts[0] + '/' : '/'
+        // If we're already at the base, do nothing.
+        if (l.pathname === repoBase || l.pathname === repoBase + 'index.html') return
+        // Redirect to index with the original route encoded after ?/
+        l.replace(repoBase + '?/' + path.replace(repoBase, ''))
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>
+

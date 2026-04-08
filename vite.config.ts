@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
@@ -7,15 +7,34 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const supabaseUrl =
+    env.VITE_SUPABASE_URL || env.SUPABASE_URL || ''
+  const supabaseAnonKey =
+    env.VITE_SUPABASE_ANON_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    env.SUPABASE_KEY ||
+    ''
+  return {
+  // GitHub Pages serves project sites from a subpath, and doesn't support SPA
+  // history routing without a 404 fallback. Using a relative base keeps asset
+  // paths working regardless of repo name.
+  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   define: {
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL || 'https://iuxlaripmlfpyuqvjogm.supabase.co'),
-    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTE1NzQsImV4cCI6MjA5MDgyNzU3NH0.gWTpSQb6zLYO_Ox3YQEA3qCkuRKaJpMtXjxYF6mpy04'),
+    'process.env.SUPABASE_URL': JSON.stringify(supabaseUrl),
+    'process.env.SUPABASE_KEY': JSON.stringify(supabaseAnonKey),
+    'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(
+      env.SUPABASE_SERVICE_ROLE_KEY || '',
+    ),
+    'process.env.SUPABASE_SERVICE_KEY': JSON.stringify(
+      env.SUPABASE_SERVICE_KEY || '',
+    ),
   },
   plugins: [
     tanstackStart(),
@@ -37,8 +56,8 @@ export default defineConfig({
         background_color: '#f9fafb',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: '.',
+        start_url: '.',
         icons: [
           {
             src: '/pwa-192x192.png',
@@ -79,4 +98,5 @@ export default defineConfig({
       }
     })
   ],
+}
 })

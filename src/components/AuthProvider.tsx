@@ -89,14 +89,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        void hydrateRole(session.user)
-      } else {
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          await hydrateRole(session.user)
+        } else {
+          setUser(null)
+        }
+      } catch (err) {
+        console.error('Failed to initialize auth session:', err)
         setUser(null)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    void initSession()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

@@ -8,6 +8,7 @@
     "start": "node dist/server/server.js",
     "preview": "node ./scripts/preview.js",
     "deploy": "node ./scripts/deploy.js",
+    "pr:create": "node ./scripts/create_pr.js",
     "push": "git add . && git commit -m \"auto-deploy\" && git push",
     "watch": "onchange \"src/**/*\" -- npm run push",
     "build:capacitor": "vite build --config vite.capacitor.config.ts",

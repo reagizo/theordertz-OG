@@ -121,21 +121,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) throw error
+    setLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
 
-    // Wait for role resolution to complete before returning
-    await new Promise<void>((resolve) => {
-      const check = () => {
-        if (!roleLoadingRef.current) resolve()
-        else setTimeout(check, 50)
+      if (data?.session?.user) {
+        await hydrateRole(data.session.user)
       }
-      check()
-    })
-  }, [])
+
+      // Wait for role resolution to complete before returning
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          if (!roleLoadingRef.current) resolve()
+          else setTimeout(check, 50)
+        }
+        check()
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [hydrateRole])
 
   const logout = useCallback(async () => {
     if (!hasSupabaseConfig) {

@@ -1,0 +1,44 @@
+name: Build and Deploy to Cloudflare
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - name: Save dist as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+  deploy_cf:
+    needs: build
+    if: ${{ secrets.CF_API_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Restore dist artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+      - run: npm ci
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE: 'true'
+          SKIP_BUILD: 'true'
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: npm run deploy

@@ -128,3 +128,11 @@ This starter uses "Application Name" as a placeholder throughout the UI and meta
 - `src/routes/__root.tsx` — the `title` field in the `head()` configuration
 
 Search for all occurrences of "Application Name" in the `src/` directory and replace with the user's application name.
+
+## CI/CD for Cloudflare Deployment
+
+- The repository now supports optional Cloudflare deployment via GitHub Actions.
+- To enable CF deployment in CI, set the following secret in your repository: `CF_API_TOKEN` with a Cloudflare API token that has permissions to manage workers.
+- The build workflow will always build artifacts first. If `CF_API_TOKEN` is present, a separate Cloudflare deployment step will run using the provided token.
+- Local development should not require Cloudflare credentials unless you explicitly simulate Cloudflare deployment with `CLOUDFLARE=true` in your environment.
+- To simulate CF deployment locally, set `CLOUDFLARE=true` and run `npm run deploy`; this will build (unless SKIP_BUILD is set) and deploy via Wrangler.

@@ -15,6 +15,10 @@ export default defineConfig(({ mode }) => {
     env.SUPABASE_ANON_KEY ||
     env.SUPABASE_KEY ||
     ''
+  // Conditionally enable Cloudflare integration only when explicitly requested.
+  // Some build environments (like CI) may not have a valid Wrangler config yet,
+  // which would cause the build to fail. Gate the plugin behind CLOUDFLARE env flag.
+  const useCloudflare = (env.CLOUDFLARE ?? 'false') === 'true'
   return {
   // GitHub Pages serves project sites from a subpath, and doesn't support SPA
   // history routing without a 404 fallback. Using a relative base keeps asset
@@ -36,7 +40,7 @@ export default defineConfig(({ mode }) => {
     ),
   },
   plugins: [
-    cloudflare(),
+    ...(useCloudflare ? [cloudflare()] : []),
     tanstackStart(),
     react(),
     tailwindcss(),

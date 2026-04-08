@@ -200,3 +200,24 @@ export const clearAllTestDataFn = async () => {
   localStorage.removeItem('creditPortfolios')
   return { success: true }
 }
+
+// ── Authorization Functions ─────────────────────────────────────────────────
+
+export const resolveAccessByEmailFn = async (data: { email: string }) => {
+  // In Capacitor app, we don't have server-side access resolution.
+  // Return null to let Supabase auth handle it, or provide basic role mapping.
+  const adminEmails = ['rkaijage@gmail.com', 'admin@example.com']
+  if (adminEmails.includes(data.email)) {
+    return { role: 'admin' }
+  }
+  // Return null for other emails; they'll get default 'guest' or app_metadata role
+  return null
+}
+
+// ── User Management Functions ────────────────────────────────────────────────
+
+export const listUsersFn = async () => {
+  // Return empty array in Capacitor app
+  // Full user listing should use Supabase admin API on server
+  return []
+}

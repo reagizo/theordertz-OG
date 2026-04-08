@@ -12,6 +12,7 @@
     "enabled": true
   },
   "env": {
-    "staging": {}
+    "staging": {},
+    "production": {}
   }
 }

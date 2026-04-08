@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, hasSupabaseConfig } from '@/lib/supabase'
 import { resolveAccessByEmailFn } from '@/server/db.functions'
+import {
+  getCurrentUser as getLocalCurrentUser,
+  login as localLogin,
+  logout as localLogout,
+  signup as localSignup,
+} from '@/lib/auth'
 
 interface UserLike {
   id: string
@@ -33,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const hydrateRole = useCallback(async (nextUser: UserLike | null) => {
-    if (!nextUser?.email) {
+    if (!nextUser?.email || !hasSupabaseConfig) {
       setUser(nextUser)
       return
     }
@@ -68,6 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    if (!hasSupabaseConfig) {
+      setUser(getLocalCurrentUser())
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -95,6 +107,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [hydrateRole])
 
   const login = useCallback(async (email: string, password: string) => {
+    if (!hasSupabaseConfig) {
+      const user = await localLogin(email, password)
+      setUser(user)
+      return
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -103,11 +121,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    if (!hasSupabaseConfig) {
+      localLogout()
+      setUser(null)
+      return
+    }
+
     await supabase.auth.signOut()
     setUser(null)
   }, [])
 
   const signup = useCallback(async (email: string, password: string, meta: Record<string, unknown>) => {
+    if (!hasSupabaseConfig) {
+      return await localSignup(email, password, meta)
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

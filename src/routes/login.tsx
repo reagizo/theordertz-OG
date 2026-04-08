@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { hasSupabaseConfig } from '@/lib/supabase'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
 
 export const Route = createFileRoute('/login')({
@@ -65,6 +66,18 @@ function LoginPage() {
               Welcome back
             </h2>
             <p className="text-gray-500 text-sm mb-6">Sign in to your account to continue</p>
+
+            {!hasSupabaseConfig && (
+              <div className="mb-4 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+                Local auth mode is active. Use a built-in account:
+                <div className="mt-2 font-semibold text-orange-800">
+                  admin@example.com / admin
+                  <br />
+                  rkaijage@gmail.com / @Eva0191!
+                </div>
+                Or register a new account below.
+              </div>
+            )}
 
             {error && (
               <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">

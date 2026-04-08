@@ -1,0 +1,107 @@
+{
+  "app": {
+    "name": "The Order-Reagizo Service Company",
+    "tagline": "Interactive Service Platform"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "agents": "Agents",
+    "customers": "Customers",
+    "users": "Users (DB)",
+    "floatRequests": "Float Requests",
+    "settings": "Settings",
+    "wallet": "My Wallet",
+    "requestService": "Request Service",
+    "history": "History",
+    "floatExchange": "Float Exchange",
+    "superAgent": "Super Agent"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "phoneNumber": "Phone Number",
+    "role": "Role",
+    "admin": "Admin",
+    "agent": "Agent",
+    "customer": "Customer",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "loading": "Loading...",
+    "noData": "No data available",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "logout": "Sign Out",
+    "language": "Language",
+    "english": "English",
+    "swahili": "Swahili"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "welcome": "Welcome back, {name}!",
+      "stats": {
+        "totalTransactions": "Total Transactions",
+        "activeAgents": "Active Agents",
+        "totalCustomers": "Total Customers",
+        "walletBalance": "Wallet Balance"
+      }
+    },
+    "services": {
+      "title": "Request Service",
+      "description": "Choose a service to request",
+      "serviceTypes": {
+        "delivery": "Delivery Service",
+        "transport": "Transport Service",
+        "cleaning": "Cleaning Service",
+        "maintenance": "Maintenance Service"
+      }
+    },
+    "history": {
+      "title": "Service History",
+      "empty": "No service history found",
+      "date": "Date",
+      "service": "Service",
+      "status": "Status",
+      "amount": "Amount"
+    },
+    "settings": {
+      "title": "Settings",
+      "profile": "Profile Settings",
+      "notifications": "Notification Settings",
+      "security": "Security Settings",
+      "superAgentName": "Super Agent Name",
+      "changePassword": "Change Password"
+    }
+  },
+  "forms": {
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email",
+      "minLength": "Must be at least {count} characters",
+      "passwordMatch": "Passwords do not match"
+    }
+  },
+  "notifications": {
+    "success": "Operation completed successfully",
+    "error": "An error occurred",
+    "warning": "Please check your input",
+    "info": "Information updated"
+  }
+}

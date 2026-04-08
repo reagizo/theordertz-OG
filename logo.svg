@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 420" width="400" height="420">
+  <polygon points="200,20 360,90 340,120 200,60 60,120 40,90" fill="#0D1B2A"/>
+  <polygon points="200,100 330,160 310,190 200,135 90,190 70,160" fill="#C41E3A"/>
+  <polygon points="200,170 280,210 260,235 200,205 140,235 120,210" fill="#E8822A"/>
+  <text x="200" y="320" text-anchor="middle" font-family="Great Vibes, cursive" font-size="72" fill="#0D1B2A">The Order</text>
+  <text x="200" y="370" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-size="20" fill="#C41E3A" letter-spacing="3">REAGIZO SERVICE COMPANY</text>
+</svg>

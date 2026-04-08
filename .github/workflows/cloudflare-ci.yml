@@ -36,7 +36,7 @@ jobs:
 
   deploy_cf:
     needs: build
-    if: ${{ secrets.CF_API_TOKEN != '' }}
+    if: ${{ github.event.inputs.cf_env || true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

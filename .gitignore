@@ -38,3 +38,6 @@ temp/
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# Wrangler
+.wrangler/

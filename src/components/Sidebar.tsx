@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Menu,
   X,
+  Database,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from './AuthProvider'
@@ -29,6 +30,7 @@ const adminNav: NavItem[] = [
   { label: 'Transactions', to: '/admin/transactions', icon: ArrowLeftRight },
   { label: 'Agents', to: '/admin/agents', icon: UserCheck },
   { label: 'Customers', to: '/admin/customers', icon: Users },
+  { label: 'Users (DB)', to: '/admin/users', icon: Database },
   { label: 'Float Requests', to: '/admin/float-requests', icon: TrendingUp },
   { label: 'Settings', to: '/admin/settings', icon: Settings },
 ]

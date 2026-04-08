@@ -24,6 +24,7 @@ import { Route as CustomerHistoryRouteImport } from './routes/customer/history'
 import { Route as CustomerConfirmationRouteImport } from './routes/customer/confirmation'
 import { Route as AgentTransactionsRouteImport } from './routes/agent/transactions'
 import { Route as AgentFloatRouteImport } from './routes/agent/float'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin/transactions'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminFloatRequestsRouteImport } from './routes/admin/float-requests'
@@ -105,6 +106,11 @@ const AgentFloatRoute = AgentFloatRouteImport.update({
   path: '/float',
   getParentRoute: () => AgentRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/float-requests'
     | '/admin/settings'
     | '/admin/transactions'
+    | '/admin/users'
     | '/agent/float'
     | '/agent/transactions'
     | '/customer/confirmation'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/admin/float-requests'
     | '/admin/settings'
     | '/admin/transactions'
+    | '/admin/users'
     | '/agent/float'
     | '/agent/transactions'
     | '/customer/confirmation'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/float-requests'
     | '/admin/settings'
     | '/admin/transactions'
+    | '/admin/users'
     | '/agent/float'
     | '/agent/transactions'
     | '/customer/confirmation'
@@ -378,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentFloatRouteImport
       parentRoute: typeof AgentRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/transactions': {
       id: '/admin/transactions'
       path: '/transactions'
@@ -422,6 +441,7 @@ interface AdminRouteChildren {
   AdminFloatRequestsRoute: typeof AdminFloatRequestsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -431,6 +451,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFloatRequestsRoute: AdminFloatRequestsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

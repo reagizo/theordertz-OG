@@ -8,7 +8,9 @@ import type {
   CreditPortfolio,
 } from '@/lib/types'
 
-const supabaseAdmin = getSupabaseAdminOrThrow()
+const supabaseAdmin = {
+  from: (...args: any[]) => getSupabaseAdminOrThrow().from(...args),
+}
 
 // ── Agents ──────────────────────────────────────────────────────────────────
 

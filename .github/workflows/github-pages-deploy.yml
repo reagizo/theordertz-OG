@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -26,9 +26,10 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v1
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: deploy
+          publish_dir: ./dist/client
+          publish_branch: gh-pages
+          allow_empty_commit: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}

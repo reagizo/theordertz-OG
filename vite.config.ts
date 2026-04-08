@@ -5,8 +5,6 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 
-import { cloudflare } from "@cloudflare/vite-plugin";
-
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const supabaseUrl =
@@ -40,11 +38,6 @@ export default defineConfig(({ mode }) => {
     tanstackStart(),
     react(),
     tailwindcss(),
-    cloudflare({
-      viteEnvironment: {
-        name: "ssr"
-      }
-    }),
     ...(mode === 'production'
       ? [
           VitePWA({

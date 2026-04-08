@@ -1,0 +1,107 @@
+{
+  "app": {
+    "name": "Kampuni ya Huduma za Agizo",
+    "tagline": "Msambazaji wa Huduma wa Kiuchumi"
+  },
+  "navigation": {
+    "dashboard": "Dasibodi",
+    "transactions": "Mkataba",
+    "agents": "Wafanyakazi",
+    "customers": "Wateja",
+    "users": "Watumishi (DB)",
+    "floatRequests": "Maombi ya Float",
+    "settings": "Mipangilio",
+    "wallet": "Wifedhi Wangu",
+    "requestService": "omba Huduma",
+    "history": "Historia",
+    "floatExchange": "Badiliko la Float",
+    "superAgent": "Mfanyakazi Mkuu"
+  },
+  "auth": {
+    "login": "Ingia",
+    "register": "Jisajili",
+    "email": "Barua pepe",
+    "password": "Nenosiri",
+    "fullName": "Jina Kamili",
+    "phoneNumber": "Namba ya Simu",
+    "role": "Kifizu",
+    "admin": "Mkurugenzi",
+    "agent": "Mfanyakazi",
+    "customer": "Mteja",
+    "rememberMe": "Kumbukeni",
+    "forgotPassword": "Umekumbuka Nenosiri?",
+    "signIn": "Njoo",
+    "createAccount": "Jaza Akaunti",
+    "alreadyHaveAccount": "Unaakaunti tayari?",
+    "dontHaveAccount": "Hakuna akaunti?"
+  },
+  "common": {
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "delete": "Futa",
+    "edit": "Hariri",
+    "view": "Angalia",
+    "search": "Tafuta",
+    "loading": "Inaload...",
+    "noData": "Hakuna data",
+    "error": "Kosa",
+    "success": "Umekamilika",
+    "confirm": "Thibitisha",
+    "logout": "Tokee",
+    "language": "Lugha",
+    "english": "Kiingereza",
+    "swahili": "Kiswahili"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dasibodi",
+      "welcome": "Karibu tena, {name}!",
+      "stats": {
+        "totalTransactions": "Jumla ya Mikataba",
+        "activeAgents": "Wafanyakazi Wanaozaa",
+        "totalCustomers": "Jumla ya Wateja",
+        "walletBalance": "Kiasi cha Wifedhi"
+      }
+    },
+    "services": {
+      "title": "Omba Huduma",
+      "description": "Chagua huduma ungependa kuomba",
+      "serviceTypes": {
+        "delivery": "Huduma ya Kuokoa",
+        "transport": "Huduma ya Usafirishaji",
+        "cleaning": "Huduma ya Safi",
+        "maintenance": "Huduma ya Ujenzi"
+      }
+    },
+    "history": {
+      "title": "Historia ya Huduma",
+      "empty": "Hakuna historia ya huduma",
+      "date": "Tarehe",
+      "service": "Huduma",
+      "status": "Hali",
+      "amount": "Kiasi"
+    },
+    "settings": {
+      "title": "Mipangilio",
+      "profile": "Mipangilio ya Dunia",
+      "notifications": "Mipangilio ya Mishahara",
+      "security": "Mipangilio ya Usalama",
+      "superAgentName": "Jina la Mfanyakazi Mkuu",
+      "changePassword": "Badilisha Nenosiri"
+    }
+  },
+  "forms": {
+    "validation": {
+      "required": "Kichwa hiki kinahitajika",
+      "email": "Tafuta barua pepe sahihi",
+      "minLength": "Lazima iwe {count} herufi kwa chini",
+      "passwordMatch": "Nenosiri hazifanani"
+    }
+  },
+  "notifications": {
+    "success": "Amelipwa kikamilifu",
+    "error": "Kupatikana na kosa",
+    "warning": "Tafsirie maelezo yako",
+    "info": "Maelezo yamebadilika"
+  }
+}

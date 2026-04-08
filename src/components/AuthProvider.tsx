@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { login as mockLogin, signup as mockSignup, getCurrentUser, setCurrentUser, logout as mockLogout } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 
 interface UserLike {
   id: string
@@ -30,31 +30,58 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserLike | null>(null)
   const [loading, setLoading] = useState(true)
-  // Local, Netlify-free initialization
+
   useEffect(() => {
-    const u = getCurrentUser()
-    if (u) {
-      setUser(u as UserLike)
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user)
+      }
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          setUser(session.user)
+        } else {
+          setUser(null)
+        }
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
     }
-    setLoading(false)
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
-    const u = await mockLogin(email, password)
-    setUser(u as unknown as UserLike)
-    setCurrentUser(u)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
   }, [])
 
   const logout = useCallback(async () => {
-    mockLogout()
+    await supabase.auth.signOut()
     setUser(null)
   }, [])
 
   const signup = useCallback(async (email: string, password: string, meta: Record<string, unknown>) => {
-    const u = await mockSignup(email, password, meta)
-    setUser(u as unknown as UserLike)
-    setCurrentUser(u)
-    return u as unknown as UserLike
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: meta?.name || '',
+          ...meta
+        }
+      }
+    })
+    if (error) throw error
+    return data.user
   }, [])
 
   const role = user?.app_metadata?.roles?.[0] ?? 'guest'

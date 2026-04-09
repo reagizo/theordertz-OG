@@ -86,8 +86,8 @@ function CustomerWallet() {
         {/* Profile Picture */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-semibold text-gray-900">{displayName}</p>
-            <p className="text-xs text-gray-500">{profile?.email ?? user?.email}</p>
+            <p className="text-base font-bold text-gray-900">{displayName}</p>
+            <p className="text-sm text-gray-500">{profile?.email ?? user?.email}</p>
           </div>
           {profilePicture ? (
             <div className="relative group">

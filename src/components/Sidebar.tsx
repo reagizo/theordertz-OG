@@ -88,6 +88,7 @@ export function Sidebar({ role }: SidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
   const [userPicture, setUserPicture] = useState<string | undefined>(undefined)
+  const [customerProfile, setCustomerProfile] = useState<{ fullName?: string; tier?: string } | null>(null)
   const nav = useMemo(() => getNavItems(role, t), [role, t])
 
   useEffect(() => {
@@ -137,6 +138,19 @@ export function Sidebar({ role }: SidebarProps) {
     })
   }, [user?.email])
 
+  useEffect(() => {
+    if (role !== 'customer' || !user?.id) return
+    supabase.from('customers').select('full_name, tier').eq('id', user.id).maybeSingle().then(({ data, error }) => {
+      if (error) {
+        console.error('Sidebar: error fetching customer profile:', error)
+        return
+      }
+      if (data) {
+        setCustomerProfile({ fullName: data.full_name, tier: data.tier })
+      }
+    })
+  }, [role, user?.id])
+
   const roleLabel = role === 'admin' ? t('navigation.agents') : role === 'agent' ? t('navigation.agents') : role === 'test' ? 'Test' : t('navigation.customers')
 
   const handleLogout = async () => {
@@ -144,7 +158,13 @@ export function Sidebar({ role }: SidebarProps) {
     router.navigate({ to: '/login' })
   }
 
-  const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'User'
+  const displayName = role === 'customer' && customerProfile?.fullName
+    ? customerProfile.fullName
+    : user?.user_metadata?.full_name ?? user?.email ?? 'User'
+
+  const tierDisplay = customerProfile?.tier
+    ? customerProfile.tier === 'premier' ? 'Premier Customer' : 'D2D Customer'
+    : ''
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -164,10 +184,23 @@ export function Sidebar({ role }: SidebarProps) {
         <div className="flex items-center gap-3">
           <AvatarWithPicture picture={userPicture} name={displayName} />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white truncate">
-              {displayName}
-            </p>
-            <p className="text-xs text-pink-300">{roleLabel}</p>
+            {role === 'customer' ? (
+              <>
+                <p className="text-sm font-semibold text-white truncate">
+                  {displayName}
+                </p>
+                <p className="text-xs text-pink-300 font-medium">
+                  {tierDisplay}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-white truncate">
+                  {displayName}
+                </p>
+                <p className="text-xs text-pink-300">{roleLabel}</p>
+              </>
+            )}
           </div>
         </div>
       </div>

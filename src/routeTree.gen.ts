@@ -22,6 +22,7 @@ import { Route as RegisterAgentRouteImport } from './routes/register/agent'
 import { Route as CustomerServicesRouteImport } from './routes/customer/services'
 import { Route as CustomerHistoryRouteImport } from './routes/customer/history'
 import { Route as CustomerConfirmationRouteImport } from './routes/customer/confirmation'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as AgentTransactionsRouteImport } from './routes/agent/transactions'
 import { Route as AgentFloatRouteImport } from './routes/agent/float'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
@@ -96,6 +97,11 @@ const CustomerConfirmationRoute = CustomerConfirmationRouteImport.update({
   path: '/confirmation',
   getParentRoute: () => CustomerRoute,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentTransactionsRoute = AgentTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
+  '/api/health': typeof ApiHealthRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
   '/customer/history': typeof CustomerHistoryRoute
   '/customer/services': typeof CustomerServicesRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
+  '/api/health': typeof ApiHealthRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
   '/customer/history': typeof CustomerHistoryRoute
   '/customer/services': typeof CustomerServicesRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
+  '/api/health': typeof ApiHealthRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
   '/customer/history': typeof CustomerHistoryRoute
   '/customer/services': typeof CustomerServicesRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/agent/float'
     | '/agent/transactions'
+    | '/api/health'
     | '/customer/confirmation'
     | '/customer/history'
     | '/customer/services'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/agent/float'
     | '/agent/transactions'
+    | '/api/health'
     | '/customer/confirmation'
     | '/customer/history'
     | '/customer/services'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/agent/float'
     | '/agent/transactions'
+    | '/api/health'
     | '/customer/confirmation'
     | '/customer/history'
     | '/customer/services'
@@ -279,6 +291,7 @@ export interface RootRouteChildren {
   AgentRoute: typeof AgentRouteWithChildren
   CustomerRoute: typeof CustomerRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   RegisterAgentRoute: typeof RegisterAgentRoute
   RegisterCustomerRoute: typeof RegisterCustomerRoute
 }
@@ -375,6 +388,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/customer/confirmation'
       preLoaderRoute: typeof CustomerConfirmationRouteImport
       parentRoute: typeof CustomerRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/agent/transactions': {
       id: '/agent/transactions'
@@ -495,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentRoute: AgentRouteWithChildren,
   CustomerRoute: CustomerRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiHealthRoute: ApiHealthRoute,
   RegisterAgentRoute: RegisterAgentRoute,
   RegisterCustomerRoute: RegisterCustomerRoute,
 }

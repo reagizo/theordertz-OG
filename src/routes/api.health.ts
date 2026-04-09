@@ -1,13 +1,15 @@
-// Health check endpoint for the API gateway
-// Accessible at /api/health
+import { createFileRoute } from '@tanstack/react-router';
 
-export async function GET() {
-  const payload = {
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  };
-  return new Response(JSON.stringify(payload), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+export const Route = createFileRoute('/api/health')({
+  server: {
+    handlers: {
+      GET: async () => {
+        const payload = {
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+        };
+        return Response.json(payload);
+      },
+    },
+  },
+});

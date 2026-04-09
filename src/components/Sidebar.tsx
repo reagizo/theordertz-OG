@@ -140,13 +140,12 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (role !== 'customer' || !user?.id) return
-    supabase.from('customers').select('full_name, tier').eq('id', user.id).maybeSingle().then(({ data, error }) => {
-      if (error) {
-        console.error('Sidebar: error fetching customer profile:', error)
-        return
-      }
-      if (data) {
-        setCustomerProfile({ fullName: data.full_name, tier: data.tier })
+    Promise.all([
+      supabase.from('users').select('full_name').eq('id', user.id).maybeSingle(),
+      supabase.from('customers').select('tier').eq('id', user.id).maybeSingle(),
+    ]).then(([userData, customerData]) => {
+      if (userData?.full_name || customerData?.tier) {
+        setCustomerProfile({ fullName: userData?.full_name, tier: customerData?.tier })
       }
     })
   }, [role, user?.id])

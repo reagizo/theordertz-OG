@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Fallback to empty string to prevent crash if env vars are missing
-const supabaseUrl = process.env.SUPABASE_URL || ''
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+// Vite env vars must be prefixed with VITE_ to be exposed to the browser
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || ''
 
 // Safe storage for server-side (prevents localStorage crash)
 const serverStorage = {

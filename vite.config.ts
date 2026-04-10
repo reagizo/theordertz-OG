@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => {
   // Some build environments (like CI) may not have a valid Wrangler config yet,
   // which would cause the build to fail. Gate the plugin behind CLOUDFLARE env flag.
   const useCloudflare = (env.CLOUDFLARE ?? 'false') === 'true'
+  
+  // Only include cloudflare plugin if explicitly requested - it will validate 
+  // wrangler config during build which requires dist to exist
+  const cloudflarePlugin = useCloudflare ? [cloudflare()] : []
+  
   return {
   // GitHub Pages serves project sites from a subpath, and doesn't support SPA
   // history routing without a 404 fallback. Using a relative base keeps asset
@@ -45,7 +50,7 @@ export default defineConfig(({ mode }) => {
     ),
   },
   plugins: [
-    ...(useCloudflare ? [cloudflare()] : []),
+    ...cloudflarePlugin,
     tanstackStart(),
     react(),
     tailwindcss(),

@@ -13,9 +13,11 @@ if (!useCF) {
   process.exit(0);
 }
 
+// Build without cloudflare plugin - normal vite build creates dist/server/server.js
 if (process.env.SKIP_BUILD !== 'true') {
-  console.log('Building project before deployment...');
-  const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true });
+  console.log('Building project for Cloudflare deployment...');
+  const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, 
+    env: { ...process.env, CLOUDFLARE: 'false' } });  // Build without CF plugin
   if (buildRes.status && buildRes.status !== 0) {
     console.error('Build failed. Aborting deployment.');
     process.exit(buildRes.status);
@@ -24,7 +26,7 @@ if (process.env.SKIP_BUILD !== 'true') {
 
 const mainPath = path.resolve('dist/server/server.js');
 if (!fs.existsSync(mainPath)) {
-  console.error(`Error: Expected Cloudflare main entry not found at ${mainPath}. Ensure the build outputs dist/server/server.js`);
+  console.error(`Error: Expected server entry not found at ${mainPath}.`);
   process.exit(1);
 }
 

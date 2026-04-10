@@ -804,9 +804,23 @@ export async function saveSuperAgentProfile(profile: SuperAgentProfile): Promise
       is_test_account: profile.isTestAccount,
       admin_requested_by: profile.adminRequestedBy,
       profile_picture: profile.profilePicture || null,
-      user_id: profile.userId || null,
     })
-  if (error) throw error
+  if (error) {
+    console.error('saveSuperAgentProfile error:', error)
+    throw error
+  }
+  
+  // Try to update user_id separately (won't fail if column doesn't exist)
+  if (profile.userId) {
+    try {
+      await supabaseAdmin
+        .from('super_agents')
+        .update({ user_id: profile.userId })
+        .eq('id', profile.id)
+    } catch (e) {
+      console.log('user_id column may not exist yet')
+    }
+  }
 }
 
 export async function deleteSuperAgent(id: string): Promise<void> {

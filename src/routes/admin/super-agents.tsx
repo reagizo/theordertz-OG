@@ -114,6 +114,14 @@ function AdminSuperAgents() {
       let userId = editingAgent?.userId
       let userMessage = ''
 
+      // Check if super agent with this email already exists
+      const existingAgent = superAgents.find(a => a.email === form.email)
+      if (existingAgent && !editingAgent) {
+        setMessage('A Super Agent with this email already exists.')
+        setLoading(null)
+        return
+      }
+
       if (form.createUserAccount && !editingAgent) {
         // Check if email already exists
         const existingUser = await getAppUserByEmailFn({ data: { email: form.email } })
@@ -177,9 +185,10 @@ function AdminSuperAgents() {
 
       handleCloseForm()
       setTimeout(() => setMessage(''), 3000)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving super agent:', err)
-      setMessage('Failed to save. Email may already exist.')
+      const errorMsg = err?.message || err?.details || JSON.stringify(err)
+      setMessage('Failed to save: ' + errorMsg)
     } finally {
       setLoading(null)
     }

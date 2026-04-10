@@ -1,12 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo } from 'react'
-import { listAllVendorsFn, saveVendorProfileFn, deleteVendorFn } from '@/server/db.functions'
+import { listAllVendorsFn, saveVendorProfileFn, deleteVendorFn, syncVendorsToSupabaseFn } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor } from '@/lib/utils'
 import { useSettings } from '@/contexts/SettingsContext'
-import { Users, Search, CheckCircle, XCircle, Clock, Trash2, Building2, Mail, Phone, MapPin, Hash } from 'lucide-react'
+import { Users, Search, CheckCircle, XCircle, Clock, Trash2, Building2, RefreshCw } from 'lucide-react'
 
 export const Route = createFileRoute('/admin/vendors')({
   loader: async () => {
+    await syncVendorsToSupabaseFn()
     const { real, test } = await listAllVendorsFn()
     return { vendors: real, testVendors: test }
   },

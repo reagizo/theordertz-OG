@@ -1,4 +1,5 @@
 import { getStore } from '@/server/localStore'
+import { supabaseAdmin } from '@/lib/supabase'
 import type {
   AgentProfile,
   CustomerProfile,
@@ -320,6 +321,60 @@ export async function deleteVendor(id: string): Promise<void> {
   const isTest = id.startsWith('test-')
   const store = getStore(getStoreName('vendors', isTest))
   await store.delete(id)
+}
+
+// ── Supabase Sync: Vendors ─────────────────────────────────────────────────────
+
+export async function syncVendorsToSupabase(): Promise<void> {
+  const real = await listVendors(false)
+  const test = await listVendors(true)
+  
+  for (const v of real) {
+    await supabaseAdmin.from('vendors').upsert({
+      id: v.id,
+      fullName: v.fullName,
+      email: v.email,
+      phone: v.phone,
+      businessName: v.businessName,
+      businessType: v.businessType,
+      address: v.address,
+      tinNumber: v.tinNumber,
+      vrNumber: v.vrNumber,
+      status: v.status,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt,
+      walletBalance: v.walletBalance,
+      isTestAccount: v.isTestAccount,
+    }, { onConflict: 'id' })
+  }
+  
+  for (const v of test) {
+    await supabaseAdmin.from('vendors').upsert({
+      id: v.id,
+      fullName: v.fullName,
+      email: v.email,
+      phone: v.phone,
+      businessName: v.businessName,
+      businessType: v.businessType,
+      address: v.address,
+      tinNumber: v.tinNumber,
+      vrNumber: v.vrNumber,
+      status: v.status,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt,
+      walletBalance: v.walletBalance,
+      isTestAccount: true,
+    }, { onConflict: 'id' })
+  }
+}
+
+export async function getVendorsFromSupabase(): Promise<VendorProfile[]> {
+  const { data, error } = await supabaseAdmin.from('vendors').select('*').order('createdAt', { ascending: false })
+  if (error) {
+    console.error('Error fetching vendors from Supabase:', error)
+    return []
+  }
+  return data as VendorProfile[]
 }
 
 // ── Test data cleanup ────────────────────────────────────────────────────────

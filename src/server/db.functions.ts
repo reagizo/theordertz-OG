@@ -41,6 +41,7 @@ import {
   listVendors,
   listAllVendors,
   listVendorsByStatus,
+  syncVendorsToSupabase,
   deleteAgent,
   deleteCustomer,
   deleteTransaction,
@@ -199,3 +200,6 @@ export const listVendorsByStatusFn = createServerFn({ method: 'GET' })
 export const deleteVendorFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { id: string }) => data)
   .handler(({ data }) => deleteVendor(data.id))
+
+export const syncVendorsToSupabaseFn = createServerFn({ method: 'POST' })
+  .handler(() => syncVendorsToSupabase())

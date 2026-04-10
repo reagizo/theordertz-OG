@@ -92,28 +92,24 @@ export function Sidebar({ role }: SidebarProps) {
   const nav = useMemo(() => getNavItems(role, t), [role, t])
 
   useEffect(() => {
-    if (!user?.email) return
+    if (!user?.id || !user?.email) return
     console.log('Sidebar: fetching profile picture for', user.email)
-    supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle().then(({ data, error }) => {
-      if (error) {
-        console.error('Sidebar: Supabase error fetching profile picture:', error)
-        return
-      }
-      console.log('Sidebar: profile_picture from Supabase:', data?.profile_picture ? 'present' : 'null')
-      if (data?.profile_picture) {
-        setUserPicture(data.profile_picture)
+    Promise.all([
+      supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle(),
+      supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
+    ]).then(([appUserData, userData]) => {
+      const picture = appUserData?.profile_picture || userData?.profile_picture_url
+      if (picture) {
+        setUserPicture(picture)
       } else {
-        // Check localStorage for old profile pictures and sync to Supabase
         let foundPicture: string | undefined
         try {
-          // Check app_settings_v3
           const raw = localStorage.getItem('app_settings_v3')
           if (raw) {
             const settings = JSON.parse(raw)
             const found = settings.users?.find((u: any) => u.email === user.email)
             if (found?.profilePicture) foundPicture = found.profilePicture
           }
-          // Check mock.user
           if (!foundPicture) {
             const muRaw = localStorage.getItem('mock.user')
             if (muRaw) {
@@ -124,19 +120,13 @@ export function Sidebar({ role }: SidebarProps) {
         } catch { /* ignore */ }
 
         if (foundPicture) {
-          console.log('Sidebar: found profile picture in localStorage, syncing to Supabase...')
           setUserPicture(foundPicture)
-          // Save to Supabase so it syncs across devices
-          supabase.from('app_users').update({ profile_picture: foundPicture }).eq('email', user.email).then(({ error }) => {
-            if (error) console.error('Sidebar: failed to sync profile picture to Supabase:', error)
-            else console.log('Sidebar: profile picture synced to Supabase')
-          })
-        } else {
-          console.log('Sidebar: no profile picture found anywhere')
+          supabase.from('users').update({ profile_picture_url: foundPicture }).eq('id', user.id)
+          supabase.from('app_users').update({ profile_picture: foundPicture }).eq('email', user.email)
         }
       }
     })
-  }, [user?.email])
+  }, [user?.id, user?.email])
 
   useEffect(() => {
     if (role !== 'customer' || !user?.id) return

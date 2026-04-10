@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { getCustomerProfileFn, listTransactionsByCustomerFn } from '@/server/db.functions'
 import { formatTZS, formatDate, statusColor, tierLabel } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 import { Wallet, ArrowUpRight, Clock, CheckCircle, CreditCard, Upload, X } from 'lucide-react'
 import type { CustomerProfile, Transaction } from '@/lib/types'
 import { Link } from '@tanstack/react-router'
@@ -27,30 +28,39 @@ function CustomerWallet() {
     Promise.all([
       getCustomerProfileFn({ data: { id: user.id } }),
       listTransactionsByCustomerFn({ data: { customerId: user.id } }),
-    ]).then(([p, txs]) => {
+      supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
+    ]).then(([p, txs, userData]) => {
       setProfile(p)
       setTransactions(txs)
+      if (userData?.profile_picture_url && !saved) {
+        setProfilePicture(userData.profile_picture_url)
+        localStorage.setItem(`customer_picture_${user.id}`, userData.profile_picture_url)
+      }
     }).finally(() => setLoading(false))
   }, [user?.id])
 
-  const handlePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user?.id) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       if (ev.target?.result) {
         const dataUrl = ev.target.result as string
         setProfilePicture(dataUrl)
         localStorage.setItem(`customer_picture_${user.id}`, dataUrl)
+        await supabase.from('users').update({ profile_picture_url: dataUrl }).eq('id', user.id)
+        await supabase.from('app_users').update({ profile_picture: dataUrl }).eq('id', user.id)
       }
     }
     reader.readAsDataURL(file)
   }
 
-  const removePicture = () => {
+  const removePicture = async () => {
     if (!user?.id) return
     setProfilePicture(null)
     localStorage.removeItem(`customer_picture_${user.id}`)
+    await supabase.from('users').update({ profile_picture_url: null }).eq('id', user.id)
+    await supabase.from('app_users').update({ profile_picture: null }).eq('id', user.id)
   }
 
   if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>

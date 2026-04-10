@@ -16,7 +16,7 @@ function Home() {
     try {
       if (!user) {
         router.navigate({ to: '/login' })
-      } else if (role === 'admin' || role === 'test') {
+      } else if (role === 'admin' || role === 'test' || role === 'supervisor' || role === 'clerk' || role === 'accountant') {
         router.navigate({ to: '/admin' })
       } else if (role === 'agent') {
         router.navigate({ to: '/agent' })

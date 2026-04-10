@@ -28,31 +28,8 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CLOUDFLARE: 'true'
-        run: npm run build
-      - name: Save dist as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-  deploy_cf:
-    needs: build
-    if: ${{ github.event.inputs.cf_env || true }}
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ github.event.inputs.cf_env || 'production' }}
-      url: https://theordertz.reagizo.workers.dev
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-      - name: Restore dist artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - run: npm ci
+          SKIP_BUILD: 'true'
+        run: npm run deploy
       - name: Set Cloudflare secrets
         run: |
           npx wrangler secret put SUPABASE_URL --env ${{ github.event.inputs.cf_env || 'production' }} --name theordertz <<< '${{ secrets.SUPABASE_URL }}'

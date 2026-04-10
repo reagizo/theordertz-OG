@@ -13,6 +13,16 @@ export const Route = createRootRoute({
       <a href="/" className="text-blue-600 hover:underline">Return home</a>
     </div>
   ),
+  errorComponent: ({ error }) => {
+    console.error('Root error boundary:', error)
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+        <h1 className="text-4xl font-bold text-red-600">Something went wrong</h1>
+        <p className="text-lg text-gray-600">We encountered an error. Please try again.</p>
+        <a href="/" className="text-blue-600 hover:underline">Return home</a>
+      </div>
+    )
+  },
   onCatch: ({ error }) => {
     console.error('Global catch handler:', error)
     return (

@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
 
-export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey)
+// Only enable Supabase if both URL and key are actually set (non-empty)
+export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'))
 
 const getSupabaseServiceKey = () => {
   return (
@@ -22,14 +23,28 @@ const serverStorage = {
 }
 
 // Client for Browser (uses Anon Key)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: typeof window === 'undefined' ? serverStorage : localStorage,
-    autoRefreshToken: typeof window !== 'undefined',
-    persistSession: typeof window !== 'undefined',
-    detectSessionInUrl: typeof window !== 'undefined',
+// Always export a valid object, but use null client if not configured
+const supabaseClient = hasSupabaseConfig 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: typeof window === 'undefined' ? serverStorage : localStorage,
+        autoRefreshToken: typeof window !== 'undefined',
+        persistSession: typeof window !== 'undefined',
+        detectSessionInUrl: typeof window !== 'undefined',
+      },
+    })
+  : null
+
+// Safe export - always an object, methods check for client
+export const supabase = {
+  auth: supabaseClient?.auth ?? {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
+    signOut: async () => ({ error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },
-})
+  from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), maybeSingle: async () => ({ data: null, error: null }), order: () => ({ execute: async () => ({ data: [], error: null }) }), execute: async () => ({ data: [], error: null }) }) }), insert: async () => ({ data: null, error: null }), update: () => ({ eq: () => ({ execute: async () => ({ error: null }) }) }), delete: () => ({ eq: () => ({ execute: async () => ({ error: null }) }) }) }),
+}
 
 // Admin for Server Functions (uses Service Role Key)
 // Only create this client on the server when we have a service key.

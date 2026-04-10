@@ -70,8 +70,6 @@ function AgentDashboard() {
     await supabase.from('users').update({ profile_picture_url: null }).eq('id', user.id)
     await supabase.from('app_users').update({ profile_picture: null }).eq('id', user.id)
   }
-    localStorage.removeItem(`agent_picture_${user.id}`)
-  }
 
   if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>
 

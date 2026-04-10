@@ -146,7 +146,7 @@ export function Sidebar({ role }: SidebarProps) {
       })
   }, [role, user?.email])
 
-  const roleLabel = role === 'admin' ? t('navigation.agents') : role === 'agent' ? t('navigation.agents') : role === 'test' ? 'Test' : t('navigation.customers')
+  const roleLabel = role === 'admin' ? t('navigation.agents') : role === 'agent' ? 'AGENT' : role === 'test' ? 'Test' : t('navigation.customers')
 
   const handleLogout = async () => {
     await logout()

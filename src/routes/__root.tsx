@@ -19,7 +19,8 @@ export const Route = createRootRoute({
       <div className="flex h-screen flex-col items-center justify-center gap-4 p-8 text-center">
         <h1 className="text-4xl font-bold text-red-600">Error</h1>
         <p className="text-lg text-gray-600">{error?.message || 'An unexpected error occurred'}</p>
-        <a href="/" className="text-blue-600 hover:underline">Return home</a>
+        <p className="text-sm text-gray-500 mt-2">Please refresh the page or try again later.</p>
+        <a href="/" className="text-blue-600 hover:underline mt-4">Return home</a>
       </div>
     )
   },

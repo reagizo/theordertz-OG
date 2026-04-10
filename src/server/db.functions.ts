@@ -47,6 +47,7 @@ import {
   clearAllAlerts,
   listAppUsers,
   saveAppUser,
+  getAppUserByEmail,
   deleteAppUser,
   getSetting,
   saveSetting,

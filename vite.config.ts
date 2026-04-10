@@ -25,10 +25,8 @@ export default defineConfig(({ mode }) => {
   const cloudflarePlugin = useCloudflare ? [cloudflare()] : []
   
   return {
-  // GitHub Pages serves project sites from a subpath, and doesn't support SPA
-  // history routing without a 404 fallback. Using a relative base keeps asset
-  // paths working regardless of repo name.
-  base: '/',
+  // GitHub Pages serves from a subpath, so use relative base
+  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

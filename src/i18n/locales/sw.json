@@ -5,7 +5,7 @@
   },
   "navigation": {
     "dashboard": "Dasibodi",
-    "transactions": "Mikataba",
+    "transactions": "Miamala",
     "superAgents": "Wakala Mkuu",
     "agents": "Wakala",
     "customers": "Wateja",
@@ -81,7 +81,7 @@
       "title": "Dasibodi",
       "welcome": "Karibu tena, {name}!",
       "stats": {
-        "totalTransactions": "Jumla ya Mikataba",
+        "totalTransactions": "Jumla ya Miamala",
         "activeAgents": "Wakala Wanaozaa",
         "totalCustomers": "Jumla ya Wateja",
         "walletBalance": "Kiasi cha Wifedhi"
@@ -112,12 +112,12 @@
       "welcome": "Karibu tena, {name}!",
       "charts": {
         "monthlyRevenue": "Mapato ya Kila Mwezi",
-        "transactionTrend": "Mwelekeo wa Mikataba (Siku 30)",
-        "transactionsByTier": "Mikataba kulingana na Kiwango",
-        "transactionsByService": "Mikataba kulingana na Huduma"
+        "transactionTrend": "Mwelekeo wa Miamala (Siku 30)",
+        "transactionsByTier": "Miamala kulingana na Kiwango",
+        "transactionsByService": "Miamala kulingana na Huduma"
       },
       "stats": {
-        "totalTransactions": "Jumla ya Mikataba",
+        "totalTransactions": "Jumla ya Miamala",
         "activeAgents": "Wakala Wanaozaa",
         "totalCustomers": "Jumla ya Wateja",
         "walletBalance": "Kiasi cha Wifedhi"
@@ -128,9 +128,9 @@
     "dashboard": {
       "charts": {
         "monthlyRevenue": "Mapato ya Kila Mwezi",
-        "transactionTrend": "Mwelekeo wa Mikataba (Siku 30)",
-        "transactionsByTier": "Mikataba kulingana na Kiwango",
-        "transactionsByService": "Mikataba kulingana na Huduma"
+        "transactionTrend": "Mwelekeo wa Miamala (Siku 30)",
+        "transactionsByTier": "Miamala kulingana na Kiwango",
+        "transactionsByService": "Miamala kulingana na Huduma"
       }
     },
       "amount": "Kiasi"
@@ -153,11 +153,11 @@
     "superAgent": "Wakala Mkuu"
   },
   "transactions": {
-    "title": "Mikataba",
-    "allTransactions": "Mikataba Yote",
-    "agentTransactions": "Mikataba ya Wakala",
-    "superAgentTransactions": "Mikataba ya Wakala Mkuu",
-    "customerTransactions": "Mikataba ya Mteja",
+    "title": "Miamala",
+    "allTransactions": "Miamala Yote",
+    "agentTransactions": "Miamala ya Wakala",
+    "superAgentTransactions": "Miamala ya Wakala Mkuu",
+    "customerTransactions": "Miamala ya Mteja",
     "transactionDetails": "Maelezo ya Mkataba",
     "provider": "Mtoa Huduma",
     "paymentMethod": "Njia ya Malipo",

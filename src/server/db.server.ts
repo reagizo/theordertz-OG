@@ -73,8 +73,42 @@ export async function getCustomerProfile(id: string): Promise<CustomerProfile | 
     .select('*')
     .eq('id', id)
     .single()
-  if (error || !data) return null
-  return mapCustomerRow(data)
+  if (error || !data) {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('id, email, full_name, phone, address')
+      .eq('id', id)
+      .single()
+    if (!userData) return null
+    return {
+      id: userData.id,
+      fullName: userData.full_name || '',
+      email: userData.email || '',
+      phone: userData.phone || '',
+      nationalId: '',
+      address: userData.address || '',
+      tier: 'd2d' as const,
+      status: 'approved' as const,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      walletBalance: 0,
+      creditLimit: 0,
+      creditUsed: 0,
+      isTestAccount: false,
+    }
+  }
+  const profile = mapCustomerRow(data)
+  if (!profile.fullName) {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('full_name')
+      .eq('id', id)
+      .single()
+    if (userData?.full_name) {
+      profile.fullName = userData.full_name
+    }
+  }
+  return profile
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {

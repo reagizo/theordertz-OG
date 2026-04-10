@@ -43,15 +43,14 @@ const mockAuth = {
   onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
 }
 
-const mockChannel = () => ({
-  on: () => ({
-    on: () => ({
-      subscribe: async () => ({}),
-    }),
-  }),
-  subscribe: async () => ({}),
-  unsubscribe: async () => {},
-})
+const mockChannel = () => {
+  const createHandler = () => ({
+    on: () => createHandler(),
+    subscribe: async () => ({}) as any,
+    unsubscribe: async () => {},
+  })
+  return createHandler()
+}
 
 const mockFrom = () => ({
   select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), maybeSingle: async () => ({ data: null, error: null }), order: () => ({ execute: async () => ({ data: [], error: null }) }), execute: async () => ({ data: [], error: null }) }) }),

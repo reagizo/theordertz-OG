@@ -8,12 +8,12 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'The Order-Reagizo Service Company' },
-      { name: 'theme-color', content: '#111827' },
-      { name: 'description', content: 'The Order-Reagizo Service Company - Interactive Service Platform' },
+      { title: 'Service Interface Portal System' },
+      { name: 'theme-color', content: '#1a1a3e' },
+      { name: 'description', content: 'Service Interface Portal System - The Order Service Company' },
     ],
     links: [
-      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+      { rel: 'icon', type: 'image/png', href: '/logo.png' },
       { rel: 'manifest', href: '/manifest.webmanifest' },
       { rel: 'apple-touch-icon', href: '/pwa-512x512.png' },
     ],
@@ -33,7 +33,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-gray-50">
+      <body className="bg-[#1a1a3e]">
         <AuthProvider>
           {children}
         </AuthProvider>

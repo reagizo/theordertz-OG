@@ -50,20 +50,24 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
     lg: "text-xl"
   }[size]
 
-  const textClass = `tracking-[0.25em] uppercase font-semibold ${textSizeClasses}`
+  const textClass = `tracking-[0.25em] uppercase font-semibold text-center w-full ${textSizeClasses}`
 
   if (!animate) {
     return (
-      <div className={`flex flex-col items-center ${className}`}>
-        <img 
-          src="/logo.png" 
-          alt="Service Interface Portal System" 
-          className={`${sizeClasses} object-contain drop-shadow-2xl`}
-        />
+      <div className={`flex flex-col items-center justify-center w-full ${className}`}>
+        <div className="flex justify-center">
+          <img 
+            src="/logo.png" 
+            alt="Service Interface Portal System" 
+            className={`${sizeClasses} object-contain drop-shadow-2xl`}
+          />
+        </div>
         {showText && (
-          <p className={textClass} style={{ color: '#fbb040', fontFamily: 'Playfair Display, Georgia, serif' }}>
-            SERVICE INTERFACE PORTAL SYSTEM
-          </p>
+          <div className="w-full max-w-sm mt-4">
+            <p className={textClass} style={{ color: '#fbb040', fontFamily: 'Playfair Display, Georgia, serif' }}>
+              SERVICE INTERFACE PORTAL SYSTEM
+            </p>
+          </div>
         )}
       </div>
     )
@@ -71,17 +75,21 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
 
   return (
     <div 
-      className={`flex flex-col items-center transition-opacity duration-1000 ${isFadingOut ? 'opacity-0' : 'opacity-100'} ${className}`}
+      className={`flex flex-col items-center justify-center w-full transition-opacity duration-1000 ${isFadingOut ? 'opacity-0' : 'opacity-100'} ${className}`}
     >
-      <img 
-        src="/logo.png" 
-        alt="Service Interface Portal System" 
-        className={`${sizeClasses} object-contain drop-shadow-2xl`}
-      />
+      <div className="flex justify-center">
+        <img 
+          src="/logo.png" 
+          alt="Service Interface Portal System" 
+          className={`${sizeClasses} object-contain drop-shadow-2xl`}
+        />
+      </div>
       {showText && (
-        <p className={textClass} style={{ color: '#fbb040', fontFamily: 'Playfair Display, Georgia, serif' }}>
-          SERVICE INTERFACE PORTAL SYSTEM
-        </p>
+        <div className="w-full max-w-sm mt-4">
+          <p className={textClass} style={{ color: '#fbb040', fontFamily: 'Playfair Display, Georgia, serif' }}>
+            SERVICE INTERFACE PORTAL SYSTEM
+          </p>
+        </div>
       )}
     </div>
   )

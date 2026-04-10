@@ -15,7 +15,7 @@ const Logo: React.FC<LogoProps> = ({ inline = false, alt = "Brand Logo", classNa
     return <LogoInline aria-label={alt} className={className} />;
   }
 
-  const src = assetPath ?? "/logo.svg";
+  const src = assetPath ?? "/logo.png";
   const sizeClass = size === "lg" ? "w-16 h-16" : size === "sm" ? "w-8 h-8" : "";
   return (
     <div className={`flex items-center gap-2 ${className || ""}`}>

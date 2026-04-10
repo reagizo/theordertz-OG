@@ -4,6 +4,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { saveAgentProfileFn } from '@/server/db.functions'
 import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react'
+import AnimatedLogo from '@/components/AnimatedLogo'
 
 export const Route = createFileRoute('/register/agent')({
   component: AgentRegisterPage,
@@ -38,7 +39,6 @@ function AgentRegisterPage() {
           status: 'pending', createdAt: now, updatedAt: now, floatBalance: 0, commissionRate: 2.5, commissionEarned: 0,
         },
       })
-      // Create registration alert for admin
       try {
         const raw = localStorage.getItem('app_settings_v3')
         const settings = raw ? JSON.parse(raw) : { superAgentName: 'Super Agent', users: [], registrationAlerts: [] }
@@ -66,35 +66,27 @@ function AgentRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-200 via-pink-100 to-purple-300 py-8 px-4 relative overflow-hidden">
-      {/* Translucent logo watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-        <img src="/logo.svg" alt="" className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-[0.06] scale-110" aria-hidden="true" />
+    <div className="min-h-screen bg-[#1a1a3e] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Blur background layers */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e8346a]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#fbb040]/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#4F46E5]/10 rounded-full blur-[150px]" />
       </div>
-      {/* Decorative arcs */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full border-[3px] border-orange-300/30" />
-        <div className="absolute -top-20 -left-20 w-[400px] h-[400px] rounded-full border-[2px] border-orange-400/20" />
-        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full border-[3px] border-purple-300/30" />
-        <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full border-[2px] border-purple-400/20" />
-      </div>
-      <div className="absolute top-0 left-0 w-96 h-96 bg-orange-200/40 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/40 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
       <div className="max-w-2xl mx-auto relative z-10 flex flex-col items-center">
-        <div className="mb-4 flex flex-col items-center">
-          <img src="/logo.svg" alt="The Order-Reagizo Service Company" className="w-20 h-20 sm:w-24 sm:h-24 mb-2 drop-shadow-lg" />
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1E3A5F] text-center" style={{ fontFamily: 'Playfair Display, serif' }}>The Order-Reagizo</h1>
-          <p className="text-sm text-[#1E3A5F]/70 text-center">Service Company</p>
+        {/* Logo Section */}
+        <div className="mb-6">
+          <AnimatedLogo showText={true} animate={true} size="md" />
         </div>
-        <p className="text-[#1E3A5F]/60 text-sm mb-6">Agent Registration</p>
+        <p className="text-white/60 text-sm mb-6">Agent Registration</p>
 
-        <div className="w-full bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6 sm:p-8 border border-white/60">
-          <h2 className="text-xl font-bold text-[#1E3A5F] mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>Register as Agent</h2>
-          <p className="text-gray-500 text-sm mb-6">Complete KYC verification to register as an authorized agent</p>
+        <div className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6 sm:p-8">
+          <h2 className="text-xl font-semibold text-white mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>Register as Agent</h2>
+          <p className="text-white/60 text-sm mb-6">Complete KYC verification to register as an authorized agent</p>
 
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-200 text-sm flex items-center gap-2">
               <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
@@ -105,82 +97,82 @@ function AgentRegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Full Name *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Full Name *</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="fullName" value={form.fullName} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="John Doe" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Email Address *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Email Address *</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="email" type="email" value={form.email} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="agent@example.com" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Phone Number *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Phone Number *</label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="phone" value={form.phone} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="+255 7XX XXX XXX" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">National ID *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">National ID *</label>
                 <input name="nationalId" value={form.nationalId} onChange={handleChange} required
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                   placeholder="XXXXXXXXXXXXXXXXXX" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Physical Address *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Physical Address *</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="address" value={form.address} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Street, City, Region" />
                 </div>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Business Name (Optional)</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Name (Optional)</label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="businessName" value={form.businessName} onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Your business trading name" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Password *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Password *</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="password" type="password" value={form.password} onChange={handleChange} required minLength={8}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Min. 8 characters" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Confirm Password *</label>
+                <label className="block text-sm font-semibold text-white/80 mb-1.5">Confirm Password *</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Re-enter password" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-700">
+            <div className="bg-[#fbb040]/10 border border-[#fbb040]/30 rounded-xl p-3 text-xs text-[#fbb040]">
               <strong>Note:</strong> Your registration will be reviewed by an administrator. You may need to confirm your email address before accessing your account.
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+              className="w-full py-3 bg-gradient-to-r from-[#fbb040] to-[#e8346a] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
               {loading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -195,9 +187,9 @@ function AgentRegisterPage() {
             </button>
           </form>
 
-          <p className="mt-6 pt-6 border-t border-gray-100 text-center text-sm text-gray-500">
+          <p className="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/50">
             Already have an account?{' '}
-            <Link to="/login" className="text-[#1E3A5F] font-medium hover:text-[#EC4899] underline underline-offset-4 transition-colors">Sign in</Link>
+            <Link to="/login" className="text-[#fbb040] font-medium hover:text-[#fbb040]/80 underline underline-offset-4 transition-colors">Sign in</Link>
           </p>
         </div>
       </div>

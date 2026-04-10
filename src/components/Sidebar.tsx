@@ -92,10 +92,10 @@ export function Sidebar({ role }: SidebarProps) {
       {/* Logo */}
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="Logo" className="w-9 h-9 flex-shrink-0" />
+          <img src="/logo.png" alt="Logo" className="w-9 h-9 flex-shrink-0 object-contain" />
           <div className="min-w-0">
-            <p className="text-white font-bold text-xs leading-tight truncate" style={{ fontFamily: 'Playfair Display, serif' }}>The Order</p>
-            <p className="text-pink-300 text-[10px] leading-tight">Reagizo Service Co.</p>
+            <p className="text-white font-bold text-[10px] leading-tight tracking-wider uppercase" style={{ fontFamily: 'Playfair Display, serif' }}>SIPS</p>
+            <p className="text-[#fbb040] text-[9px] leading-tight">Portal System</p>
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@ export function Sidebar({ role }: SidebarProps) {
       )}
 
       {/* Mobile drawer */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-[#1E3A5F] to-[#2D4A6F] transform transition-transform lg:hidden ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#1a1a3e] transform transition-transform lg:hidden ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={() => setOpen(false)}
           className="absolute top-4 right-4 text-white/70 hover:text-white"
@@ -180,7 +180,7 @@ export function Sidebar({ role }: SidebarProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 bg-gradient-to-b from-[#1E3A5F] to-[#2D4A6F]">
+      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 bg-[#1a1a3e]">
         <SidebarContent />
       </div>
     </>

@@ -1,12 +1,20 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { useSettings } from '@/contexts/SettingsContext'
-import { saveAgentProfileFn } from '@/server/db.functions'
+import { saveAgentProfileFn, listSuperAgentsFn } from '@/server/db.functions'
 import { generateId } from '@/lib/utils'
-import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight, Upload, X, Camera } from 'lucide-react'
+import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight, Upload, X, Camera, Shield } from 'lucide-react'
+import type { SuperAgentProfile } from '@/lib/types'
 
 export const Route = createFileRoute('/register/agent')({
+  loader: () => {
+    try {
+      return listSuperAgentsFn()
+    } catch {
+      return []
+    }
+  },
   component: AgentRegisterPage,
 })
 
@@ -14,13 +22,24 @@ function AgentRegisterPage() {
   const { signup } = useAuth()
   const { addRegistrationAlert, updateUser } = useSettings()
   const router = useRouter()
+  const superAgents = Route.useLoaderData() as SuperAgentProfile[]
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', nationalId: '', address: '', businessName: '', password: '', confirmPassword: '',
+    superAgentId: '',
   })
   const [profilePicture, setProfilePicture] = useState<string>('')
   const pictureInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (superAgents.length > 0 && !form.superAgentId) {
+      const activeAgents = superAgents.filter(a => a.status === 'active')
+      if (activeAgents.length > 0) {
+        setForm(f => ({ ...f, superAgentId: activeAgents[0].id }))
+      }
+    }
+  }, [superAgents])
 
   const handlePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -31,7 +50,7 @@ function AgentRegisterPage() {
     reader.readAsDataURL(file)
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
@@ -54,12 +73,14 @@ function AgentRegisterPage() {
           nationalId: form.nationalId, address: form.address, businessName: form.businessName || undefined,
           status: 'pending', createdAt: now, updatedAt: now, floatBalance: 0, commissionRate: 2.5, commissionEarned: 0,
           isTestAccount: isTestProfile, adminRequestedBy: adminEmail,
-        },
+          assignedSuperAgentId: form.superAgentId || undefined,
+        } as any,
       })
       if (profilePicture && user.id) {
         await updateUser(user.id, { profilePicture })
       }
-      const alertMessage = `New ${isTestProfile ? 'TEST ' : ''}agent registration from ${form.phone || form.email}. ${isTestProfile ? `Linked to admin ${adminEmail}. ` : ''}Awaiting admin approval.`
+      const selectedSuperAgent = superAgents.find(a => a.id === form.superAgentId)
+      const alertMessage = `New ${isTestProfile ? 'TEST ' : ''}agent registration from ${form.phone || form.email}. ${selectedSuperAgent ? `Assigned to: ${selectedSuperAgent.fullName}. ` : ''}${isTestProfile ? `Linked to admin ${adminEmail}. ` : ''}Awaiting admin approval.`
       addRegistrationAlert({
         type: 'agent',
         name: form.fullName,
@@ -204,6 +225,29 @@ function AgentRegisterPage() {
                     placeholder="Your business trading name" />
                 </div>
               </div>
+              {superAgents.length > 0 && (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Select Super Agent *</label>
+                  <div className="relative">
+                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <select
+                      name="superAgentId"
+                      value={form.superAgentId}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EC4899]/30 focus:border-[#EC4899] text-sm transition-all shadow-sm"
+                    >
+                      <option value="">Select a Super Agent</option>
+                      {superAgents.filter(a => a.status === 'active').map(agent => (
+                        <option key={agent.id} value={agent.id}>
+                          {agent.fullName} {agent.phone ? `(${agent.phone})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Choose the Super Agent you will work under</p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-[#1E3A5F] mb-1.5">Password *</label>
                 <div className="relative">

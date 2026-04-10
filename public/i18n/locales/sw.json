@@ -15,7 +15,8 @@
     "requestService": "omba Huduma",
     "history": "Historia",
     "floatExchange": "Badiliko la Float",
-    "superAgent": "Mfanyakazi Mkuu"
+    "superAgent": "Mfanyakazi Mkuu",
+    "superAgents": "Wafanyakazi Wakubwa"
   },
   "auth": {
     "login": "Ingia",

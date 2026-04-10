@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import BrandLayout from '../../components/BrandLayout'
 import { useSettings } from '../../contexts/SettingsContext'
 import { useAuth } from '@/components/AuthProvider'
-import { getCustomerProfileFn, listAgentsFn } from '@/server/db.functions'
+import { getCustomerProfileFn, listAgentsFn, listSuperAgentsFn } from '@/server/db.functions'
 
 export const Route = createFileRoute('/customer/confirmation')({
   component: CustomerConfirmationPage,
@@ -20,6 +20,14 @@ function CustomerConfirmationPage() {
     async function loadAgentName() {
       try {
         const customer = await getCustomerProfileFn({ data: { id: user.id } })
+        if (customer?.assignedSuperAgentId) {
+          const superAgents = await listSuperAgentsFn()
+          const superAgent = superAgents.find(a => a.id === customer.assignedSuperAgentId)
+          if (superAgent) {
+            setAgentName(superAgent.fullName)
+            return
+          }
+        }
         if (customer?.assignedAgentId) {
           const agents = await listAgentsFn()
           const agent = agents.find(a => a.id === customer.assignedAgentId)

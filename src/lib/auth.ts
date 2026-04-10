@@ -191,9 +191,9 @@ export async function signup(email: string, _password: string, meta: Record<stri
   const user: User = {
     id: (isTest ? 'test-' : 'mock-') + email,
     email,
-    name: meta?.name as string | undefined,
+    name: meta?.full_name as string | undefined,
     app_metadata: { roles: ['customer'], isTestAccount: isTest },
-    user_metadata: { full_name: meta?.name as string | undefined },
+    user_metadata: { full_name: meta?.full_name as string | undefined },
   }
   const ls = getLocalStorage()
   if (ls) ls.setItem('mock.user', JSON.stringify(user))

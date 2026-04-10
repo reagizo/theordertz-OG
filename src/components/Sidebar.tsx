@@ -138,9 +138,11 @@ export function Sidebar({ role }: SidebarProps) {
       supabase.from('users').select('full_name').eq('id', user.id).maybeSingle(),
       supabase.from('customer_profiles').select('tier').eq('email', user.email).maybeSingle(),
     ]).then(([userData, customerData]) => {
-      console.log('Customer profile result', { userData, customerData })
+      console.log('Customer profile result', JSON.stringify(userData), JSON.stringify(customerData))
       if (userData?.full_name || customerData?.tier) {
         setCustomerProfile({ fullName: userData?.full_name, tier: customerData?.tier })
+      } else {
+        console.log('No full_name or tier found in results')
       }
     })
   }, [role, user?.email])

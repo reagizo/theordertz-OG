@@ -2,10 +2,12 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { saveCustomerProfileFn } from '@/server/db.functions'
+import { supabaseAdmin } from '@/lib/supabase'
 import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, ArrowRight } from 'lucide-react'
 import type { CustomerTier } from '@/lib/types'
 import AnimatedLogo from '@/components/AnimatedLogo'
+import { isTestAccountByNameOrEmail, useSettings } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/register/customer')({
   component: CustomerRegisterPage,
@@ -14,6 +16,7 @@ export const Route = createFileRoute('/register/customer')({
 function CustomerRegisterPage() {
   const { signup } = useAuth()
   const router = useRouter()
+  const { addTestAccount, addRealAccount, addRegistrationAlert } = useSettings()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -32,7 +35,8 @@ function CustomerRegisterPage() {
     if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return }
     setLoading(true)
     try {
-      const user = await signup(form.email, form.password, { full_name: form.fullName, role: 'customer', tier: form.tier })
+      const isTest = isTestAccountByNameOrEmail(form.fullName, form.email)
+      const user = await signup(form.email, form.password, { full_name: form.fullName, role: 'customer', tier: form.tier, isTestAccount: isTest })
       const now = new Date().toISOString()
       await saveCustomerProfileFn({
         data: {
@@ -41,22 +45,30 @@ function CustomerRegisterPage() {
           createdAt: now, updatedAt: now, walletBalance: 0, creditLimit: form.tier === 'premier' ? 500000 : 0, creditUsed: 0,
         },
       })
-      try {
-        const raw = localStorage.getItem('app_settings_v3')
-        const settings = raw ? JSON.parse(raw) : { superAgentName: 'Super Agent', users: [], registrationAlerts: [] }
-        settings.registrationAlerts = settings.registrationAlerts || []
-        settings.registrationAlerts.unshift({
-          id: crypto.randomUUID(),
-          type: 'customer',
-          name: form.fullName,
-          email: form.email,
-          tier: form.tier,
-          message: `New ${form.tier === 'premier' ? 'Premier' : 'D2D'} customer registration from ${form.phone || form.email}. Awaiting admin approval.`,
-          read: false,
-          createdAt: now,
-        })
-        localStorage.setItem('app_settings_v3', JSON.stringify(settings))
-      } catch { /* ignore */ }
+      const accountData = { name: form.fullName, email: form.email, role: 'Customer' as const, profilePicture: undefined, password: form.password }
+      if (isTest) {
+        addTestAccount(accountData)
+        supabaseAdmin.from('test_accounts').upsert({ name: form.fullName, email: form.email, role: 'Customer' }, { onConflict: 'email' })
+      } else {
+        addRealAccount(accountData)
+        supabaseAdmin.from('real_accounts').upsert({ name: form.fullName, email: form.email, role: 'Customer' }, { onConflict: 'email' })
+      }
+      addRegistrationAlert({
+        type: 'customer',
+        name: form.fullName,
+        email: form.email,
+        tier: form.tier,
+        message: `New ${form.tier === 'premier' ? 'Premier' : 'D2D'} customer registration from ${form.phone || form.email}. Awaiting admin approval.`,
+        isTestAccount: isTest,
+      })
+      supabaseAdmin.from('registration_alerts').insert({
+        type: 'customer',
+        name: form.fullName,
+        email: form.email,
+        tier: form.tier,
+        message: `New ${form.tier === 'premier' ? 'Premier' : 'D2D'} customer registration from ${form.phone || form.email}. Awaiting admin approval.`,
+        is_test_account: isTest,
+      })
       router.navigate({ to: '/customer' })
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string }

@@ -1,6 +1,6 @@
 import React from 'react'
 
-export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Test'
+export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Test' | 'SuperAgent'
 export type CustomerTier = 'd2d' | 'premier'
 
 export type AppUser = {
@@ -11,23 +11,47 @@ export type AppUser = {
   profilePicture?: string
   password?: string
   createdAt: string
+  isTestAccount?: boolean
 }
 
 export type RegistrationAlert = {
   id: string
-  type: 'agent' | 'customer'
+  type: 'agent' | 'customer' | 'super_agent'
   name: string
   email: string
   tier?: CustomerTier
   message: string
   read: boolean
   createdAt: string
+  isTestAccount?: boolean
+}
+
+export type PasswordResetItem = {
+  id: string
+  email: string
+  newPassword: string
+  status: 'pending' | 'approved' | 'rejected'
+  requestedAt: string
+  processedAt?: string
+  processedBy?: string
 }
 
 type SettingsState = {
   superAgentName: string
   users: AppUser[]
   registrationAlerts: RegistrationAlert[]
+  testAccounts: AppUser[]
+  realAccounts: AppUser[]
+  passwordResets: PasswordResetItem[]
+}
+
+export const TEST_ADMIN_EMAIL = 'admin@example.com'
+export const REAL_ADMIN_EMAIL = 'rkaijage@gmail.com'
+
+export function isTestAccountByNameOrEmail(name: string, email: string): boolean {
+  const nameLower = name.toLowerCase()
+  const emailLower = email.toLowerCase()
+  return nameLower.startsWith('test-') || emailLower.startsWith('test-')
 }
 
 type SettingsContextValue = {
@@ -39,6 +63,11 @@ type SettingsContextValue = {
   addRegistrationAlert: (alert: Omit<RegistrationAlert, 'id' | 'read' | 'createdAt'>) => void
   markAlertRead: (id: string) => void
   clearAllAlerts: () => void
+  addTestAccount: (user: Omit<AppUser, 'id' | 'createdAt' | 'isTestAccount'>) => void
+  addRealAccount: (user: Omit<AppUser, 'id' | 'createdAt' | 'isTestAccount'>) => void
+  addPasswordReset: (reset: Omit<PasswordResetItem, 'id' | 'requestedAt' | 'status'>) => void
+  approvePasswordReset: (id: string) => void
+  rejectPasswordReset: (id: string) => void
 }
 
 const SETTINGS_KEY = 'app_settings_v3'
@@ -51,10 +80,13 @@ function loadSettings(): SettingsState {
   return {
     superAgentName: 'Super Agent',
     users: [
-      { id: 'seed-admin-1', name: 'REAGAN ROBERT KAIJAGE', email: 'rkaijage@gmail.com', role: 'Admin', password: '@Eva0191!', createdAt: new Date().toISOString() },
-      { id: 'seed-admin-2', name: 'Owner - Administrator', email: 'admin@example.com', role: 'Admin', password: 'admin', createdAt: new Date().toISOString() },
+      { id: 'seed-admin-1', name: 'REAGAN ROBERT KAIJAGE', email: 'rkaijage@gmail.com', role: 'Admin', password: '@Eva0191!', createdAt: new Date().toISOString(), isTestAccount: false },
+      { id: 'seed-admin-2', name: 'Owner - Administrator', email: 'admin@example.com', role: 'Admin', password: 'admin', createdAt: new Date().toISOString(), isTestAccount: true },
     ],
     registrationAlerts: [],
+    testAccounts: [],
+    realAccounts: [],
+    passwordResets: [],
   }
 }
 
@@ -142,6 +174,77 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }, [])
 
+  const addTestAccount = React.useCallback((user: Omit<AppUser, 'id' | 'createdAt' | 'isTestAccount'>) => {
+    const newUser: AppUser = {
+      ...user,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      isTestAccount: true,
+    }
+    setState(prev => {
+      const next = { ...prev, testAccounts: [...prev.testAccounts, newUser] }
+      saveSettings(next)
+      return next
+    })
+    return newUser
+  }, [])
+
+  const addRealAccount = React.useCallback((user: Omit<AppUser, 'id' | 'createdAt' | 'isTestAccount'>) => {
+    const newUser: AppUser = {
+      ...user,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      isTestAccount: false,
+    }
+    setState(prev => {
+      const next = { ...prev, realAccounts: [...prev.realAccounts, newUser] }
+      saveSettings(next)
+      return next
+    })
+    return newUser
+  }, [])
+
+  const addPasswordReset = React.useCallback((reset: Omit<PasswordResetItem, 'id' | 'requestedAt' | 'status'>) => {
+    const newReset: PasswordResetItem = {
+      ...reset,
+      id: crypto.randomUUID(),
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    }
+    setState(prev => {
+      const next = { ...prev, passwordResets: [...prev.passwordResets, newReset] }
+      saveSettings(next)
+      return next
+    })
+    return newReset
+  }, [])
+
+  const approvePasswordReset = React.useCallback((id: string) => {
+    setState(prev => {
+      const next = {
+        ...prev,
+        passwordResets: prev.passwordResets.map(r => 
+          r.id === id ? { ...r, status: 'approved' as const, processedAt: new Date().toISOString() } : r
+        ),
+      }
+      saveSettings(next)
+      return next
+    })
+  }, [])
+
+  const rejectPasswordReset = React.useCallback((id: string) => {
+    setState(prev => {
+      const next = {
+        ...prev,
+        passwordResets: prev.passwordResets.map(r => 
+          r.id === id ? { ...r, status: 'rejected' as const, processedAt: new Date().toISOString() } : r
+        ),
+      }
+      saveSettings(next)
+      return next
+    })
+  }, [])
+
   const value = React.useMemo(() => ({
     settings: state,
     setSuperAgentName,
@@ -151,7 +254,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addRegistrationAlert,
     markAlertRead,
     clearAllAlerts,
-  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts])
+    addTestAccount,
+    addRealAccount,
+    addPasswordReset,
+    approvePasswordReset,
+    rejectPasswordReset,
+  }), [state, setSuperAgentName, addUser, updateUser, removeUser, addRegistrationAlert, markAlertRead, clearAllAlerts, addTestAccount, addRealAccount, addPasswordReset, approvePasswordReset, rejectPasswordReset])
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }

@@ -6,6 +6,7 @@ import type {
   FloatRequest,
   FloatExchange,
   CreditPortfolio,
+  VendorProfile,
 } from '@/lib/types'
 
 // ── Store routing: test accounts use isolated demo stores ─────────────────────
@@ -281,13 +282,53 @@ export async function deleteFloatExchange(id: string): Promise<void> {
   await store.delete(id)
 }
 
+// ── Vendors ─────────────────────────────────────────────────────────────────
+
+export async function getVendorProfile(id: string): Promise<VendorProfile | null> {
+  const isTest = id.startsWith('test-')
+  const store = getStore(getStoreName('vendors', isTest))
+  return store.get(id, { type: 'json' })
+}
+
+export async function saveVendorProfile(profile: VendorProfile): Promise<void> {
+  const isTest = isTestEntity(profile)
+  const store = getStore(getStoreName('vendors', isTest))
+  await store.setJSON(profile.id, profile)
+}
+
+export async function listVendors(testOnly?: boolean): Promise<VendorProfile[]> {
+  const store = getStore(testOnly ? 'test-vendors' : 'vendors')
+  const { blobs } = await store.list()
+  if (blobs.length === 0) return []
+  const results = await Promise.all(
+    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<VendorProfile>)
+  )
+  return results.filter(Boolean)
+}
+
+export async function listAllVendors(): Promise<{ real: VendorProfile[]; test: VendorProfile[] }> {
+  const [real, test] = await Promise.all([listVendors(false), listVendors(true)])
+  return { real, test }
+}
+
+export async function listVendorsByStatus(status: 'pending' | 'approved' | 'rejected', testOnly?: boolean): Promise<VendorProfile[]> {
+  const all = await listVendors(testOnly)
+  return all.filter(v => v.status === status)
+}
+
+export async function deleteVendor(id: string): Promise<void> {
+  const isTest = id.startsWith('test-')
+  const store = getStore(getStoreName('vendors', isTest))
+  await store.delete(id)
+}
+
 // ── Test data cleanup ────────────────────────────────────────────────────────
 // Admin can wipe all test data at once without touching real records.
 
 export async function clearAllTestData(): Promise<void> {
   const testStores = [
     'test-agents', 'test-customers', 'test-transactions',
-    'test-float-requests', 'test-float-exchanges',
+    'test-float-requests', 'test-float-exchanges', 'test-vendors',
   ]
   for (const name of testStores) {
     const store = getStore(name)

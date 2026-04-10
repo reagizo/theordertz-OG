@@ -5,6 +5,7 @@ import type {
   Transaction,
   FloatRequest,
   FloatExchange,
+  VendorProfile,
 } from '@/lib/types'
 import {
   getAgentProfile,
@@ -35,11 +36,17 @@ import {
   listFloatExchangesByAgent,
   getCreditPortfolio,
   listCreditPortfolios,
+  getVendorProfile,
+  saveVendorProfile,
+  listVendors,
+  listAllVendors,
+  listVendorsByStatus,
   deleteAgent,
   deleteCustomer,
   deleteTransaction,
   deleteFloatRequest,
   deleteFloatExchange,
+  deleteVendor,
   clearAllTestData,
 } from '@/server/db.server'
 
@@ -170,3 +177,25 @@ export const deleteFloatExchangeFn = createServerFn({ method: 'POST' })
 
 export const clearAllTestDataFn = createServerFn({ method: 'POST' })
   .handler(() => clearAllTestData())
+
+// ── Vendor Functions ────────────────────────────────────────────────────────
+
+export const getVendorProfileFn = createServerFn({ method: 'GET' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(({ data }) => getVendorProfile(data.id))
+
+export const saveVendorProfileFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: VendorProfile) => data)
+  .handler(({ data }) => saveVendorProfile(data))
+
+export const listVendorsFn = createServerFn().handler(() => listVendors())
+
+export const listAllVendorsFn = createServerFn().handler(() => listAllVendors())
+
+export const listVendorsByStatusFn = createServerFn({ method: 'GET' })
+  .inputValidator((data: { status: 'pending' | 'approved' | 'rejected' }) => data)
+  .handler(({ data }) => listVendorsByStatus(data.status))
+
+export const deleteVendorFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(({ data }) => deleteVendor(data.id))

@@ -3,18 +3,20 @@ import React, { useState, useRef } from 'react'
 import { useSettings, type UserRole, type AppUser, type CustomerTier } from '@/contexts/SettingsContext'
 import {
   UserPlus, Save, Trash2, Edit2, Upload, X, Check, Shield, KeyRound, User,
-  Bell, BellOff, AlertTriangle, Activity, FlaskConical,
+  Bell, BellOff, AlertTriangle, Activity, FlaskConical, Users, RefreshCw,
 } from 'lucide-react'
+import { TEST_ADMIN_EMAIL, REAL_ADMIN_EMAIL } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/settings')({
   component: AdminSettings,
 })
 
-const ROLES: UserRole[] = ['Admin', 'Supervisor', 'Clerk', 'Agent', 'Customer', 'Test']
+const ROLES: UserRole[] = ['Admin', 'Supervisor', 'Clerk', 'Agent', 'Customer', 'Test', 'SuperAgent']
 
 const ROLE_COLORS: Record<UserRole, string> = {
   Admin: 'bg-red-100 text-red-700',
   Supervisor: 'bg-purple-100 text-purple-700',
+  SuperAgent: 'bg-indigo-100 text-indigo-700',
   Clerk: 'bg-blue-100 text-blue-700',
   Agent: 'bg-orange-100 text-orange-700',
   Customer: 'bg-green-100 text-green-700',
@@ -62,10 +64,20 @@ function ProfilePictureUploader({ currentPicture, name, onUpload }: { currentPic
 }
 
 function AdminSettings() {
-  const { settings, setSuperAgentName, addUser, updateUser, removeUser, markAlertRead, clearAllAlerts } = useSettings()
+  const { settings, setSuperAgentName, addUser, updateUser, removeUser, markAlertRead, clearAllAlerts, approvePasswordReset, rejectPasswordReset } = useSettings()
 
   const [superAgentNameInput, setSuperAgentNameInput] = useState(settings.superAgentName)
   const [superAgentSaved, setSuperAgentSaved] = useState(false)
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('mock.user')
+      if (stored) {
+        const user = JSON.parse(stored)
+        setCurrentUserEmail(user?.email ?? null)
+      }
+    } catch {}
+  }, [])
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -83,9 +95,17 @@ function AdminSettings() {
   const [editEmail, setEditEmail] = useState('')
   const [editRole, setEditRole] = useState<UserRole>('Clerk')
   const [editPicture, setEditPicture] = useState('')
-  const [settingsTab, setSettingsTab] = useState<'general' | 'alerts' | 'audit' | 'test-accounts'>('general')
+  const [settingsTab, setSettingsTab] = useState<'general' | 'alerts' | 'audit' | 'test-accounts' | 'super-agents' | 'password-resets'>('general')
 
-  const unreadAlerts = settings.registrationAlerts.filter(a => !a.read)
+  const isTestAdmin = currentUserEmail === TEST_ADMIN_EMAIL
+  const isRealAdmin = currentUserEmail === REAL_ADMIN_EMAIL
+
+  const filteredAlerts = settings.registrationAlerts.filter(alert => {
+    if (isTestAdmin) return alert.isTestAccount === true
+    if (isRealAdmin) return alert.isTestAccount !== true
+    return true
+  })
+  const unreadAlerts = filteredAlerts.filter(a => !a.read)
 
   const handleSaveSuperAgent = () => {
     setSuperAgentName(superAgentNameInput)
@@ -141,7 +161,9 @@ function AdminSettings() {
           <div className="flex gap-1 overflow-x-auto">
             {[
               { id: 'general' as const, label: 'General', icon: User },
-              { id: 'alerts' as const, label: `Registration Alerts${unreadAlerts.length > 0 ? ` (${unreadAlerts.length})` : ''}`, icon: Bell },
+              { id: 'super-agents' as const, label: 'Super Agents', icon: Shield },
+              { id: 'password-resets' as const, label: 'Password Resets', icon: RefreshCw },
+              { id: 'alerts' as const, label: `Alerts${unreadAlerts.length > 0 ? ` (${unreadAlerts.length})` : ''}`, icon: Bell },
               { id: 'audit' as const, label: 'Audit Trail', icon: Activity },
               { id: 'test-accounts' as const, label: 'Test Accounts', icon: FlaskConical },
             ].map(tab => (
@@ -359,13 +381,13 @@ function AdminSettings() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Registration Alerts</h2>
-                {settings.registrationAlerts.length > 0 && (
+                {filteredAlerts.length > 0 && (
                   <button onClick={clearAllAlerts} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
                     <BellOff className="w-4 h-4" /> Clear All
                   </button>
                 )}
               </div>
-              {settings.registrationAlerts.length === 0 ? (
+              {filteredAlerts.length === 0 ? (
                 <div className="text-center py-12">
                   <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500">No registration alerts yet.</p>
@@ -373,7 +395,7 @@ function AdminSettings() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {settings.registrationAlerts.map((alert) => (
+                  {filteredAlerts.map((alert) => (
                     <div
                       key={alert.id}
                       className={`flex items-start gap-3 p-4 rounded-xl border transition-colors ${
@@ -398,6 +420,9 @@ function AdminSettings() {
                           </span>
                           {!alert.read && (
                             <span className="inline-flex px-1.5 py-0.5 text-xs rounded-full bg-red-100 text-red-700">New</span>
+                          )}
+                          {alert.isTestAccount && (
+                            <span className="inline-flex px-1.5 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">TEST</span>
                           )}
                         </div>
                         <p className="text-sm text-gray-600 mt-0.5">{alert.email}</p>
@@ -425,13 +450,13 @@ function AdminSettings() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Audit Trail</h2>
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {settings.registrationAlerts.length === 0 ? (
+                {filteredAlerts.length === 0 ? (
                   <div className="text-center py-12">
                     <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">No audit entries yet.</p>
                   </div>
                 ) : (
-                  settings.registrationAlerts.map((alert) => (
+                  filteredAlerts.map((alert) => (
                     <div key={alert.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="mt-0.5">
                         <Activity className="w-4 h-4 text-gray-400" />
@@ -444,6 +469,9 @@ function AdminSettings() {
                           }`}>
                             {alert.type === 'agent' ? 'Agent' : `Customer ${alert.tier === 'premier' ? '(Premier)' : '(D2D)'}`}
                           </span>
+                          {alert.isTestAccount && (
+                            <span className="inline-flex px-1.5 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">TEST</span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-600 mt-0.5">{alert.name} — {alert.email}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{alert.message}</p>
@@ -461,12 +489,99 @@ function AdminSettings() {
           {/* Test Accounts Tab */}
           {settingsTab === 'test-accounts' && (
             <div className="space-y-6">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Test Accounts</h2>
-                <p className="text-sm text-gray-500">
-                  Test account functionality is currently disabled.
-                </p>
-              </div>
+              {isTestAdmin && (
+                <>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Test Accounts</h2>
+                    <p className="text-sm text-gray-500">
+                      These accounts are linked to the test environment (admin@example.com). All registrations starting with "Test-" are captured here.
+                    </p>
+                  </div>
+                  {settings.testAccounts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FlaskConical className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">No test accounts registered yet.</p>
+                      <p className="text-xs text-gray-400 mt-1">Accounts with "Test-" in name or email will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3">Name</th>
+                            <th className="px-4 py-3">Email</th>
+                            <th className="px-4 py-3">Role</th>
+                            <th className="px-4 py-3">Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {settings.testAccounts.map((u) => (
+                            <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                              <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
+                              <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${ROLE_COLORS[u.role]}`}>{u.role}</span>
+                              </td>
+                              <td className="px-4 py-3 text-gray-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {isRealAdmin && (
+                <>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Real Accounts</h2>
+                    <p className="text-sm text-gray-500">
+                      These accounts are linked to the production environment (rkaijage@gmail.com). All registrations without "Test-" are captured here.
+                    </p>
+                  </div>
+                  {settings.realAccounts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Shield className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">No real accounts registered yet.</p>
+                      <p className="text-xs text-gray-400 mt-1">Accounts without "Test-" in name or email will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3">Name</th>
+                            <th className="px-4 py-3">Email</th>
+                            <th className="px-4 py-3">Role</th>
+                            <th className="px-4 py-3">Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {settings.realAccounts.map((u) => (
+                            <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                              <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
+                              <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${ROLE_COLORS[u.role]}`}>{u.role}</span>
+                              </td>
+                              <td className="px-4 py-3 text-gray-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!isTestAdmin && !isRealAdmin && (
+                <div className="text-center py-8">
+                  <Shield className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">You do not have permission to view account listings.</p>
+                  <p className="text-xs text-gray-400 mt-1">Only admin@example.com (Test) or rkaijage@gmail.com (Real) can view accounts.</p>
+                </div>
+              )}
 
               {/* Clear Test Data */}
               <div className="bg-red-50 border border-red-200 rounded-xl p-5">
@@ -494,6 +609,146 @@ function AdminSettings() {
                   Clear All Test Data
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Super Agents Tab */}
+          {settingsTab === 'super-agents' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Super Agents Management</h2>
+                <p className="text-sm text-gray-500">
+                  Register and manage Super Agents who can supervise transactions and manage agents.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg"><UserPlus className="w-5 h-5 text-indigo-600" /></div>
+                  <h3 className="font-semibold text-gray-900">Register New Super Agent</h3>
+                </div>
+                <ProfilePictureUploader currentPicture={newUserPicture} name={newUserName || 'New Super Agent'} onUpload={setNewUserPicture} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" value={newUserName} onChange={(e) => setNewUserName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Full name" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="email@example.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Min. 6 characters" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input type="password" value={newUserConfirmPassword} onChange={(e) => setNewUserConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Re-enter password" />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => { if (newUserName && newUserEmail && newUserPassword === newUserConfirmPassword && newUserPassword.length >= 6) { addUser({ name: newUserName, email: newUserEmail, role: 'SuperAgent', profilePicture: newUserPicture || undefined, password: newUserPassword }); setNewUserName(''); setNewUserEmail(''); setNewUserPicture(''); setNewUserPassword(''); setNewUserConfirmPassword('') } else { alert('Please fill all fields correctly') } }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm">
+                    <UserPlus className="w-4 h-4" /> Add Super Agent
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3">User</th>
+                      <th className="px-4 py-3">Email</th>
+                      <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3">Created</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settings.users.filter(u => u.role === 'SuperAgent').length === 0 ? (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No Super Agents registered yet.</td></tr>
+                    ) : (
+                      settings.users.filter(u => u.role === 'SuperAgent').map((u) => (
+                        <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <AvatarWithPicture picture={u.profilePicture} name={u.name} size="sm" />
+                              <span className="font-medium text-gray-900">{u.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">Super Agent</span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button onClick={() => startEdit(u)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded" title="Edit"><Edit2 className="w-4 h-4" /></button>
+                              <button onClick={() => removeUser(u.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Password Resets Tab */}
+          {settingsTab === 'password-resets' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Password Reset Requests</h2>
+                <p className="text-sm text-gray-500">
+                  Review and approve password reset requests from users.
+                </p>
+              </div>
+
+              {settings.passwordResets.length === 0 ? (
+                <div className="text-center py-12">
+                  <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No password reset requests.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {settings.passwordResets.map((reset) => (
+                    <div key={reset.id} className={`flex items-start gap-3 p-4 rounded-xl border ${
+                      reset.status === 'pending' ? 'bg-amber-50 border-amber-200' : reset.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                    }`}>
+                      <div className="mt-0.5 p-2 rounded-lg flex-shrink-0 bg-white/50">
+                        <KeyRound className={`w-4 h-4 ${reset.status === 'pending' ? 'text-amber-600' : reset.status === 'approved' ? 'text-green-600' : 'text-red-600'}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-gray-900 text-sm">{reset.email}</span>
+                          <span className={`inline-flex px-1.5 py-0.5 text-xs rounded-full ${
+                            reset.status === 'pending' ? 'bg-amber-100 text-amber-700' : reset.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {reset.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Requested: {new Date(reset.requestedAt).toLocaleString()}</p>
+                        {reset.processedAt && (
+                          <p className="text-xs text-gray-500">Processed: {new Date(reset.processedAt).toLocaleString()}</p>
+                        )}
+                      </div>
+                      {reset.status === 'pending' && (
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button onClick={() => { approvePasswordReset(reset.id); alert('Password reset approved.') }} className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700">Approve</button>
+                          <button onClick={() => { rejectPasswordReset(reset.id); alert('Password reset rejected.') }} className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200">Reject</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

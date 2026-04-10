@@ -17,7 +17,7 @@ if (!useCF) {
 if (process.env.SKIP_BUILD !== 'true') {
   console.log('Building project for Cloudflare deployment...');
   const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, 
-    env: { ...process.env, CLOUDFLARE: 'false' } });  // Build without CF plugin
+    env: { ...process.env, CLOUDFLARE: 'false' } });
   if (buildRes.status && buildRes.status !== 0) {
     console.error('Build failed. Aborting deployment.');
     process.exit(buildRes.status);
@@ -31,14 +31,6 @@ if (!fs.existsSync(mainPath)) {
 }
 
 const cfEnv = process.env.CF_ENV || 'production';
-if (cfEnv === 'production' || cfEnv === 'staging') {
-  console.log('Running Wrangler build to validate Cloudflare bundle...');
-  const wranglerBuild = spawnSync('wrangler', ['build'], { stdio: 'inherit', shell: true });
-  if (wranglerBuild.status && wranglerBuild.status !== 0) {
-    console.error('Wrangler build failed. Aborting deployment.');
-    process.exit(wranglerBuild.status);
-  }
-}
 
 console.log('Starting Cloudflare deployment...');
 const result = spawnSync('wrangler', ['deploy', '--env', cfEnv], { stdio: 'inherit', shell: true });

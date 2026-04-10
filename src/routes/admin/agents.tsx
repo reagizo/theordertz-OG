@@ -7,7 +7,14 @@ import type { AgentProfile } from '@/lib/types'
 import { useSettings } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/agents')({
-  loader: () => listAllAgentsFn(),
+  loader: () => {
+    try {
+      return listAllAgentsFn()
+    } catch (err) {
+      console.error('Agents loader error:', err)
+      return { real: [], test: [] }
+    }
+  },
   component: AdminAgents,
 })
 

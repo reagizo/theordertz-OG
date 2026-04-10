@@ -6,7 +6,14 @@ import { CheckCircle, XCircle, Clock, Search } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 
 export const Route = createFileRoute('/admin/transactions')({
-  loader: () => listTransactionsFn(),
+  loader: () => {
+    try {
+      return listTransactionsFn()
+    } catch (err) {
+      console.error('Transactions loader error:', err)
+      return []
+    }
+  },
   component: AdminTransactions,
 })
 

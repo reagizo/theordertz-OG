@@ -5,6 +5,7 @@ import { getAgentProfileFn, listTransactionsByAgentFn, listFloatExchangesByAgent
 import { formatTZS, formatDate, statusColor } from '@/lib/utils'
 import { TrendingUp, ArrowLeftRight, DollarSign, Clock, Upload, X } from 'lucide-react'
 import type { AgentProfile, Transaction, FloatExchange } from '@/lib/types'
+import { supabase } from '@/lib/supabase'
 
 export const Route = createFileRoute('/agent/')({
   component: AgentDashboard,
@@ -26,14 +27,19 @@ function AgentDashboard() {
 
     async function load() {
       try {
-        const [p, txs, fxs] = await Promise.all([
+        const [p, txs, fxs, picData] = await Promise.all([
           getAgentProfileFn({ data: { id: user!.id } }),
           listTransactionsByAgentFn({ data: { agentId: user!.id } }),
           listFloatExchangesByAgentFn({ data: { agentId: user!.id } }),
+          supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
         ])
         setProfile(p)
         setTransactions(txs)
         setFloatExchanges(fxs)
+        if (picData?.data?.profile_picture_url && !saved) {
+          setProfilePicture(picData.data.profile_picture_url)
+          localStorage.setItem(`agent_picture_${user.id}`, picData.data.profile_picture_url)
+        }
       } finally {
         setLoading(false)
       }
@@ -41,23 +47,29 @@ function AgentDashboard() {
     load()
   }, [user?.id])
 
-  const handlePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user?.id) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       if (ev.target?.result) {
         const dataUrl = ev.target.result as string
         setProfilePicture(dataUrl)
         localStorage.setItem(`agent_picture_${user.id}`, dataUrl)
+        await supabase.from('users').update({ profile_picture_url: dataUrl }).eq('id', user.id)
+        await supabase.from('app_users').update({ profile_picture: dataUrl }).eq('id', user.id)
       }
     }
     reader.readAsDataURL(file)
   }
 
-  const removePicture = () => {
+  const removePicture = async () => {
     if (!user?.id) return
     setProfilePicture(null)
+    localStorage.removeItem(`agent_picture_${user.id}`)
+    await supabase.from('users').update({ profile_picture_url: null }).eq('id', user.id)
+    await supabase.from('app_users').update({ profile_picture: null }).eq('id', user.id)
+  }
     localStorage.removeItem(`agent_picture_${user.id}`)
   }
 

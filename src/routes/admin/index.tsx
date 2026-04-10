@@ -49,13 +49,18 @@ ChartJS.register(
 
 export const Route = createFileRoute('/admin/')({
   loader: async () => {
-    const [transactions, agents, customers, floatRequests] = await Promise.all([
-      listTransactionsFn(),
-      listAgentsFn(),
-      listCustomersFn(),
-      listFloatRequestsFn(),
-    ])
-    return { transactions, agents, customers, floatRequests }
+    try {
+      const [transactions, agents, customers, floatRequests] = await Promise.all([
+        listTransactionsFn(),
+        listAgentsFn(),
+        listCustomersFn(),
+        listFloatRequestsFn(),
+      ])
+      return { transactions, agents, customers, floatRequests }
+    } catch (err) {
+      console.error('Admin dashboard loader error:', err)
+      return { transactions: [], agents: [], customers: [], floatRequests: [] }
+    }
   },
   component: AdminDashboardPage,
 })

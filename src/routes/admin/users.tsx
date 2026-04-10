@@ -2,7 +2,14 @@ import { createFileRoute } from '@tanstack/react-router'
 import { listUsersFn } from '@/server/db.functions'
 
 export const Route = createFileRoute('/admin/users')({
-  loader: () => listUsersFn(),
+  loader: () => {
+    try {
+      return listUsersFn()
+    } catch (err) {
+      console.error('Users loader error:', err)
+      return []
+    }
+  },
   component: AdminUsersTable,
 })
 

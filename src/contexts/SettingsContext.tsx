@@ -211,8 +211,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (updates.profilePicture !== undefined) updateData.profile_picture = updates.profilePicture
       if (updates.password !== undefined) updateData.password = updates.password
       await supabase.from('app_users').update(updateData).eq('id', id)
+      
+      if (updates.profilePicture !== undefined) {
+        await supabase.from('users').update({ profile_picture_url: updates.profilePicture }).eq('id', id)
+      }
 
-      // Sync to localStorage for auth.ts
       if (updates.profilePicture !== undefined) {
         try {
           const raw = localStorage.getItem('app_settings_v3')

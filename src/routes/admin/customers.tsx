@@ -7,7 +7,14 @@ import type { CustomerProfile, Transaction, CreditPortfolio } from '@/lib/types'
 import { useSettings } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/customers')({
-  loader: () => listAllCustomersFn(),
+  loader: () => {
+    try {
+      return listAllCustomersFn()
+    } catch (err) {
+      console.error('Customers loader error:', err)
+      return { real: [], test: [] }
+    }
+  },
   component: AdminCustomers,
 })
 

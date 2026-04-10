@@ -49,7 +49,14 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     ...cloudflarePlugin,
-    tanstackStart(),
+    tanstackStart({
+      ssr: true,
+      routeTree: {
+        generated: './src/routeTree.gen.ts',
+        fileHeader: '',
+      },
+      disableAutoStyleInjection: true,
+    }),
     react(),
     tailwindcss(),
     ...(mode === 'production'

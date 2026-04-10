@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { AuthProvider } from '@/components/AuthProvider'
 import { SettingsProvider } from '@/contexts/SettingsContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import '@/styles.css'
 
 export const Route = createRootRoute({
   notFoundComponent: () => (

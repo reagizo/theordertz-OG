@@ -6,13 +6,21 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react'
 import AnimatedLogo from '@/components/AnimatedLogo'
-import { isTestAccountByNameOrEmail, useSettings } from '@/contexts/SettingsContext'
+import { isTestAccountByNameOrEmail, useSettings, SettingsProvider } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/register/agent')({
   component: AgentRegisterPage,
 })
 
 function AgentRegisterPage() {
+  return (
+    <SettingsProvider>
+      <AgentRegisterContent />
+    </SettingsProvider>
+  )
+}
+
+function AgentRegisterContent() {
   const { signup } = useAuth()
   const router = useRouter()
   const { addTestAccount, addRealAccount, addRegistrationAlert } = useSettings()
@@ -77,6 +85,7 @@ function AgentRegisterPage() {
   }
 
   return (
+    <SettingsProvider>
     <div className="min-h-screen bg-[#0A2A66] flex items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* Blur background layers */}
       <div className="absolute inset-0 pointer-events-none">
@@ -205,5 +214,6 @@ function AgentRegisterPage() {
         </div>
       </div>
     </div>
+    </SettingsProvider>
   )
 }

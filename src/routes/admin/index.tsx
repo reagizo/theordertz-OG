@@ -51,14 +51,16 @@ ChartJS.register(
 
 export const Route = createFileRoute('/admin/')({
   loader: async () => {
-    const [transactions, agents, customers, floatRequests, { real: vendors }] = await Promise.all([
+    const results = await Promise.all([
       listTransactionsFn(),
       listAgentsFn(),
       listCustomersFn(),
       listFloatRequestsFn(),
       listAllVendorsFn(),
     ])
-    return { transactions, agents, customers, floatRequests, vendors }
+    const vendorsResult = results[4]
+    const vendors = vendorsResult?.real ?? []
+    return { transactions: results[0], agents: results[1], customers: results[2], floatRequests: results[3], vendors }
   },
   component: AdminDashboardPage,
 })

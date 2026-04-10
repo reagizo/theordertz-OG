@@ -96,7 +96,21 @@ function saveSettings(s: SettingsState) {
 
 const SettingsContext = React.createContext<SettingsContextValue | undefined>(undefined)
 
+function useExistingSettingsContext(): SettingsContextValue | null {
+  try {
+    const ctx = React.useContext(SettingsContext)
+    return ctx ?? null
+  } catch {
+    return null
+  }
+}
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const existing = useExistingSettingsContext()
+  if (existing) {
+    return <>{children}</>
+  }
+
   const [state, setState] = React.useState<SettingsState>(loadSettings)
 
   const setSuperAgentName = React.useCallback((name: string) => {

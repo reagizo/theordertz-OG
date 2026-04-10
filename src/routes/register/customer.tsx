@@ -7,13 +7,21 @@ import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, ArrowRight } from 'lucide-react'
 import type { CustomerTier } from '@/lib/types'
 import AnimatedLogo from '@/components/AnimatedLogo'
-import { isTestAccountByNameOrEmail, useSettings } from '@/contexts/SettingsContext'
+import { isTestAccountByNameOrEmail, useSettings, SettingsProvider } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/register/customer')({
   component: CustomerRegisterPage,
 })
 
 function CustomerRegisterPage() {
+  return (
+    <SettingsProvider>
+      <CustomerRegisterContent />
+    </SettingsProvider>
+  )
+}
+
+function CustomerRegisterContent() {
   const { signup } = useAuth()
   const router = useRouter()
   const { addTestAccount, addRealAccount, addRegistrationAlert } = useSettings()
@@ -81,6 +89,7 @@ function CustomerRegisterPage() {
   }
 
   return (
+    <SettingsProvider>
     <div className="min-h-screen bg-[#0A2A66] flex items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* Blur background layers */}
       <div className="absolute inset-0 pointer-events-none">
@@ -215,5 +224,6 @@ function CustomerRegisterPage() {
         </div>
       </div>
     </div>
+    </SettingsProvider>
   )
 }

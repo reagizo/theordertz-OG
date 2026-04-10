@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { AuthProvider } from '@/components/AuthProvider'
+import { SettingsProvider } from '@/contexts/SettingsContext'
 import '@/styles.css'
 
 export const Route = createRootRoute({
@@ -36,7 +37,9 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body className="bg-[#0A2A66]">
         <AuthProvider>
-          {children}
+          <SettingsProvider>
+            {children}
+          </SettingsProvider>
         </AuthProvider>
         <Scripts />
       </body>

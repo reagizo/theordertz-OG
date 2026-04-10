@@ -13,13 +13,13 @@ function AdminLayout() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && (!user || (role !== 'admin' && role !== 'test'))) {
+    if (!loading && (!user || (role !== 'admin' && role !== 'test' && role !== 'supervisor' && role !== 'clerk' && role !== 'accountant'))) {
       router.navigate({ to: '/login' })
     }
   }, [user, loading, role, router])
 
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-gray-500">Loading...</div></div>
-  if (!user || (role !== 'admin' && role !== 'test')) return null
+  if (!user || (role !== 'admin' && role !== 'test' && role !== 'supervisor' && role !== 'clerk' && role !== 'accountant')) return null
 
   return (
     <RoleGuard permission="view_dashboard" resource="admin_dashboard" redirectTo="/login">

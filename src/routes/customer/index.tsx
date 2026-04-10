@@ -22,7 +22,7 @@ function CustomerWallet() {
 
   useEffect(() => {
     if (!user?.id || !user?.email) return
-    const saved = localStorage.getItem(`customer_picture_${user.id}`)
+    const saved = localStorage.getItem(`profile_picture_${user.id}`)
     if (saved) setProfilePicture(saved)
 
     Promise.all([
@@ -31,8 +31,6 @@ function CustomerWallet() {
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
       supabase.from('customer_profiles').select('full_name, email, tier').eq('email', user.email).maybeSingle(),
     ]).then(([p, txs, userData, customerData]) => {
-      console.log('customer_profiles by email:', JSON.stringify(customerData))
-      
       if (customerData?.data?.full_name) {
         setProfile({ ...p!, fullName: customerData.data.full_name, email: customerData.data.email || p?.email || user.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
       } else {
@@ -41,7 +39,7 @@ function CustomerWallet() {
       setTransactions(txs)
       if (userData?.data?.profile_picture_url && !saved) {
         setProfilePicture(userData.data.profile_picture_url)
-        localStorage.setItem(`customer_picture_${user.id}`, userData.data.profile_picture_url)
+        localStorage.setItem(`profile_picture_${user.id}`, userData.data.profile_picture_url)
       }
     }).finally(() => setLoading(false))
   }, [user?.id, user?.email])
@@ -54,20 +52,20 @@ function CustomerWallet() {
       if (ev.target?.result) {
         const dataUrl = ev.target.result as string
         setProfilePicture(dataUrl)
-        localStorage.setItem(`customer_picture_${user.id}`, dataUrl)
+        localStorage.setItem(`profile_picture_${user.id}`, dataUrl)
         await supabase.from('users').update({ profile_picture_url: dataUrl }).eq('id', user.id)
-        await supabase.from('app_users').update({ profile_picture: dataUrl }).eq('id', user.id)
+        await supabase.from('app_users').update({ profile_picture: dataUrl }).eq('email', user.email)
       }
     }
     reader.readAsDataURL(file)
   }
 
   const removePicture = async () => {
-    if (!user?.id) return
+    if (!user?.id || !user?.email) return
     setProfilePicture(null)
-    localStorage.removeItem(`customer_picture_${user.id}`)
+    localStorage.removeItem(`profile_picture_${user.id}`)
     await supabase.from('users').update({ profile_picture_url: null }).eq('id', user.id)
-    await supabase.from('app_users').update({ profile_picture: null }).eq('id', user.id)
+    await supabase.from('app_users').update({ profile_picture: null }).eq('email', user.email)
   }
 
   if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>

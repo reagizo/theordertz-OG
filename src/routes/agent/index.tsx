@@ -21,8 +21,8 @@ function AgentDashboard() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user?.id) return
-    const saved = localStorage.getItem(`agent_picture_${user.id}`)
+    if (!user?.id || !user?.email) return
+    const saved = localStorage.getItem(`profile_picture_${user.id}`)
     if (saved) setProfilePicture(saved)
 
     async function load() {
@@ -38,7 +38,7 @@ function AgentDashboard() {
         setFloatExchanges(fxs)
         if (picData?.data?.profile_picture_url && !saved) {
           setProfilePicture(picData.data.profile_picture_url)
-          localStorage.setItem(`agent_picture_${user.id}`, picData.data.profile_picture_url)
+          localStorage.setItem(`profile_picture_${user.id}`, picData.data.profile_picture_url)
         }
       } finally {
         setLoading(false)
@@ -49,26 +49,26 @@ function AgentDashboard() {
 
   const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user?.id) return
+    if (!file || !user?.id || !user?.email) return
     const reader = new FileReader()
     reader.onload = async (ev) => {
       if (ev.target?.result) {
         const dataUrl = ev.target.result as string
         setProfilePicture(dataUrl)
-        localStorage.setItem(`agent_picture_${user.id}`, dataUrl)
+        localStorage.setItem(`profile_picture_${user.id}`, dataUrl)
         await supabase.from('users').update({ profile_picture_url: dataUrl }).eq('id', user.id)
-        await supabase.from('app_users').update({ profile_picture: dataUrl }).eq('id', user.id)
+        await supabase.from('app_users').update({ profile_picture: dataUrl }).eq('email', user.email)
       }
     }
     reader.readAsDataURL(file)
   }
 
   const removePicture = async () => {
-    if (!user?.id) return
+    if (!user?.id || !user?.email) return
     setProfilePicture(null)
-    localStorage.removeItem(`agent_picture_${user.id}`)
+    localStorage.removeItem(`profile_picture_${user.id}`)
     await supabase.from('users').update({ profile_picture_url: null }).eq('id', user.id)
-    await supabase.from('app_users').update({ profile_picture: null }).eq('id', user.id)
+    await supabase.from('app_users').update({ profile_picture: null }).eq('email', user.email)
   }
 
   if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>

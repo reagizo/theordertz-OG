@@ -91,9 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const initSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          await hydrateRole(session.user)
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          console.warn('Supabase session error:', error.message)
+        }
+        if (data?.session?.user) {
+          await hydrateRole(data.session.user)
         } else {
           setUser(null)
         }
@@ -108,18 +111,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void initSession()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          void hydrateRole(session.user)
-        } else {
-          setUser(null)
+    let subscription: any = null
+    try {
+      const result = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          if (session?.user) {
+            void hydrateRole(session.user)
+          } else {
+            setUser(null)
+          }
         }
-      }
-    )
+      )
+      subscription = result.data?.subscription
+    } catch (err) {
+      console.warn('Failed to set up auth state change listener:', err)
+    }
 
     return () => {
-      subscription.unsubscribe()
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
   }, [hydrateRole])
 

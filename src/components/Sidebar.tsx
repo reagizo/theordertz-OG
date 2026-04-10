@@ -94,7 +94,7 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (!user?.id || !user?.email) return
-    const savedPicture = localStorage.getItem(`customer_picture_${user.id}`)
+    const savedPicture = localStorage.getItem(`profile_picture_${user.id}`)
     if (savedPicture) {
       setUserPicture(savedPicture)
       supabase.from('users').update({ profile_picture_url: savedPicture }).eq('id', user.id)
@@ -108,7 +108,7 @@ export function Sidebar({ role }: SidebarProps) {
       const picture = appUserData?.profile_picture || userData?.profile_picture_url
       if (picture) {
         setUserPicture(picture)
-        localStorage.setItem(`customer_picture_${user.id}`, picture)
+        localStorage.setItem(`profile_picture_${user.id}`, picture)
       } else {
         let foundPicture: string | undefined
         try {
@@ -129,7 +129,7 @@ export function Sidebar({ role }: SidebarProps) {
 
         if (foundPicture) {
           setUserPicture(foundPicture)
-          localStorage.setItem(`customer_picture_${user.id}`, foundPicture)
+          localStorage.setItem(`profile_picture_${user.id}`, foundPicture)
           supabase.from('users').update({ profile_picture_url: foundPicture }).eq('id', user.id)
           supabase.from('app_users').update({ profile_picture: foundPicture }).eq('email', user.email)
         }

@@ -130,16 +130,12 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (role !== 'customer' || !user?.email) return
-    Promise.all([
-      supabase.from('users').select('full_name').eq('id', user.id).maybeSingle(),
-      supabase.from('customer_profiles').select('tier').eq('email', user.email).maybeSingle(),
-    ]).then(([userData, customerData]) => {
-      const fullName = userData?.data?.full_name
-      const tier = customerData?.data?.tier
-      if (fullName || tier) {
-        setCustomerProfile({ fullName, tier })
-      }
-    })
+    supabase.from('customer_profiles').select('full_name, tier').eq('email', user.email).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setCustomerProfile({ fullName: data.full_name, tier: data.tier })
+        }
+      })
   }, [role, user?.email])
 
   const roleLabel = role === 'admin' ? t('navigation.agents') : role === 'agent' ? t('navigation.agents') : role === 'test' ? 'Test' : t('navigation.customers')

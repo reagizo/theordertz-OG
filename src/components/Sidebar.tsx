@@ -93,7 +93,13 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (!user?.id || !user?.email) return
-    console.log('Sidebar: fetching profile picture for', user.email)
+    const savedPicture = localStorage.getItem(`customer_picture_${user.id}`)
+    if (savedPicture) {
+      setUserPicture(savedPicture)
+      supabase.from('users').update({ profile_picture_url: savedPicture }).eq('id', user.id)
+      supabase.from('app_users').update({ profile_picture: savedPicture }).eq('email', user.email)
+      return
+    }
     Promise.all([
       supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle(),
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
@@ -101,6 +107,7 @@ export function Sidebar({ role }: SidebarProps) {
       const picture = appUserData?.profile_picture || userData?.profile_picture_url
       if (picture) {
         setUserPicture(picture)
+        localStorage.setItem(`customer_picture_${user.id}`, picture)
       } else {
         let foundPicture: string | undefined
         try {
@@ -121,6 +128,7 @@ export function Sidebar({ role }: SidebarProps) {
 
         if (foundPicture) {
           setUserPicture(foundPicture)
+          localStorage.setItem(`customer_picture_${user.id}`, foundPicture)
           supabase.from('users').update({ profile_picture_url: foundPicture }).eq('id', user.id)
           supabase.from('app_users').update({ profile_picture: foundPicture }).eq('email', user.email)
         }

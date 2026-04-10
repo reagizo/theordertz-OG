@@ -211,7 +211,7 @@ export const markAlertReadFn = createServerFn({ method: 'POST' })
 export const clearAllAlertsFn = createServerFn({ method: 'POST' })
   .handler(() => clearAllAlerts())
 
-export const resolveAccessByEmailFn = createServerFn({ method: 'GET' })
+export const resolveAccessByEmailFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { email: string }) => data)
   .handler(({ data }) => resolveAccessByEmail(data.email))
 

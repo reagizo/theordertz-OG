@@ -624,46 +624,61 @@ export type ResolvedAccess = {
 }
 
 export async function resolveAccessByEmail(email: string): Promise<ResolvedAccess> {
-  const normalized = email.trim().toLowerCase()
+  const normalized = String(email ?? '').trim().toLowerCase()
+  if (!normalized) return { role: 'guest', approved: false }
 
-  const admin = getSupabaseAdminOrThrow()
-  if (!admin) {
-    console.warn('Supabase admin not available, defaulting to guest')
+  try {
+    const admin = getAdminSafe()
+    if (!admin) {
+      console.warn('Supabase admin not available, defaulting to guest')
+      return { role: 'guest', approved: false }
+    }
+
+    const { data: appUser, error: appUserError } = await admin
+      .from('app_users')
+      .select('role')
+      .eq('email', normalized)
+      .maybeSingle()
+    if (appUserError) {
+      console.warn('resolveAccessByEmail app_users query failed:', appUserError.message)
+    }
+
+    const appRole = String(appUser?.role ?? '').toLowerCase()
+    if (appRole === 'admin' || appRole === 'test') {
+      return { role: appRole, approved: true }
+    }
+
+    const { data: customer, error: customerError } = await admin
+      .from('customer_profiles')
+      .select('status')
+      .eq('email', normalized)
+      .maybeSingle()
+    if (customerError) {
+      console.warn('resolveAccessByEmail customer_profiles query failed:', customerError.message)
+    }
+    if (customer) {
+      const approved = String(customer.status ?? '').toLowerCase() === 'approved'
+      return { role: approved ? 'customer' : 'guest', approved }
+    }
+
+    const { data: agent, error: agentError } = await admin
+      .from('agent_profiles')
+      .select('status')
+      .eq('email', normalized)
+      .maybeSingle()
+    if (agentError) {
+      console.warn('resolveAccessByEmail agent_profiles query failed:', agentError.message)
+    }
+    if (agent) {
+      const approved = String(agent.status ?? '').toLowerCase() === 'approved'
+      return { role: approved ? 'agent' : 'guest', approved }
+    }
+
+    return { role: 'guest', approved: false }
+  } catch (err) {
+    console.error('resolveAccessByEmail failed unexpectedly:', err)
     return { role: 'guest', approved: false }
   }
-
-  const { data: appUser } = await admin
-    .from('app_users')
-    .select('role')
-    .eq('email', normalized)
-    .maybeSingle()
-
-  const appRole = (appUser?.role ?? '').toLowerCase()
-  if (appRole === 'admin' || appRole === 'test') {
-    return { role: appRole, approved: true }
-  }
-
-  const { data: customer } = await admin
-    .from('customer_profiles')
-    .select('status')
-    .eq('email', normalized)
-    .maybeSingle()
-  if (customer) {
-    const approved = (customer.status ?? '').toLowerCase() === 'approved'
-    return { role: approved ? 'customer' : 'guest', approved }
-  }
-
-  const { data: agent } = await admin
-    .from('agent_profiles')
-    .select('status')
-    .eq('email', normalized)
-    .maybeSingle()
-  if (agent) {
-    const approved = (agent.status ?? '').toLowerCase() === 'approved'
-    return { role: approved ? 'agent' : 'guest', approved }
-  }
-
-  return { role: 'guest', approved: false }
 }
 
 // ── App Users ───────────────────────────────────────────────────────────────

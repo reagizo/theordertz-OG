@@ -163,6 +163,28 @@ export function Sidebar({ role }: SidebarProps) {
       })
   }, [role, user?.email])
 
+  useEffect(() => {
+    if (role !== 'admin') return
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'app_settings_v3' && user?.email) {
+        supabase.from('app_users').select('role').eq('email', user.email).maybeSingle()
+          .then(({ data }) => {
+            if (data?.role) {
+              const roleMap: Record<string, string> = {
+                admin: 'Administrator',
+                supervisor: 'Supervisor',
+                clerk: 'Clerk',
+                accountant: 'Accountant',
+              }
+              setUserRoleLabel(roleMap[data.role] || data.role)
+            }
+          })
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [role, user?.email])
+
   const roleLabel = role === 'admin' ? (userRoleLabel || t('navigation.agents')) : role === 'agent' ? 'AGENT' : role === 'test' ? 'Test' : t('navigation.customers')
 
   const handleLogout = async () => {

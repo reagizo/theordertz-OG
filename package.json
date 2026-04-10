@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "set CLOUDFLARE=false&& vite dev --port 3000",
+    "dev": "cross-env CLOUDFLARE=false vite dev --port 3000",
     "build": "vite build",
     "start": "node dist/server/server.js",
     "preview": "node ./scripts/preview.js",
@@ -50,6 +50,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "lucide-react": "^0.576.0",
     "onchange": "^7.1.0",
     "rimraf": "^6.0.1",

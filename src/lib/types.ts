@@ -108,6 +108,8 @@ export interface SuperAgentProfile {
   updatedAt: string
   isTestAccount?: boolean
   adminRequestedBy?: string
+  profilePicture?: string
+  userId?: string
 }
 
 export interface CustomerProfile {

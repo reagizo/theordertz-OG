@@ -737,6 +737,8 @@ function mapSuperAgentRow(data: any): SuperAgentProfile {
     updatedAt: data.updated_at,
     isTestAccount: data.is_test_account,
     adminRequestedBy: data.admin_requested_by,
+    profilePicture: data.profile_picture || undefined,
+    userId: data.user_id || undefined,
   }
 }
 
@@ -783,6 +785,8 @@ export async function saveSuperAgentProfile(profile: SuperAgentProfile): Promise
       updated_at: profile.updatedAt,
       is_test_account: profile.isTestAccount,
       admin_requested_by: profile.adminRequestedBy,
+      profile_picture: profile.profilePicture || null,
+      user_id: profile.userId || null,
     })
   if (error) throw error
 }

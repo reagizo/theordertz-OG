@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import { listSuperAgentsFn, saveSuperAgentProfileFn, deleteSuperAgentFn } from '@/server/db.functions'
+import { useState, useRef } from 'react'
+import { listSuperAgentsFn, saveSuperAgentProfileFn, deleteSuperAgentFn, saveAppUserFn } from '@/server/db.functions'
 import { formatDate } from '@/lib/utils'
-import { CheckCircle, XCircle, Clock, UserPlus, Trash2, Edit, Shield } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, UserPlus, Trash2, Edit, Shield, Upload, X, Camera } from 'lucide-react'
 import type { SuperAgentProfile } from '@/lib/types'
 import { generateId } from '@/lib/utils'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -39,25 +39,52 @@ function AdminSuperAgents() {
     email: '',
     phone: '',
     status: 'active' as 'active' | 'inactive' | 'pending',
+    profilePicture: '',
+    createUserAccount: true,
+    password: '',
   })
+  const [profilePicture, setProfilePicture] = useState<string>('')
+  const pictureInputRef = useRef<HTMLInputElement>(null)
   const { addAuditEntry } = useSettings()
+
+  const handlePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { setMessage('Image must be less than 2MB'); return }
+    const reader = new FileReader()
+    reader.onload = (ev) => { 
+      if (ev.target?.result) {
+        setProfilePicture(ev.target.result as string)
+        setForm(f => ({ ...f, profilePicture: ev.target!.result as string }))
+      }
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleOpenForm = (agent?: SuperAgentProfile) => {
     if (agent) {
       setEditingAgent(agent)
+      setProfilePicture(agent.profilePicture || '')
       setForm({
         fullName: agent.fullName,
         email: agent.email,
         phone: agent.phone,
         status: agent.status,
+        profilePicture: agent.profilePicture || '',
+        createUserAccount: false,
+        password: '',
       })
     } else {
       setEditingAgent(null)
+      setProfilePicture('')
       setForm({
         fullName: '',
         email: '',
         phone: '',
         status: 'active' as 'active' | 'inactive' | 'pending',
+        profilePicture: '',
+        createUserAccount: true,
+        password: '',
       })
     }
     setShowForm(true)
@@ -66,7 +93,8 @@ function AdminSuperAgents() {
   const handleCloseForm = () => {
     setShowForm(false)
     setEditingAgent(null)
-    setForm({ fullName: '', email: '', phone: '', status: 'active' })
+    setProfilePicture('')
+    setForm({ fullName: '', email: '', phone: '', status: 'active', profilePicture: '', createUserAccount: true, password: '' })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,10 +103,29 @@ function AdminSuperAgents() {
       setMessage('Full name and email are required')
       return
     }
+    if (form.createUserAccount && !editingAgent && !form.password) {
+      setMessage('Password is required when creating user account')
+      return
+    }
 
     setLoading('saving')
     try {
       const now = new Date().toISOString()
+      let userId = editingAgent?.userId
+
+      if (form.createUserAccount && !editingAgent) {
+        const appUser = {
+          id: generateId(),
+          name: form.fullName,
+          email: form.email,
+          role: 'super_agent',
+          profile_picture: profilePicture || null,
+          password: form.password,
+        }
+        await saveAppUserFn({ data: appUser })
+        userId = appUser.id
+      }
+
       const profile: SuperAgentProfile = {
         id: editingAgent?.id || generateId(),
         fullName: form.fullName,
@@ -89,6 +136,8 @@ function AdminSuperAgents() {
         updatedAt: now,
         isTestAccount: form.email.toLowerCase().includes('test'),
         adminRequestedBy: 'admin',
+        profilePicture: profilePicture || editingAgent?.profilePicture,
+        userId: userId,
       }
 
       await saveSuperAgentProfileFn({ data: profile })
@@ -98,14 +147,14 @@ function AdminSuperAgents() {
         setMessage('Super Agent updated successfully')
       } else {
         setSuperAgents(prev => [profile, ...prev])
-        setMessage('Super Agent added successfully')
+        setMessage('Super Agent added successfully! ' + (form.createUserAccount ? 'User account created.' : ''))
       }
 
       addAuditEntry({
         action: editingAgent ? 'Super Agent Updated' : 'Super Agent Added',
         entityType: 'SuperAgent',
         entityName: form.fullName,
-        details: `Email: ${form.email} | Status: ${form.status}`,
+        details: `Email: ${form.email} | Status: ${form.status}${userId ? ' | User account created' : ''}`,
         actor: form.fullName,
       })
 
@@ -229,10 +278,17 @@ function AdminSuperAgents() {
                   <tr key={agent.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-semibold text-sm">
-                          {agent.fullName.charAt(0).toUpperCase()}
+                        {agent.profilePicture ? (
+                          <img src={agent.profilePicture} alt={agent.fullName} className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-semibold text-sm">
+                            {agent.fullName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <span className="font-medium text-gray-900">{agent.fullName}</span>
+                          {agent.userId && <span className="ml-2 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">Has Account</span>}
                         </div>
-                        <span className="font-medium text-gray-900">{agent.fullName}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{agent.email}</td>
@@ -269,13 +325,41 @@ function AdminSuperAgents() {
       {/* Add/Edit Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b sticky top-0 bg-white">
               <h2 className="text-lg font-semibold text-gray-900">
                 {editingAgent ? 'Edit Super Agent' : 'Add Super Agent'}
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Profile Picture */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                    {profilePicture ? (
+                      <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-gray-400" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => pictureInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 p-1.5 bg-green-600 text-white rounded-full hover:bg-green-700"
+                  >
+                    <Upload className="w-3 h-3" />
+                  </button>
+                </div>
+                <input
+                  ref={pictureInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePictureUpload}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500 mt-2">Profile Picture</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                 <input
@@ -320,6 +404,47 @@ function AdminSuperAgents() {
                   <option value="pending">Pending</option>
                 </select>
               </div>
+              
+              {/* Create User Account Section - Only for new Super Agents */}
+              {!editingAgent && (
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="createUserAccount"
+                      checked={form.createUserAccount}
+                      onChange={e => setForm(f => ({ ...f, createUserAccount: e.target.checked }))}
+                      className="w-4 h-4 accent-green-600"
+                    />
+                    <label htmlFor="createUserAccount" className="text-sm font-medium text-gray-700">
+                      Create user account for login
+                    </label>
+                  </div>
+                  {form.createUserAccount && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                      <input
+                        type="password"
+                        value={form.password}
+                        onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Min. 8 characters"
+                        minLength={8}
+                        required={form.createUserAccount}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Super Agent can use this to log in independently</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {editingAgent && editingAgent.userId && (
+                <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-700">
+                  <p><strong>User Account:</strong> Created</p>
+                  <p className="text-xs text-blue-500 mt-1">This Super Agent has a user account and can log in independently.</p>
+                </div>
+              )}
+              
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"

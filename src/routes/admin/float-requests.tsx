@@ -7,11 +7,16 @@ import type { FloatRequest, FloatExchange } from '@/lib/types'
 
 export const Route = createFileRoute('/admin/float-requests')({
   loader: async () => {
-    const [floatRequests, floatExchanges] = await Promise.all([
-      listFloatRequestsFn(),
-      listFloatExchangesFn(),
-    ])
-    return { floatRequests, floatExchanges }
+    try {
+      const [floatRequests, floatExchanges] = await Promise.all([
+        listFloatRequestsFn(),
+        listFloatExchangesFn(),
+      ])
+      return { floatRequests, floatExchanges }
+    } catch (err) {
+      console.error('Float requests loader error:', err)
+      return { floatRequests: [], floatExchanges: [] }
+    }
   },
   component: AdminFloatRequests,
 })

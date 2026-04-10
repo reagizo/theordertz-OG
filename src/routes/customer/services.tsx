@@ -28,7 +28,14 @@ import {
 import { Zap, Send, FileText } from 'lucide-react'
 
 export const Route = createFileRoute('/customer/services')({
-  loader: async () => listAgentsFn(),
+  loader: async () => {
+    try {
+      return await listAgentsFn()
+    } catch (err) {
+      console.error('Services loader error:', err)
+      return []
+    }
+  },
   component: CustomerServices,
 })
 

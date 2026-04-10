@@ -6,7 +6,7 @@ export function LogoWatermark({ className = '' }: { className?: string }) {
         <polygon points="200,100 330,160 310,190 200,135 90,190 70,160" fill="#C41E3A" />
         <polygon points="200,170 280,210 260,235 200,205 140,235 120,210" fill="#E8822A" />
         <text x="200" y="320" textAnchor="middle" fontFamily="Great Vibes, cursive" fontSize="72" fill="#0D1B2A">The Order</text>
-        <text x="200" y="370" textAnchor="middle" fontFamily="Playfair Display, Georgia, serif" fontSize="20" fill="#C41E3A" letterSpacing="3">REAGIZO SERVICE COMPANY</text>
+        <text x="200" y="370" textAnchor="middle" fontFamily="Aptos Display, Aptos, sans-serif" fontSize="20" fill="#C41E3A" letterSpacing="3">REAGIZO SERVICE COMPANY</text>
       </svg>
     </div>
   )

@@ -94,7 +94,7 @@ export function Sidebar({ role }: SidebarProps) {
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 flex-shrink-0 object-contain" />
           <div className="min-w-0">
-            <p className="text-white font-bold text-[10px] leading-tight tracking-wider uppercase" style={{ fontFamily: 'Playfair Display, serif' }}>SIPS</p>
+            <p className="text-white font-bold text-[10px] leading-tight tracking-wider uppercase" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>SIPS</p>
             <p className="text-[#fbb040] text-[9px] leading-tight">Portal System</p>
           </div>
         </div>

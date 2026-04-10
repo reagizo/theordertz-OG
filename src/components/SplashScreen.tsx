@@ -90,7 +90,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
           </div>
           <p 
             className="mt-6 text-center text-lg tracking-[0.25em] uppercase font-semibold animate-fade-in"
-            style={{ color: '#fbb040', fontFamily: 'Playfair Display, Georgia, serif' }}
+            style={{ color: '#fbb040', fontFamily: 'Aptos Display, Aptos, sans-serif' }}
           >
             SERVICE INTERFACE PORTAL SYSTEM
           </p>

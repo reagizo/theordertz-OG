@@ -1,8 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Aptos+Display:wght@300;400;500;600;700;800&family=Aptos:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss" source("../");
 
-/* Branding variables and decorative background scaffolding */
 :root {
   --brand-1: #4F46E5;
   --brand-2: #06B6D4;
@@ -22,9 +21,8 @@
 }
 
 @layer base {
-  /* Body text - Open Sans everywhere */
   body, p, span, div, label, input, select, textarea, button, a, td, th, li, small, code, pre {
-    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Aptos', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   }
 
   body {
@@ -34,9 +32,8 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Headings - Playfair Display */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Aptos Display', 'Aptos', sans-serif;
   }
 
   h1 { font-weight: 700; }
@@ -44,7 +41,6 @@
   h3 { font-weight: 600; }
   h4, h5, h6 { font-weight: 500; }
 
-  /* Font weight utilities */
   .font-light { font-weight: 300; }
   .font-regular { font-weight: 400; }
   .font-medium { font-weight: 500; }
@@ -52,7 +48,7 @@
   .font-bold { font-weight: 700; }
 
   code {
-    font-family: 'Open Sans', monospace;
+    font-family: 'Aptos', monospace;
   }
 }
 
@@ -81,12 +77,10 @@
     @apply block text-sm font-medium text-brand-blue mb-1.5;
   }
 
-  /* Brand background - soft gradient with curved arcs */
   .brand-bg {
     @apply bg-gradient-to-br from-[#FFF5EE] via-[#FFE4E8] to-[#E8D5F5] relative overflow-hidden;
   }
 
-  /* Decorative curved arcs */
   .brand-arc-top-left {
     @apply absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full border-[3px] border-orange-300/20 pointer-events-none;
   }
@@ -103,7 +97,6 @@
     @apply absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full border-[2px] border-purple-400/15 pointer-events-none;
   }
 
-  /* Soft glow overlays */
   .brand-glow-top {
     @apply absolute top-0 left-0 w-96 h-96 bg-orange-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none;
   }
@@ -113,7 +106,6 @@
   }
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -132,51 +124,20 @@
   background: #1E3A5F;
 }
 
-/* Mobile-friendly improvements */
 @media (max-width: 640px) {
-  /* Prevent horizontal overflow */
   html, body {
     overflow-x: hidden;
   }
 
-  /* Better tap targets on mobile */
   button, a, input, select, textarea {
     min-height: 44px;
   }
 
-  /* Smaller padding on mobile containers */
   .space-y-6 > * + * {
     margin-top: 1rem;
   }
 }
 
-/* Safe area padding for notched phones (iPhone X+) */
-@supports (padding: max(0px)) {
-  body {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-}
-
-/* Mobile-friendly improvements */
-@media (max-width: 640px) {
-  /* Prevent horizontal overflow */
-  html, body {
-    overflow-x: hidden;
-  }
-
-  /* Better tap targets on mobile */
-  button, a, input, select, textarea {
-    min-height: 44px;
-  }
-
-  /* Smaller padding on mobile containers */
-  .space-y-6 > * + * {
-    margin-top: 1rem;
-  }
-}
-
-/* Safe area padding for notched phones (iPhone X+) */
 @supports (padding: max(0px)) {
   body {
     padding-left: env(safe-area-inset-left);

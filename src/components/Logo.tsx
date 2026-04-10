@@ -22,7 +22,7 @@ const Logo: React.FC<LogoProps> = ({ inline = false, alt = "Brand Logo", classNa
       <img src={src} alt={alt} className={`${sizeClass} flex-shrink-0`} style={{ display: "block", maxWidth: "100%", height: "auto" }} />
       {showName && (
         <div className="flex flex-col">
-          <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>The Order</p>
+          <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>The Order</p>
           <p className="text-pink-300 text-xs leading-tight">Reagizo Service Co.</p>
         </div>
       )}

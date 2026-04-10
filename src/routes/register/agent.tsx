@@ -82,7 +82,7 @@ function AgentRegisterPage() {
         <p className="text-white/60 text-sm mb-6">Agent Registration</p>
 
         <div className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-white mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>Register as Agent</h2>
+          <h2 className="text-xl font-semibold text-white mb-1" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>Register as Agent</h2>
           <p className="text-white/60 text-sm mb-6">Complete KYC verification to register as an authorized agent</p>
 
           {error && (

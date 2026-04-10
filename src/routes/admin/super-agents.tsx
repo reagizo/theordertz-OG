@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Clock, UserPlus, Trash2, Edit, Shield, Upload, X,
 import type { SuperAgentProfile } from '@/lib/types'
 import { generateId } from '@/lib/utils'
 import { useSettings } from '@/contexts/SettingsContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export const Route = createFileRoute('/admin/super-agents')({
   loader: async () => {
@@ -20,7 +21,7 @@ export const Route = createFileRoute('/admin/super-agents')({
   component: AdminSuperAgents,
   errorComponent: () => (
     <div className="p-6 text-center">
-      <h2 className="text-xl font-semibold text-gray-900 mb-2">Super Agents Table Not Found</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('superAgents.title')} Table Not Found</h2>
       <p className="text-gray-500 mb-4">The super_agents table doesn't exist in your database.</p>
       <p className="text-sm text-gray-400">Please run the migration SQL in Supabase SQL Editor.</p>
     </div>
@@ -34,6 +35,8 @@ function AdminSuperAgents() {
   const [message, setMessage] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingAgent, setEditingAgent] = useState<SuperAgentProfile | null>(null)
+  const { settings } = useSettings()
+  const { t } = useLanguage()
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -223,15 +226,15 @@ function AdminSuperAgents() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Super Agents</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage Super Agent accounts</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('superAgents.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('superAgents.manageAccounts')}</p>
         </div>
         <button
           onClick={() => handleOpenForm()}
           className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-600"
         >
           <UserPlus className="w-4 h-4" />
-          Add Super Agent
+          {t('superAgents.addSuperAgent')}
         </button>
       </div>
 
@@ -284,19 +287,19 @@ function AdminSuperAgents() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Super Agent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('superAgents.title')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.email')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.phone')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.status')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.date')}</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {superAgents.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    No Super Agents yet. Click "Add Super Agent" to create one.
+                    {t('superAgents.noSuperAgents')}. {t('superAgents.addSuperAgent')} {t('common.next')}.
                   </td>
                 </tr>
               ) : (
@@ -354,7 +357,7 @@ function AdminSuperAgents() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b sticky top-0 bg-white">
               <h2 className="text-lg font-semibold text-gray-900">
-                {editingAgent ? 'Edit Super Agent' : 'Add Super Agent'}
+                {editingAgent ? t('superAgents.editSuperAgent') : t('superAgents.addSuperAgent')}
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -443,7 +446,7 @@ function AdminSuperAgents() {
                       className="w-4 h-4 accent-green-600"
                     />
                     <label htmlFor="createUserAccount" className="text-sm font-medium text-gray-700">
-                      Create user account for login
+                      {t('superAgents.createUserAccount')}
                     </label>
                   </div>
                   {form.createUserAccount && (
@@ -466,8 +469,8 @@ function AdminSuperAgents() {
               
               {editingAgent && editingAgent.userId && (
                 <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-700">
-                  <p><strong>User Account:</strong> Created</p>
-                  <p className="text-xs text-blue-500 mt-1">This Super Agent has a user account and can log in independently.</p>
+                  <p><strong>{t('common.user') || 'User'}:</strong> {t('common.created') || 'Created'}</p>
+                  <p className="text-xs text-blue-500 mt-1">{t('superAgents.userAccountCreated')}</p>
                 </div>
               )}
               
@@ -477,7 +480,7 @@ function AdminSuperAgents() {
                   onClick={handleCloseForm}
                   className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"

@@ -72,7 +72,9 @@
     "active": "Inafanya kazi",
     "inactive": "Haifanyi kazi",
     "yes": "Ndiyo",
-    "no": "Hapana"
+    "no": "Hapana",
+    "user": "Mtumiaji",
+    "created": "Imetengenezwa"
   },
   "pages": {
     "dashboard": {
@@ -199,7 +201,12 @@
     "addSuperAgent": "Ongeza Wakala Mkuu",
     "editSuperAgent": "Hariri Wakala Mkuu",
     "superAgentDetails": "Maelezo ya Wakala Mkuu",
-    "noSuperAgents": "Hakuna wakala mkuu"
+    "superAgentCode": "Kodi ya Wakala Mkuu",
+    "noSuperAgents": "Hakuna wakala mkuu",
+    "manageAccounts": "Kudhibiti akaunti za Wakala Mkuu",
+    "createUserAccount": "Unda Akaunti ya Mtumiaji",
+    "userAccountCreated": "Wakala Mkuu huyu ana akaunti ya mtumiaji na anaweza kuingia mwenyewe.",
+    "userAccountNote": "Wakala Mkuu anaweza kutumia hii kuingia wenyewe."
   },
   "forms": {
     "validation": {

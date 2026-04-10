@@ -72,7 +72,9 @@
     "active": "Active",
     "inactive": "Inactive",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "user": "User",
+    "created": "Created"
   },
   "pages": {
     "dashboard": {
@@ -127,6 +129,70 @@
       "superAgentName": "Super Agent Name",
       "changePassword": "Change Password"
     }
+  },
+  "roles": {
+    "admin": "Admin",
+    "supervisor": "Supervisor",
+    "clerk": "Clerk",
+    "agent": "Agent",
+    "customer": "Customer",
+    "superAgent": "Super Agent"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "allTransactions": "All Transactions",
+    "agentTransactions": "Agent Transactions",
+    "superAgentTransactions": "Super Agent Transactions",
+    "customerTransactions": "Customer Transactions",
+    "transactionDetails": "Transaction Details",
+    "provider": "Provider",
+    "paymentMethod": "Payment Method",
+    "cashOnDelivery": "Cash on Delivery",
+    "onCredit": "On Credit",
+    "statusApproved": "Approved",
+    "statusPending": "Pending",
+    "statusRejected": "Rejected",
+    "noTransactions": "No transactions"
+  },
+  "customers": {
+    "title": "Customers",
+    "allCustomers": "All Customers",
+    "addCustomer": "Add Customer",
+    "editCustomer": "Edit Customer",
+    "viewCustomer": "View Customer",
+    "customerDetails": "Customer Details",
+    "tier": "Tier",
+    "tierD2D": "Day-to-Day",
+    "tierPremier": "Premier",
+    "walletBalance": "Wallet Balance",
+    "creditLimit": "Credit Limit",
+    "creditUsed": "Credit Used",
+    "creditAvailable": "Credit Available",
+    "noCustomers": "No customers"
+  },
+  "agents": {
+    "title": "Agents",
+    "allAgents": "All Agents",
+    "addAgent": "Add Agent",
+    "editAgent": "Edit Agent",
+    "viewAgent": "View Agent",
+    "agentDetails": "Agent Details",
+    "floatBalance": "Float Balance",
+    "commission": "Commission",
+    "noAgents": "No agents"
+  },
+  "superAgents": {
+    "title": "Super Agents",
+    "allSuperAgents": "All Super Agents",
+    "addSuperAgent": "Add Super Agent",
+    "editSuperAgent": "Edit Super Agent",
+    "superAgentDetails": "Super Agent Details",
+    "superAgentCode": "Super Agent Code",
+    "noSuperAgents": "No super agents found",
+    "manageAccounts": "Manage Super Agent accounts",
+    "createUserAccount": "Create User Account",
+    "userAccountCreated": "This Super Agent has a user account and can log in independently.",
+    "userAccountNote": "Super Agent can use this to log in independently."
   },
   "forms": {
     "validation": {

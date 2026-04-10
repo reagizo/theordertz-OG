@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { useSettings } from '@/contexts/SettingsContext'
 import { saveTransactionFn, listAgentsFn, getCustomerProfileFn } from '@/server/db.functions'
 import { generateId, formatTZS } from '@/lib/utils'
 import type {
@@ -47,6 +48,7 @@ const SERVICE_OPTIONS = [
 
 function CustomerServices() {
   const { user } = useAuth()
+  const { settings } = useSettings()
   const agents = Route.useLoaderData() as AgentProfile[]
   const approvedAgents = agents.filter(a => a.status === 'approved')
 
@@ -529,7 +531,7 @@ function CustomerServices() {
             )}
             <div className="flex justify-between border-t pt-2 mt-2"><span className="text-gray-500">Amount</span><span className="font-bold text-green-700 text-base">{formatTZS(parseInt(form.amount.replace(/,/g, ''), 10) || 0)}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">Payment</span><span className="font-medium">{form.isOnCredit ? 'On Credit (OC)' : form.paymentMethod === 'cod' ? 'COD' : 'OC'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Super Agent</span><span className="font-medium">{agents.find(a => a.id === customer?.assignedAgentId)?.fullName || localStorage.getItem('superAgentName') || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Super Agent</span><span className="font-medium">{agents.find(a => a.id === customer?.assignedAgentId)?.fullName || settings.superAgentName}</span></div>
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => setStep(2)} className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">Back</button>

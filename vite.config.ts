@@ -24,7 +24,7 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'logo.png', 'logo.svg'],
+      includeAssets: ['logo.png', 'logo.svg'],
       manifest: {
         name: 'The Order-Reagizo Service Company',
         short_name: 'TheOrder',

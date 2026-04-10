@@ -14,8 +14,9 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: 'icon', type: 'image/png', href: '/logo.png' },
+      { rel: 'shortcut icon', type: 'image/png', href: '/logo.png' },
       { rel: 'manifest', href: '/manifest.webmanifest' },
-      { rel: 'apple-touch-icon', href: '/pwa-512x512.png' },
+      { rel: 'apple-touch-icon', href: '/logo.png' },
     ],
   }),
   shellComponent: RootDocument,

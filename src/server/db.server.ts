@@ -751,14 +751,23 @@ export async function getSuperAgentProfile(id: string): Promise<SuperAgentProfil
 }
 
 export async function listSuperAgents(testOnly?: boolean): Promise<SuperAgentProfile[]> {
-  const { data, error } = await supabaseAdmin
-    .from('super_agents')
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error || !data) return []
-  let agents = data.map(mapSuperAgentRow)
-  if (testOnly) agents = agents.filter(a => a.isTestAccount)
-  return testOnly ? agents.filter(a => a.isTestAccount) : agents.filter(a => !a.isTestAccount)
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('super_agents')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) {
+      console.error('listSuperAgents error:', error)
+      return []
+    }
+    if (!data) return []
+    let agents = data.map(mapSuperAgentRow)
+    if (testOnly) agents = agents.filter(a => a.isTestAccount)
+    return testOnly ? agents.filter(a => a.isTestAccount) : agents.filter(a => !a.isTestAccount)
+  } catch (err) {
+    console.error('listSuperAgents exception:', err)
+    return []
+  }
 }
 
 export async function saveSuperAgentProfile(profile: SuperAgentProfile): Promise<void> {

@@ -8,15 +8,23 @@ import { generateId } from '@/lib/utils'
 import { useSettings } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/super-agents')({
-  loader: () => {
+  loader: async () => {
     try {
-      return listSuperAgentsFn()
+      const data = await listSuperAgentsFn()
+      return data || []
     } catch (err) {
       console.error('Super Agents loader error:', err)
       return []
     }
   },
   component: AdminSuperAgents,
+  errorComponent: () => (
+    <div className="p-6 text-center">
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">Super Agents Table Not Found</h2>
+      <p className="text-gray-500 mb-4">The super_agents table doesn't exist in your database.</p>
+      <p className="text-sm text-gray-400">Please run the migration SQL in Supabase SQL Editor.</p>
+    </div>
+  ),
 })
 
 function AdminSuperAgents() {

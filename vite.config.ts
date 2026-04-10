@@ -30,24 +30,24 @@ export default defineConfig({
         short_name: 'TheOrder',
         description: 'The Order-Reagizo Service Company - Interactive Service Platform',
         theme_color: '#111827',
-        background_color: '#f9fafb',
+        background_color: '#111827',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/logo.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { login as mockLogin, signup as mockSignup, getCurrentUser, setCurrentUser, logout as mockLogout } from '@/lib/auth'
+import SplashScreen from './SplashScreen'
 
 interface UserLike {
   id: string
@@ -30,7 +31,16 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserLike | null>(null)
   const [loading, setLoading] = useState(true)
-  // Local, Netlify-free initialization
+  const [showSplash, setShowSplash] = useState(false)
+
+  useEffect(() => {
+    const hasSeenSplash = sessionStorage.getItem('hasSeenSplash')
+    if (!hasSeenSplash) {
+      setShowSplash(true)
+      sessionStorage.setItem('hasSeenSplash', 'true')
+    }
+  }, [])
+
   useEffect(() => {
     const u = getCurrentUser()
     if (u) {
@@ -61,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, role, login, logout, signup }}>
+      {showSplash && <SplashScreen duration={2800} />}
       {children}
     </AuthContext.Provider>
   )

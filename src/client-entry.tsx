@@ -8,6 +8,9 @@ const router = createRouter({
   routeTree,
   scrollRestoration: true,
   defaultPreloadStaleTime: 0,
+  async onError(error) {
+    console.error('Router error:', error)
+  },
 })
 
 declare module '@tanstack/react-router' {

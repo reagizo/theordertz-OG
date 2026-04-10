@@ -129,11 +129,16 @@ export function Sidebar({ role }: SidebarProps) {
   }, [user?.id, user?.email])
 
   useEffect(() => {
-    if (role !== 'customer' || !user?.email) return
+    console.log('Customer profile effect running', { role, email: user?.email })
+    if (role !== 'customer' || !user?.email) {
+      console.log('Customer profile effect skipped', { role, hasEmail: !!user?.email })
+      return
+    }
     Promise.all([
       supabase.from('users').select('full_name').eq('id', user.id).maybeSingle(),
       supabase.from('customer_profiles').select('tier').eq('email', user.email).maybeSingle(),
     ]).then(([userData, customerData]) => {
+      console.log('Customer profile result', { userData, customerData })
       if (userData?.full_name || customerData?.tier) {
         setCustomerProfile({ fullName: userData?.full_name, tier: customerData?.tier })
       }

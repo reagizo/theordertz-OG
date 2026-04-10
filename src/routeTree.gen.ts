@@ -27,6 +27,7 @@ import { Route as AgentTransactionsRouteImport } from './routes/agent/transactio
 import { Route as AgentFloatRouteImport } from './routes/agent/float'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminTransactionsRouteImport } from './routes/admin/transactions'
+import { Route as AdminSuperAgentsRouteImport } from './routes/admin/super-agents'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminFloatRequestsRouteImport } from './routes/admin/float-requests'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
@@ -122,6 +123,11 @@ const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSuperAgentsRoute = AdminSuperAgentsRouteImport.update({
+  id: '/super-agents',
+  path: '/super-agents',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/super-agents': typeof AdminSuperAgentsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/super-agents': typeof AdminSuperAgentsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/super-agents': typeof AdminSuperAgentsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/agent/float': typeof AgentFloatRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/float-requests'
     | '/admin/settings'
+    | '/admin/super-agents'
     | '/admin/transactions'
     | '/admin/users'
     | '/agent/float'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/float-requests'
     | '/admin/settings'
+    | '/admin/super-agents'
     | '/admin/transactions'
     | '/admin/users'
     | '/agent/float'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/float-requests'
     | '/admin/settings'
+    | '/admin/super-agents'
     | '/admin/transactions'
     | '/admin/users'
     | '/agent/float'
@@ -424,6 +436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTransactionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/super-agents': {
+      id: '/admin/super-agents'
+      path: '/super-agents'
+      fullPath: '/admin/super-agents'
+      preLoaderRoute: typeof AdminSuperAgentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -460,6 +479,7 @@ interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminFloatRequestsRoute: typeof AdminFloatRequestsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSuperAgentsRoute: typeof AdminSuperAgentsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -470,6 +490,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminFloatRequestsRoute: AdminFloatRequestsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSuperAgentsRoute: AdminSuperAgentsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,

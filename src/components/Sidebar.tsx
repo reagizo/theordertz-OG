@@ -14,6 +14,7 @@ import {
   X,
   Database,
   Globe,
+  Shield,
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from './AuthProvider'
@@ -32,6 +33,7 @@ function getNavItems(role: SidebarProps['role'], t: (key: string) => string): Na
     return [
       { label: t('navigation.dashboard'), to: '/admin', icon: LayoutDashboard },
       { label: t('navigation.transactions'), to: '/admin/transactions', icon: ArrowLeftRight },
+      { label: t('navigation.superAgents'), to: '/admin/super-agents', icon: Shield },
       { label: t('navigation.agents'), to: '/admin/agents', icon: UserCheck },
       { label: t('navigation.customers'), to: '/admin/customers', icon: Users },
       { label: t('navigation.users'), to: '/admin/users', icon: Database },

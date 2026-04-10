@@ -23,7 +23,6 @@ const serverStorage = {
 }
 
 // Client for Browser (uses Anon Key)
-// Always export a valid object, but use null client if not configured
 const supabaseClient = hasSupabaseConfig 
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
@@ -35,15 +34,38 @@ const supabaseClient = hasSupabaseConfig
     })
   : null
 
-// Safe export - always an object, methods check for client
-export const supabase = {
-  auth: supabaseClient?.auth ?? {
-    getSession: async () => ({ data: { session: null }, error: null }),
-    signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
-    signOut: async () => ({ error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-  },
-  from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), maybeSingle: async () => ({ data: null, error: null }), order: () => ({ execute: async () => ({ data: [], error: null }) }), execute: async () => ({ data: [], error: null }) }) }), insert: async () => ({ data: null, error: null }), update: () => ({ eq: () => ({ execute: async () => ({ error: null }) }) }), delete: () => ({ eq: () => ({ execute: async () => ({ error: null }) }) }) }),
+// Safe mock for when Supabase is not configured
+const mockAuth = {
+  getSession: async () => ({ data: { session: null }, error: null }),
+  signInWithPassword: async () => ({ data: { user: null, session: null }, error: { message: 'Not configured' } }),
+  signOut: async () => ({ error: null }),
+  signUp: async () => ({ data: { user: null, session: null }, error: { message: 'Not configured' } }),
+  onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+}
+
+const mockChannel = () => ({
+  on: () => ({ subscribe: async () => ({}) }),
+  subscribe: async () => ({}),
+})
+
+const mockFrom = () => ({
+  select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), maybeSingle: async () => ({ data: null, error: null }), order: () => ({ execute: async () => ({ data: [], error: null }) }), execute: async () => ({ data: [], error: null }) }) }),
+  insert: async () => ({ data: null, error: null }),
+  update: () => ({ eq: () => ({ execute: async () => ({ error: null }) }) }),
+  delete: () => ({ eq: () => ({ execute: async () => ({ error: null }) }) }),
+  upsert: async () => ({ error: null }),
+})
+
+// Export - always valid object with safe methods
+export const supabase = supabaseClient || {
+  auth: mockAuth,
+  channel: mockChannel,
+  from: mockFrom,
+  removeChannel: () => {},
+}
+
+if (!hasSupabaseConfig) {
+  console.warn('Supabase not configured - using mock client')
 }
 
 // Admin for Server Functions (uses Service Role Key)

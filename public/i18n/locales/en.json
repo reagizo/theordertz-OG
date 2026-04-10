@@ -15,7 +15,8 @@
     "requestService": "Request Service",
     "history": "History",
     "floatExchange": "Float Exchange",
-    "superAgent": "Super Agent"
+    "superAgent": "Super Agent",
+    "superAgents": "Super Agents"
   },
   "auth": {
     "login": "Login",

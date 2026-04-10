@@ -90,6 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Get initial session
     const initSession = async () => {
+      if (!supabase) {
+        setUser(null)
+        setLoading(false)
+        return
+      }
       try {
         const { data, error } = await supabase.auth.getSession()
         if (error) {
@@ -112,19 +117,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     let subscription: any = null
-    try {
-      const result = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          if (session?.user) {
-            void hydrateRole(session.user)
-          } else {
-            setUser(null)
+    if (supabase) {
+      try {
+        const result = supabase.auth.onAuthStateChange(
+          (_event, session) => {
+            if (session?.user) {
+              void hydrateRole(session.user)
+            } else {
+              setUser(null)
+            }
           }
-        }
-      )
-      subscription = result.data?.subscription
-    } catch (err) {
-      console.warn('Failed to set up auth state change listener:', err)
+        )
+        subscription = result.data?.subscription
+      } catch (err) {
+        console.warn('Failed to set up auth state change listener:', err)
+      }
     }
 
     return () => {
@@ -139,6 +146,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = await localLogin(email, password)
       setUser(user)
       return
+    }
+
+    if (!supabase) {
+      setUser(null)
+      throw new Error('Authentication not available')
     }
 
     setLoading(true)

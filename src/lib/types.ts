@@ -95,6 +95,19 @@ export interface AgentProfile {
   commissionEarned: number
   isTestAccount?: boolean
   adminRequestedBy?: string
+  assignedSuperAgentId?: string
+}
+
+export interface SuperAgentProfile {
+  id: string
+  fullName: string
+  email: string
+  phone: string
+  status: 'active' | 'inactive' | 'pending'
+  createdAt: string
+  updatedAt: string
+  isTestAccount?: boolean
+  adminRequestedBy?: string
 }
 
 export interface CustomerProfile {

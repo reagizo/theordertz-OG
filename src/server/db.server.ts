@@ -6,6 +6,7 @@ import type {
   FloatRequest,
   FloatExchange,
   CreditPortfolio,
+  SuperAgentProfile,
 } from '@/lib/types'
 
 // Safe admin client that gracefully degrades when service key is missing
@@ -720,5 +721,64 @@ export async function saveSetting(key: string, value: any): Promise<void> {
   const { error } = await supabaseAdmin
     .from('app_settings')
     .upsert({ key, value }, { onConflict: 'key' })
+  if (error) throw error
+}
+
+// ── Super Agents ─────────────────────────────────────────────────────────────
+
+function mapSuperAgentRow(data: any): SuperAgentProfile {
+  return {
+    id: data.id,
+    fullName: data.full_name,
+    email: data.email,
+    phone: data.phone || '',
+    status: data.status || 'pending',
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    isTestAccount: data.is_test_account,
+    adminRequestedBy: data.admin_requested_by,
+  }
+}
+
+export async function getSuperAgentProfile(id: string): Promise<SuperAgentProfile | null> {
+  const { data, error } = await supabaseAdmin
+    .from('super_agents')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapSuperAgentRow(data)
+}
+
+export async function listSuperAgents(testOnly?: boolean): Promise<SuperAgentProfile[]> {
+  const { data, error } = await supabaseAdmin
+    .from('super_agents')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error || !data) return []
+  let agents = data.map(mapSuperAgentRow)
+  if (testOnly) agents = agents.filter(a => a.isTestAccount)
+  return testOnly ? agents.filter(a => a.isTestAccount) : agents.filter(a => !a.isTestAccount)
+}
+
+export async function saveSuperAgentProfile(profile: SuperAgentProfile): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('super_agents')
+    .upsert({
+      id: profile.id,
+      full_name: profile.fullName,
+      email: profile.email,
+      phone: profile.phone,
+      status: profile.status,
+      created_at: profile.createdAt,
+      updated_at: profile.updatedAt,
+      is_test_account: profile.isTestAccount,
+      admin_requested_by: profile.adminRequestedBy,
+    })
+  if (error) throw error
+}
+
+export async function deleteSuperAgent(id: string): Promise<void> {
+  const { error } = await supabaseAdmin.from('super_agents').delete().eq('id', id)
   if (error) throw error
 }

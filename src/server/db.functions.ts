@@ -222,3 +222,18 @@ export const saveAppUserFn = createServerFn({ method: 'POST' })
 export const deleteAppUserFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { id: string }) => data)
   .handler(({ data }) => deleteAppUser(data.id))
+
+// ── Super Agent Functions ──────────────────────────────────────────────────────
+
+export const listSuperAgentsFn = createServerFn().handler(() => listSuperAgents())
+
+export const getSuperAgentProfileFn = createServerFn({ method: 'GET' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(({ data }) => getSuperAgentProfile(data.id))
+
+export const saveSuperAgentProfileFn = createServerFn({ method: 'POST' })
+  .handler(({ data }) => saveSuperAgentProfile(data))
+
+export const deleteSuperAgentFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(({ data }) => deleteSuperAgent(data.id))

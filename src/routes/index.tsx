@@ -1,7 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
-import Logo from '@/components/Logo'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -10,6 +9,16 @@ export const Route = createFileRoute('/')({
 function Home() {
   const { user, loading, role } = useAuth()
   const router = useRouter()
+  const [colorIndex, setColorIndex] = useState(0)
+
+  const colors = ['#fbb040', '#e8346a', '#4F46E5', '#06B6D4', '#EC4899']
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIndex((prev) => (prev + 1) % colors.length)
+    }, 500)
+    return () => clearInterval(interval)
+  }, [colors.length])
 
   useEffect(() => {
     if (loading) return
@@ -31,15 +40,44 @@ function Home() {
   }, [user, loading, role, router])
 
   return (
-    <div className="min-h-screen bg-green-900 flex items-center justify-center">
-      <div className="text-center">
-        <Logo size="lg" showName className="justify-center mb-6" />
-        <div className="flex items-center justify-center gap-2 text-green-200">
-          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <span>Loading...</span>
+    <div className="min-h-screen bg-[#1a1a3e] flex items-center justify-center relative overflow-hidden">
+      {/* Blur background layers */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e8346a]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#fbb040]/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#4F46E5]/10 rounded-full blur-[150px]" />
+      </div>
+
+      {/* Translucent watermark logo */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+        <img 
+          src="/logo.png" 
+          alt="" 
+          className="w-[500px] h-[500px] opacity-[0.08] scale-110" 
+          aria-hidden="true" 
+        />
+      </div>
+
+      <div className="text-center relative z-10">
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/logo.png" 
+            alt="Service Interface Portal System" 
+            className="w-32 h-32 object-contain drop-shadow-2xl opacity-80"
+          />
+        </div>
+        <div className="flex items-center justify-center gap-2">
+          <span 
+            className="text-2xl font-semibold tracking-wider transition-colors duration-500"
+            style={{ color: colors[colorIndex], fontFamily: 'Playfair Display, Georgia, serif' }}
+          >
+            LOADING
+          </span>
+          <span className="flex gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#fbb040] animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-2 h-2 rounded-full bg-[#e8346a] animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-2 h-2 rounded-full bg-[#4F46E5] animate-bounce" style={{ animationDelay: '300ms' }} />
+          </span>
         </div>
       </div>
     </div>

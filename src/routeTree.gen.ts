@@ -9,14 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupervisorRouteImport } from './routes/supervisor'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CustomerRouteImport } from './routes/customer'
 import { Route as AgentRouteImport } from './routes/agent'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VendorIndexRouteImport } from './routes/vendor/index'
+import { Route as SupervisorIndexRouteImport } from './routes/supervisor/index'
 import { Route as CustomerIndexRouteImport } from './routes/customer/index'
 import { Route as AgentIndexRouteImport } from './routes/agent/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as SupervisorTransactionsRouteImport } from './routes/supervisor/transactions'
+import { Route as SupervisorSettingsRouteImport } from './routes/supervisor/settings'
+import { Route as SupervisorFloatRequestsRouteImport } from './routes/supervisor/float-requests'
+import { Route as SupervisorCustomersRouteImport } from './routes/supervisor/customers'
+import { Route as RegisterVendorRouteImport } from './routes/register/vendor'
 import { Route as RegisterCustomerRouteImport } from './routes/register/customer'
 import { Route as RegisterAgentRouteImport } from './routes/register/agent'
 import { Route as CustomerServicesRouteImport } from './routes/customer/services'
@@ -24,12 +32,18 @@ import { Route as CustomerHistoryRouteImport } from './routes/customer/history'
 import { Route as CustomerConfirmationRouteImport } from './routes/customer/confirmation'
 import { Route as AgentTransactionsRouteImport } from './routes/agent/transactions'
 import { Route as AgentFloatRouteImport } from './routes/agent/float'
+import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 import { Route as AdminTransactionsRouteImport } from './routes/admin/transactions'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminFloatRequestsRouteImport } from './routes/admin/float-requests'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
 import { Route as AdminAgentsRouteImport } from './routes/admin/agents'
 
+const SupervisorRoute = SupervisorRouteImport.update({
+  id: '/supervisor',
+  path: '/supervisor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -55,6 +69,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VendorIndexRoute = VendorIndexRouteImport.update({
+  id: '/vendor/',
+  path: '/vendor/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupervisorIndexRoute = SupervisorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SupervisorRoute,
+} as any)
 const CustomerIndexRoute = CustomerIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -69,6 +93,31 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const SupervisorTransactionsRoute = SupervisorTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => SupervisorRoute,
+} as any)
+const SupervisorSettingsRoute = SupervisorSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => SupervisorRoute,
+} as any)
+const SupervisorFloatRequestsRoute = SupervisorFloatRequestsRouteImport.update({
+  id: '/float-requests',
+  path: '/float-requests',
+  getParentRoute: () => SupervisorRoute,
+} as any)
+const SupervisorCustomersRoute = SupervisorCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => SupervisorRoute,
+} as any)
+const RegisterVendorRoute = RegisterVendorRouteImport.update({
+  id: '/register/vendor',
+  path: '/register/vendor',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterCustomerRoute = RegisterCustomerRouteImport.update({
   id: '/register/customer',
@@ -105,6 +154,11 @@ const AgentFloatRoute = AgentFloatRouteImport.update({
   path: '/float',
   getParentRoute: () => AgentRoute,
 } as any)
+const AdminVendorsRoute = AdminVendorsRouteImport.update({
+  id: '/vendors',
+  path: '/vendors',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminTransactionsRoute = AdminTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -137,11 +191,13 @@ export interface FileRoutesByFullPath {
   '/agent': typeof AgentRouteWithChildren
   '/customer': typeof CustomerRouteWithChildren
   '/login': typeof LoginRoute
+  '/supervisor': typeof SupervisorRouteWithChildren
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/vendors': typeof AdminVendorsRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
@@ -149,9 +205,16 @@ export interface FileRoutesByFullPath {
   '/customer/services': typeof CustomerServicesRoute
   '/register/agent': typeof RegisterAgentRoute
   '/register/customer': typeof RegisterCustomerRoute
+  '/register/vendor': typeof RegisterVendorRoute
+  '/supervisor/customers': typeof SupervisorCustomersRoute
+  '/supervisor/float-requests': typeof SupervisorFloatRequestsRoute
+  '/supervisor/settings': typeof SupervisorSettingsRoute
+  '/supervisor/transactions': typeof SupervisorTransactionsRoute
   '/admin/': typeof AdminIndexRoute
   '/agent/': typeof AgentIndexRoute
   '/customer/': typeof CustomerIndexRoute
+  '/supervisor/': typeof SupervisorIndexRoute
+  '/vendor/': typeof VendorIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,6 +224,7 @@ export interface FileRoutesByTo {
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/vendors': typeof AdminVendorsRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
@@ -168,9 +232,16 @@ export interface FileRoutesByTo {
   '/customer/services': typeof CustomerServicesRoute
   '/register/agent': typeof RegisterAgentRoute
   '/register/customer': typeof RegisterCustomerRoute
+  '/register/vendor': typeof RegisterVendorRoute
+  '/supervisor/customers': typeof SupervisorCustomersRoute
+  '/supervisor/float-requests': typeof SupervisorFloatRequestsRoute
+  '/supervisor/settings': typeof SupervisorSettingsRoute
+  '/supervisor/transactions': typeof SupervisorTransactionsRoute
   '/admin': typeof AdminIndexRoute
   '/agent': typeof AgentIndexRoute
   '/customer': typeof CustomerIndexRoute
+  '/supervisor': typeof SupervisorIndexRoute
+  '/vendor': typeof VendorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,11 +250,13 @@ export interface FileRoutesById {
   '/agent': typeof AgentRouteWithChildren
   '/customer': typeof CustomerRouteWithChildren
   '/login': typeof LoginRoute
+  '/supervisor': typeof SupervisorRouteWithChildren
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/float-requests': typeof AdminFloatRequestsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/transactions': typeof AdminTransactionsRoute
+  '/admin/vendors': typeof AdminVendorsRoute
   '/agent/float': typeof AgentFloatRoute
   '/agent/transactions': typeof AgentTransactionsRoute
   '/customer/confirmation': typeof CustomerConfirmationRoute
@@ -191,9 +264,16 @@ export interface FileRoutesById {
   '/customer/services': typeof CustomerServicesRoute
   '/register/agent': typeof RegisterAgentRoute
   '/register/customer': typeof RegisterCustomerRoute
+  '/register/vendor': typeof RegisterVendorRoute
+  '/supervisor/customers': typeof SupervisorCustomersRoute
+  '/supervisor/float-requests': typeof SupervisorFloatRequestsRoute
+  '/supervisor/settings': typeof SupervisorSettingsRoute
+  '/supervisor/transactions': typeof SupervisorTransactionsRoute
   '/admin/': typeof AdminIndexRoute
   '/agent/': typeof AgentIndexRoute
   '/customer/': typeof CustomerIndexRoute
+  '/supervisor/': typeof SupervisorIndexRoute
+  '/vendor/': typeof VendorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -203,11 +283,13 @@ export interface FileRouteTypes {
     | '/agent'
     | '/customer'
     | '/login'
+    | '/supervisor'
     | '/admin/agents'
     | '/admin/customers'
     | '/admin/float-requests'
     | '/admin/settings'
     | '/admin/transactions'
+    | '/admin/vendors'
     | '/agent/float'
     | '/agent/transactions'
     | '/customer/confirmation'
@@ -215,9 +297,16 @@ export interface FileRouteTypes {
     | '/customer/services'
     | '/register/agent'
     | '/register/customer'
+    | '/register/vendor'
+    | '/supervisor/customers'
+    | '/supervisor/float-requests'
+    | '/supervisor/settings'
+    | '/supervisor/transactions'
     | '/admin/'
     | '/agent/'
     | '/customer/'
+    | '/supervisor/'
+    | '/vendor/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -227,6 +316,7 @@ export interface FileRouteTypes {
     | '/admin/float-requests'
     | '/admin/settings'
     | '/admin/transactions'
+    | '/admin/vendors'
     | '/agent/float'
     | '/agent/transactions'
     | '/customer/confirmation'
@@ -234,9 +324,16 @@ export interface FileRouteTypes {
     | '/customer/services'
     | '/register/agent'
     | '/register/customer'
+    | '/register/vendor'
+    | '/supervisor/customers'
+    | '/supervisor/float-requests'
+    | '/supervisor/settings'
+    | '/supervisor/transactions'
     | '/admin'
     | '/agent'
     | '/customer'
+    | '/supervisor'
+    | '/vendor'
   id:
     | '__root__'
     | '/'
@@ -244,11 +341,13 @@ export interface FileRouteTypes {
     | '/agent'
     | '/customer'
     | '/login'
+    | '/supervisor'
     | '/admin/agents'
     | '/admin/customers'
     | '/admin/float-requests'
     | '/admin/settings'
     | '/admin/transactions'
+    | '/admin/vendors'
     | '/agent/float'
     | '/agent/transactions'
     | '/customer/confirmation'
@@ -256,9 +355,16 @@ export interface FileRouteTypes {
     | '/customer/services'
     | '/register/agent'
     | '/register/customer'
+    | '/register/vendor'
+    | '/supervisor/customers'
+    | '/supervisor/float-requests'
+    | '/supervisor/settings'
+    | '/supervisor/transactions'
     | '/admin/'
     | '/agent/'
     | '/customer/'
+    | '/supervisor/'
+    | '/vendor/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -267,12 +373,22 @@ export interface RootRouteChildren {
   AgentRoute: typeof AgentRouteWithChildren
   CustomerRoute: typeof CustomerRouteWithChildren
   LoginRoute: typeof LoginRoute
+  SupervisorRoute: typeof SupervisorRouteWithChildren
   RegisterAgentRoute: typeof RegisterAgentRoute
   RegisterCustomerRoute: typeof RegisterCustomerRoute
+  RegisterVendorRoute: typeof RegisterVendorRoute
+  VendorIndexRoute: typeof VendorIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/supervisor': {
+      id: '/supervisor'
+      path: '/supervisor'
+      fullPath: '/supervisor'
+      preLoaderRoute: typeof SupervisorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -308,6 +424,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vendor/': {
+      id: '/vendor/'
+      path: '/vendor'
+      fullPath: '/vendor/'
+      preLoaderRoute: typeof VendorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supervisor/': {
+      id: '/supervisor/'
+      path: '/'
+      fullPath: '/supervisor/'
+      preLoaderRoute: typeof SupervisorIndexRouteImport
+      parentRoute: typeof SupervisorRoute
+    }
     '/customer/': {
       id: '/customer/'
       path: '/'
@@ -328,6 +458,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/supervisor/transactions': {
+      id: '/supervisor/transactions'
+      path: '/transactions'
+      fullPath: '/supervisor/transactions'
+      preLoaderRoute: typeof SupervisorTransactionsRouteImport
+      parentRoute: typeof SupervisorRoute
+    }
+    '/supervisor/settings': {
+      id: '/supervisor/settings'
+      path: '/settings'
+      fullPath: '/supervisor/settings'
+      preLoaderRoute: typeof SupervisorSettingsRouteImport
+      parentRoute: typeof SupervisorRoute
+    }
+    '/supervisor/float-requests': {
+      id: '/supervisor/float-requests'
+      path: '/float-requests'
+      fullPath: '/supervisor/float-requests'
+      preLoaderRoute: typeof SupervisorFloatRequestsRouteImport
+      parentRoute: typeof SupervisorRoute
+    }
+    '/supervisor/customers': {
+      id: '/supervisor/customers'
+      path: '/customers'
+      fullPath: '/supervisor/customers'
+      preLoaderRoute: typeof SupervisorCustomersRouteImport
+      parentRoute: typeof SupervisorRoute
+    }
+    '/register/vendor': {
+      id: '/register/vendor'
+      path: '/register/vendor'
+      fullPath: '/register/vendor'
+      preLoaderRoute: typeof RegisterVendorRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/register/customer': {
       id: '/register/customer'
@@ -378,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentFloatRouteImport
       parentRoute: typeof AgentRoute
     }
+    '/admin/vendors': {
+      id: '/admin/vendors'
+      path: '/vendors'
+      fullPath: '/admin/vendors'
+      preLoaderRoute: typeof AdminVendorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/transactions': {
       id: '/admin/transactions'
       path: '/transactions'
@@ -422,6 +594,7 @@ interface AdminRouteChildren {
   AdminFloatRequestsRoute: typeof AdminFloatRequestsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminTransactionsRoute: typeof AdminTransactionsRoute
+  AdminVendorsRoute: typeof AdminVendorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -431,6 +604,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFloatRequestsRoute: AdminFloatRequestsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminTransactionsRoute: AdminTransactionsRoute,
+  AdminVendorsRoute: AdminVendorsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -468,14 +642,37 @@ const CustomerRouteWithChildren = CustomerRoute._addFileChildren(
   CustomerRouteChildren,
 )
 
+interface SupervisorRouteChildren {
+  SupervisorCustomersRoute: typeof SupervisorCustomersRoute
+  SupervisorFloatRequestsRoute: typeof SupervisorFloatRequestsRoute
+  SupervisorSettingsRoute: typeof SupervisorSettingsRoute
+  SupervisorTransactionsRoute: typeof SupervisorTransactionsRoute
+  SupervisorIndexRoute: typeof SupervisorIndexRoute
+}
+
+const SupervisorRouteChildren: SupervisorRouteChildren = {
+  SupervisorCustomersRoute: SupervisorCustomersRoute,
+  SupervisorFloatRequestsRoute: SupervisorFloatRequestsRoute,
+  SupervisorSettingsRoute: SupervisorSettingsRoute,
+  SupervisorTransactionsRoute: SupervisorTransactionsRoute,
+  SupervisorIndexRoute: SupervisorIndexRoute,
+}
+
+const SupervisorRouteWithChildren = SupervisorRoute._addFileChildren(
+  SupervisorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AgentRoute: AgentRouteWithChildren,
   CustomerRoute: CustomerRouteWithChildren,
   LoginRoute: LoginRoute,
+  SupervisorRoute: SupervisorRouteWithChildren,
   RegisterAgentRoute: RegisterAgentRoute,
   RegisterCustomerRoute: RegisterCustomerRoute,
+  RegisterVendorRoute: RegisterVendorRoute,
+  VendorIndexRoute: VendorIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

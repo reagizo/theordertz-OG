@@ -31,6 +31,8 @@ function Home() {
         router.navigate({ to: '/agent' })
       } else if (role === 'customer') {
         router.navigate({ to: '/customer' })
+      } else if (role === 'vendor') {
+        router.navigate({ to: '/vendor' })
       } else {
         router.navigate({ to: '/login' })
       }

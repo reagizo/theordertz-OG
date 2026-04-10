@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'supervisor' | 'clerk' | 'agent' | 'customer' | 'test' | 'guest'
+export type UserRole = 'admin' | 'supervisor' | 'clerk' | 'agent' | 'customer' | 'vendor' | 'test' | 'guest'
 export type CustomerTier = 'd2d' | 'premier'
 export type Status = 'pending' | 'approved' | 'rejected'
 export type ServiceType = 'cash_send' | 'cash_withdrawal' | 'utility_bills' | 'airtime_bundle' | 'tv_subscriptions' | 'internet_subscriptions' | 'all_payments'
@@ -138,6 +138,23 @@ export interface FloatRequest {
   updatedAt: string
   notes?: string
   adminNotes?: string
+}
+
+export interface VendorProfile {
+  id: string
+  fullName: string
+  email: string
+  phone: string
+  businessName: string
+  businessType: string
+  address: string
+  tinNumber?: string
+  vrNumber?: string
+  status: Status
+  createdAt: string
+  updatedAt: string
+  walletBalance: number
+  isTestAccount?: boolean
 }
 
 export interface Notification {

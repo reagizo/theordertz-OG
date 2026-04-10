@@ -12,6 +12,8 @@ import {
   TrendingUp,
   Menu,
   X,
+  Building2,
+  Shield,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from './AuthProvider'
@@ -28,8 +30,17 @@ const adminNav: NavItem[] = [
   { label: 'Transactions', to: '/admin/transactions', icon: ArrowLeftRight },
   { label: 'Agents', to: '/admin/agents', icon: UserCheck },
   { label: 'Customers', to: '/admin/customers', icon: Users },
+  { label: 'Vendors', to: '/admin/vendors', icon: Building2 },
   { label: 'Float Requests', to: '/admin/float-requests', icon: TrendingUp },
   { label: 'Settings', to: '/admin/settings', icon: Settings },
+]
+
+const superAgentNav: NavItem[] = [
+  { label: 'Dashboard', to: '/supervisor', icon: LayoutDashboard },
+  { label: 'Transactions', to: '/supervisor/transactions', icon: ArrowLeftRight },
+  { label: 'Customers', to: '/supervisor/customers', icon: Users },
+  { label: 'Float Requests', to: '/supervisor/float-requests', icon: TrendingUp },
+  { label: 'Settings', to: '/supervisor/settings', icon: Settings },
 ]
 
 const agentNav: NavItem[] = [
@@ -44,8 +55,14 @@ const customerNav: NavItem[] = [
   { label: 'History', to: '/customer/history', icon: History },
 ]
 
+const vendorNav: NavItem[] = [
+  { label: 'Dashboard', to: '/vendor', icon: LayoutDashboard },
+  { label: 'Transactions', to: '/vendor/transactions', icon: ArrowLeftRight },
+  { label: 'Wallet', to: '/vendor/wallet', icon: Wallet },
+]
+
 interface SidebarProps {
-  role: 'admin' | 'agent' | 'customer'
+  role: 'admin' | 'super_agent' | 'agent' | 'customer' | 'vendor'
 }
 
 function AvatarWithPicture({ picture, name, size = 'md' }: { picture?: string; name: string; size?: 'sm' | 'md' | 'lg' }) {
@@ -76,8 +93,8 @@ export function Sidebar({ role }: SidebarProps) {
   const { settings } = useSettings()
   const router = useRouter()
 
-  const nav = role === 'admin' ? adminNav : role === 'agent' ? agentNav : customerNav
-  const roleLabel = role === 'admin' ? 'Administrator' : role === 'agent' ? 'Agent' : 'Customer'
+  const nav = role === 'admin' ? adminNav : role === 'super_agent' ? superAgentNav : role === 'agent' ? agentNav : role === 'customer' ? customerNav : vendorNav
+  const roleLabel = role === 'admin' ? 'Administrator' : role === 'super_agent' ? 'Super Agent' : role === 'agent' ? 'Agent' : role === 'customer' ? 'Customer' : 'Vendor'
 
   const handleLogout = async () => {
     await logout()

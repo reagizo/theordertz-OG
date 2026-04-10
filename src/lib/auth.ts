@@ -3,6 +3,7 @@ export type User = {
   id: string
   email: string
   name?: string
+  role?: 'super_agent' | 'admin' | 'agent' | 'customer'
   app_metadata?: { roles?: string[]; isTestAccount?: boolean }
   user_metadata?: { full_name?: string; profilePicture?: string }
 }
@@ -14,6 +15,92 @@ const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name
   { email: 'rkaijage@gmail.com', password: '@Eva0191!', role: 'admin', name: 'REAGAN ROBERT KAIJAGE' },
   { email: 'admin@example.com', password: 'admin', role: 'admin', name: 'Owner - Administrator' },
 ]
+
+// Password reset requests storage
+const PASSWORD_RESET_KEY = 'mock.password.reset.requests'
+
+export type PasswordResetRequest = {
+  id: string
+  email: string
+  newPassword: string
+  status: 'pending' | 'approved' | 'rejected'
+  requestedAt: string
+  processedAt?: string
+  processedBy?: string
+}
+
+function loadPasswordResetRequests(): PasswordResetRequest[] {
+  const ls = getLocalStorage()
+  if (!ls) return []
+  try {
+    const raw = ls.getItem(PASSWORD_RESET_KEY)
+    if (!raw) return []
+    return JSON.parse(raw) as PasswordResetRequest[]
+  } catch {
+    return []
+  }
+}
+
+function savePasswordResetRequests(list: PasswordResetRequest[]) {
+  const ls = getLocalStorage()
+  if (ls) ls.setItem(PASSWORD_RESET_KEY, JSON.stringify(list))
+}
+
+export function requestPasswordReset(email: string, newPassword: string): PasswordResetRequest {
+  const ls = getLocalStorage()
+  const requests = loadPasswordResetRequests()
+  const existing = requests.find(r => r.email === email && r.status === 'pending')
+  if (existing) return existing
+  
+  const request: PasswordResetRequest = {
+    id: crypto.randomUUID(),
+    email,
+    newPassword,
+    status: 'pending',
+    requestedAt: new Date().toISOString(),
+  }
+  requests.push(request)
+  savePasswordResetRequests(requests)
+  return request
+}
+
+export function listPendingPasswordResets(): PasswordResetRequest[] {
+  return loadPasswordResetRequests().filter(r => r.status === 'pending')
+}
+
+export function approvePasswordReset(requestId: string): boolean {
+  const requests = loadPasswordResetRequests()
+  const request = requests.find(r => r.id === requestId)
+  if (!request || request.status !== 'pending') return false
+  
+  // Update the user's password in MOCK_USERS
+  const user = MOCK_USERS.find(u => u.email === request.email)
+  if (user) {
+    user.password = request.newPassword
+  } else {
+    // Check test accounts
+    const testUser = TEST_ACCOUNTS.find(u => u.email === request.email)
+    if (testUser) {
+      testUser.password = request.newPassword
+    }
+  }
+  
+  request.status = 'approved'
+  request.processedAt = new Date().toISOString()
+  savePasswordResetRequests(requests)
+  return true
+}
+
+export function rejectPasswordReset(requestId: string): boolean {
+  const requests = loadPasswordResetRequests()
+  const request = requests.find(r => r.id === requestId)
+  if (!request || request.status !== 'pending') return false
+  
+  request.status = 'rejected'
+  request.processedAt = new Date().toISOString()
+  savePasswordResetRequests(requests)
+  return true
+}
 
 // Helper to safely access localStorage only in the browser
 const getLocalStorage = () => {

@@ -3,6 +3,44 @@ import type { RbacPolicy, AccessLogEntry } from '@/lib/types'
 const ACCESS_LOG_KEY = 'rbac.access.log'
 
 export const ROLE_POLICIES: Record<string, RbacPolicy> = {
+  super_agent: {
+    role: 'super_agent',
+    permissions: [
+      'full_system_access',
+      'create_users',
+      'update_users',
+      'view_all_reports',
+      'view_dashboard',
+      'manage_agents',
+      'manage_customers',
+      'view_transactions',
+      'manage_transactions',
+      'view_float_requests',
+      'approve_float_requests',
+      'reject_float_requests',
+      'view_audit_logs',
+      'approve_registrations',
+      'reject_registrations',
+      'view_team_transactions',
+      'view_team_reports',
+      'manage_team',
+      'approve_tasks',
+      'reject_tasks',
+    ],
+    restrictions: [
+      'manage_settings',
+      'manage_roles',
+      'manage_permissions',
+      'delete_users',
+      'manage_credit_portfolios',
+    ],
+    responsibilities: [
+      'Oversee agent and customer operations',
+      'Approve transaction requests',
+      'Monitor team performance',
+      'Escalate critical issues to Administrator',
+    ],
+  },
   admin: {
     role: 'admin',
     permissions: [

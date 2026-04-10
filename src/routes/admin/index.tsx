@@ -19,6 +19,7 @@ import {
   listAgentsFn,
   listCustomersFn,
   listFloatRequestsFn,
+  listAllVendorsFn,
 } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
 import type { Transaction } from '@/lib/types'
@@ -50,13 +51,14 @@ ChartJS.register(
 
 export const Route = createFileRoute('/admin/')({
   loader: async () => {
-    const [transactions, agents, customers, floatRequests] = await Promise.all([
+    const [transactions, agents, customers, floatRequests, { real: vendors }] = await Promise.all([
       listTransactionsFn(),
       listAgentsFn(),
       listCustomersFn(),
       listFloatRequestsFn(),
+      listAllVendorsFn(),
     ])
-    return { transactions, agents, customers, floatRequests }
+    return { transactions, agents, customers, floatRequests, vendors }
   },
   component: AdminDashboardPage,
 })
@@ -92,7 +94,7 @@ type AuditEntry = {
 }
 
 function AdminDashboard() {
-  const { transactions, agents, customers, floatRequests } = Route.useLoaderData()
+  const { transactions, agents, customers, floatRequests, vendors } = Route.useLoaderData()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
@@ -151,6 +153,7 @@ function AdminDashboard() {
     const d2dCustomers = customers.filter((c) => c.tier === 'd2d')
     const premierCustomers = customers.filter((c) => c.tier === 'premier')
     const activeAgents = agents.filter((a) => a.status === 'approved')
+    const activeVendors = vendors.filter((v) => v.status === 'approved')
 
     return {
       totalTransactions: transactions.length,
@@ -165,8 +168,10 @@ function AdminDashboard() {
       d2dCount: d2dCustomers.length,
       premierCount: premierCustomers.length,
       floatRequests: floatRequests.length,
+      totalVendors: vendors.length,
+      activeVendors: activeVendors.length,
     }
-  }, [transactions, agents, customers, floatRequests])
+  }, [transactions, agents, customers, floatRequests, vendors])
 
   // Chart data: Monthly revenue
   const monthlyRevenueData = useMemo(() => {
@@ -636,7 +641,7 @@ function AdminDashboard() {
         <KPICard
           icon={Users}
           label="Users"
-          value={`${kpis.activeAgents} agents / ${kpis.totalCustomers} customers`}
+          value={`${kpis.activeAgents} agents / ${kpis.totalCustomers} / ${kpis.activeVendors} vendors`}
           sub={`${kpis.d2dCount} D2D, ${kpis.premierCount} Premier`}
           color="bg-cyan-500"
         />

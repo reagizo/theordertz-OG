@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, RefreshCw } from 'lucide-react'
 import AnimatedLogo from '@/components/AnimatedLogo'
+import { requestPasswordReset, listPendingPasswordResets, approvePasswordReset, rejectPasswordReset, type PasswordResetRequest } from '@/lib/auth'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -13,6 +14,10 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
   const { login } = useAuth()
   const router = useRouter()
 
@@ -30,6 +35,22 @@ function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail || !newPassword) {
+      setResetMessage('Please enter email and new password.')
+      return
+    }
+    if (newPassword.length < 6) {
+      setResetMessage('Password must be at least 6 characters.')
+      return
+    }
+    requestPasswordReset(resetEmail, newPassword)
+    setResetMessage('Password reset requested. Admin must approve this request.')
+    setResetEmail('')
+    setNewPassword('')
   }
 
   return (
@@ -114,7 +135,48 @@ function LoginPage() {
                 </>
               )}
             </button>
+
+            <button
+              type="button"
+              onClick={() => setShowPasswordReset(!showPasswordReset)}
+              className="w-full text-center text-sm text-white/60 hover:text-white/80 transition-colors flex items-center justify-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              {showPasswordReset ? 'Cancel Password Reset' : 'Forgot Password?'}
+            </button>
           </form>
+
+          {showPasswordReset && (
+            <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
+              <h3 className="text-sm font-semibold text-white mb-3">Request Password Reset</h3>
+              {resetMessage && (
+                <p className={`text-xs mb-3 ${resetMessage.includes('successfully') ? 'text-green-400' : 'text-amber-400'}`}>{resetMessage}</p>
+              )}
+              <form onSubmit={handlePasswordReset} className="space-y-3">
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
+                  placeholder="Your email address"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm"
+                />
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="New password"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2 bg-amber-600 text-white font-medium rounded-lg text-sm hover:bg-amber-700 transition-colors"
+                >
+                  Submit Request
+                </button>
+              </form>
+              <p className="text-xs text-white/40 mt-2">Admin must approve your request before password is changed.</p>
+            </div>
+          )}
 
           {/* Divider with text */}
           <div className="mt-6 mb-4 flex items-center gap-3">
@@ -123,7 +185,10 @@ function LoginPage() {
             <div className="flex-1 h-px bg-white/20" />
           </div>
 
-          <div className="flex items-center justify-center gap-4 text-sm">
+          <div className="flex items-center justify-center gap-3 text-sm flex-wrap">
+            <Link to="/register/vendor" className="text-[#4F46E5] font-medium hover:text-[#4F46E5]/80 underline underline-offset-4 transition-colors">
+              Register as Vendor
+            </Link>
             <Link to="/register/agent" className="text-[#F57C00] font-medium hover:text-[#F57C00]/80 underline underline-offset-4 transition-colors">
               Register as Agent
             </Link>

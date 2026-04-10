@@ -34,9 +34,15 @@ function AgentDashboard() {
         setProfile(p)
         setTransactions(txs)
         setFloatExchanges(fxs)
-        if (picData?.data?.profile_picture_url) {
-          setProfilePicture(picData.data.profile_picture_url)
-          localStorage.setItem(`profile_picture_${user.id}`, picData.data.profile_picture_url)
+        
+        const supabasePicture = picData?.data?.profile_picture_url
+        const localPicture = localStorage.getItem(`profile_picture_${user.id}`)
+        
+        if (supabasePicture) {
+          setProfilePicture(supabasePicture)
+          localStorage.setItem(`profile_picture_${user.id}`, supabasePicture)
+        } else if (localPicture) {
+          setProfilePicture(localPicture)
         }
       } finally {
         setLoading(false)

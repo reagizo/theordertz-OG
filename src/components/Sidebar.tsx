@@ -94,14 +94,19 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (!user?.id || !user?.email) return
+    const localPicture = localStorage.getItem(`profile_picture_${user.id}`)
+    
     Promise.all([
       supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle(),
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
     ]).then(([appUserData, userData]) => {
-      const picture = appUserData?.data?.profile_picture || userData?.data?.profile_picture_url
-      if (picture) {
-        setUserPicture(picture)
-        localStorage.setItem(`profile_picture_${user.id}`, picture)
+      const supabasePicture = appUserData?.data?.profile_picture || userData?.data?.profile_picture_url
+      
+      if (supabasePicture) {
+        setUserPicture(supabasePicture)
+        localStorage.setItem(`profile_picture_${user.id}`, supabasePicture)
+      } else if (localPicture) {
+        setUserPicture(localPicture)
       }
     })
   }, [user?.id, user?.email])

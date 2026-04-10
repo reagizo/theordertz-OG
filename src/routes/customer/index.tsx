@@ -35,9 +35,15 @@ function CustomerWallet() {
         setProfile(p || { id: user.id, fullName: user.user_metadata?.full_name || user.email, email: user.email, tier: 'd2d', phone: '', nationalId: '', address: '', status: 'approved', createdAt: '', updatedAt: '', walletBalance: 0, creditLimit: 0, creditUsed: 0, isTestAccount: false })
       }
       setTransactions(txs)
-      if (userData?.data?.profile_picture_url) {
-        setProfilePicture(userData.data.profile_picture_url)
-        localStorage.setItem(`profile_picture_${user.id}`, userData.data.profile_picture_url)
+      
+      const supabasePicture = userData?.data?.profile_picture_url
+      const localPicture = localStorage.getItem(`profile_picture_${user.id}`)
+      
+      if (supabasePicture) {
+        setProfilePicture(supabasePicture)
+        localStorage.setItem(`profile_picture_${user.id}`, supabasePicture)
+      } else if (localPicture) {
+        setProfilePicture(localPicture)
       }
     }).finally(() => setLoading(false))
   }, [user?.id, user?.email])

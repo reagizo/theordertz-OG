@@ -44,8 +44,13 @@ const mockAuth = {
 }
 
 const mockChannel = () => ({
-  on: () => ({ subscribe: async () => ({}) }),
+  on: () => ({
+    on: () => ({
+      subscribe: async () => ({}),
+    }),
+  }),
   subscribe: async () => ({}),
+  unsubscribe: async () => {},
 })
 
 const mockFrom = () => ({

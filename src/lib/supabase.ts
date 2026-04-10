@@ -12,8 +12,15 @@ const serverStorage = {
   removeItem: () => {},
 }
 
+// Use placeholder URL to prevent crash when env vars are missing
+const fallbackUrl = 'https://placeholder.supabase.co'
+const fallbackKey = 'placeholder-key'
+
+const effectiveUrl = supabaseUrl || fallbackUrl
+const effectiveKey = supabaseAnonKey || fallbackKey
+
 // Client for Browser (uses Anon Key)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(effectiveUrl, effectiveKey, {
   auth: {
     storage: typeof window === 'undefined' ? serverStorage : localStorage,
     storageKey: 'supabase-auth',
@@ -24,11 +31,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 })
 
 // Admin for Server Functions (uses Service Role Key)
-export const supabaseAdmin = createClient(supabaseServiceKey ? supabaseUrl : '', supabaseServiceKey || '', {
-  auth: {
-    storage: typeof window === 'undefined' ? serverStorage : localStorage,
-    storageKey: 'supabase-admin',
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-})
+export const supabaseAdmin = supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        storage: typeof window === 'undefined' ? serverStorage : localStorage,
+        storageKey: 'supabase-admin',
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : supabase // Fallback to regular client if no service key

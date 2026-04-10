@@ -1,4 +1,3 @@
-import { getStore } from '@/server/localStore'
 import { supabaseAdmin } from '@/lib/supabase'
 import type {
   AgentProfile,
@@ -10,11 +9,6 @@ import type {
   VendorProfile,
 } from '@/lib/types'
 
-// ── Store routing: test accounts use isolated demo stores ─────────────────────
-// Test account data is stored in separate "test-*" stores so it never pollutes
-// the real audit trail. Admins can still view test data via the admin panel
-// but it is clearly marked and excluded from production reports.
-
 function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; customerId?: string } | { id?: string }): boolean {
   if ('isTestAccount' in item && item.isTestAccount) return true
   if ('agentId' in item && typeof item.agentId === 'string' && item.agentId.startsWith('test-')) return true
@@ -23,32 +17,34 @@ function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; cu
   return false
 }
 
-function getStoreName(baseName: string, isTest: boolean): string {
-  return isTest ? `test-${baseName}` : baseName
-}
-
 // ── Agents ──────────────────────────────────────────────────────────────────
 
 export async function getAgentProfile(id: string): Promise<AgentProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('agents', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin.from('agents').select('*').eq('id', id).single()
+  if (error) return null
+  return data as AgentProfile
 }
 
 export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
   const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('agents', isTest))
-  await store.setJSON(profile.id, profile)
+  const { error } = await supabaseAdmin.from('agents').upsert({
+    ...profile,
+    isTestAccount: isTest,
+  }, { onConflict: 'id' })
+  if (error) console.error('Error saving agent:', error)
 }
 
 export async function listAgents(testOnly?: boolean): Promise<AgentProfile[]> {
-  const store = getStore(testOnly ? 'test-agents' : 'agents')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<AgentProfile>)
-  )
-  return results.filter(Boolean)
+  let query = supabaseAdmin.from('agents').select('*').order('createdAt', { ascending: false })
+  if (testOnly) {
+    query = query.eq('isTestAccount', true)
+  }
+  const { data, error } = await query
+  if (error) {
+    console.error('Error listing agents:', error)
+    return []
+  }
+  return (data || []) as AgentProfile[]
 }
 
 export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: AgentProfile[] }> {
@@ -59,30 +55,36 @@ export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: Age
 // ── Customers ────────────────────────────────────────────────────────────────
 
 export async function getCustomerProfile(id: string): Promise<CustomerProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('customers', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin.from('customers').select('*').eq('id', id).single()
+  if (error) return null
+  return data as CustomerProfile
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {
   const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('customers', isTest))
-  await store.setJSON(profile.id, profile)
+  const { error } = await supabaseAdmin.from('customers').upsert({
+    ...profile,
+    isTestAccount: isTest,
+  }, { onConflict: 'id' })
+  if (error) console.error('Error saving customer:', error)
 }
 
 export async function listCustomers(testOnly?: boolean): Promise<CustomerProfile[]> {
-  const store = getStore(testOnly ? 'test-customers' : 'customers')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<CustomerProfile>)
-  )
-  return results.filter(Boolean)
+  let query = supabaseAdmin.from('customers').select('*').order('createdAt', { ascending: false })
+  if (testOnly) {
+    query = query.eq('isTestAccount', true)
+  }
+  const { data, error } = await query
+  if (error) {
+    console.error('Error listing customers:', error)
+    return []
+  }
+  return (data || []) as CustomerProfile[]
 }
 
 export async function listAllCustomers(): Promise<{ real: CustomerProfile[]; test: CustomerProfile[] }> {
-  const [real, test] = await Promise.all([listCustomers(false), listCustomers(true)])
-  return { real, test }
+  const [real, test] = await Promise.all([listCustomers(false), listAgents(true)])
+  return { real, test: test as unknown as CustomerProfile[] }
 }
 
 export async function listCustomersByTier(tier: 'd2d' | 'premier', testOnly?: boolean): Promise<CustomerProfile[]> {
@@ -93,27 +95,31 @@ export async function listCustomersByTier(tier: 'd2d' | 'premier', testOnly?: bo
 // ── Transactions ─────────────────────────────────────────────────────────────
 
 export async function getTransaction(id: string): Promise<Transaction | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('transactions', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin.from('transactions').select('*').eq('id', id).single()
+  if (error) return null
+  return data as Transaction
 }
 
 export async function saveTransaction(tx: Transaction): Promise<void> {
   const isTest = isTestEntity(tx)
-  const store = getStore(getStoreName('transactions', isTest))
-  await store.setJSON(tx.id, tx)
+  const { error } = await supabaseAdmin.from('transactions').upsert({
+    ...tx,
+    isTestAccount: isTest,
+  }, { onConflict: 'id' })
+  if (error) console.error('Error saving transaction:', error)
 }
 
 export async function listTransactions(testOnly?: boolean): Promise<Transaction[]> {
-  const store = getStore(testOnly ? 'test-transactions' : 'transactions')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<Transaction>)
-  )
-  return results.filter(Boolean).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  let query = supabaseAdmin.from('transactions').select('*').order('createdAt', { ascending: false })
+  if (testOnly) {
+    query = query.eq('isTestAccount', true)
+  }
+  const { data, error } = await query
+  if (error) {
+    console.error('Error listing transactions:', error)
+    return []
+  }
+  return (data || []) as Transaction[]
 }
 
 export async function listAllTransactions(): Promise<{ real: Transaction[]; test: Transaction[] }> {
@@ -138,30 +144,34 @@ export async function listTransactionsByTier(tier: 'd2d' | 'premier', testOnly?:
   return all.filter(t => t.customerTier === tier)
 }
 
-// ── Float Requests (legacy) ──────────────────────────────────────────────────
+// ── Float Requests ────────────────────────────────────────────────────────────
 
 export async function getFloatRequest(id: string): Promise<FloatRequest | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-requests', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin.from('float_requests').select('*').eq('id', id).single()
+  if (error) return null
+  return data as FloatRequest
 }
 
 export async function saveFloatRequest(req: FloatRequest): Promise<void> {
   const isTest = isTestEntity(req)
-  const store = getStore(getStoreName('float-requests', isTest))
-  await store.setJSON(req.id, req)
+  const { error } = await supabaseAdmin.from('float_requests').upsert({
+    ...req,
+    isTestAccount: isTest,
+  }, { onConflict: 'id' })
+  if (error) console.error('Error saving float request:', error)
 }
 
 export async function listFloatRequests(testOnly?: boolean): Promise<FloatRequest[]> {
-  const store = getStore(testOnly ? 'test-float-requests' : 'float-requests')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<FloatRequest>)
-  )
-  return results.filter(Boolean).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  let query = supabaseAdmin.from('float_requests').select('*').order('createdAt', { ascending: false })
+  if (testOnly) {
+    query = query.eq('isTestAccount', true)
+  }
+  const { data, error } = await query
+  if (error) {
+    console.error('Error listing float requests:', error)
+    return []
+  }
+  return (data || []) as FloatRequest[]
 }
 
 export async function listAllFloatRequests(): Promise<{ real: FloatRequest[]; test: FloatRequest[] }> {
@@ -178,27 +188,31 @@ export async function listFloatRequestsByAgent(agentId: string): Promise<FloatRe
 // ── Float Exchange (Agent) ───────────────────────────────────────────────────
 
 export async function getFloatExchange(id: string): Promise<FloatExchange | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin.from('float_exchanges').select('*').eq('id', id).single()
+  if (error) return null
+  return data as FloatExchange
 }
 
 export async function saveFloatExchange(exchange: FloatExchange): Promise<void> {
   const isTest = isTestEntity(exchange)
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  await store.setJSON(exchange.id, exchange)
+  const { error } = await supabaseAdmin.from('float_exchanges').upsert({
+    ...exchange,
+    isTestAccount: isTest,
+  }, { onConflict: 'id' })
+  if (error) console.error('Error saving float exchange:', error)
 }
 
 export async function listFloatExchanges(testOnly?: boolean): Promise<FloatExchange[]> {
-  const store = getStore(testOnly ? 'test-float-exchanges' : 'float-exchanges')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<FloatExchange>)
-  )
-  return results.filter(Boolean).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  let query = supabaseAdmin.from('float_exchanges').select('*').order('createdAt', { ascending: false })
+  if (testOnly) {
+    query = query.eq('isTestAccount', true)
+  }
+  const { data, error } = await query
+  if (error) {
+    console.error('Error listing float exchanges:', error)
+    return []
+  }
+  return (data || []) as FloatExchange[]
 }
 
 export async function listAllFloatExchanges(): Promise<{ real: FloatExchange[]; test: FloatExchange[] }> {
@@ -212,7 +226,7 @@ export async function listFloatExchangesByAgent(agentId: string): Promise<FloatE
   return all.filter(e => e.agentId === agentId)
 }
 
-// ── Credit Portfolios ────────────────────────────────────────────────────────
+// ── Credit Portfolios ───────────────────────────────────────────────────────
 
 export async function getCreditPortfolio(customerId: string): Promise<CreditPortfolio | null> {
   const customer = await getCustomerProfile(customerId)
@@ -249,62 +263,56 @@ export async function listCreditPortfolios(testOnly?: boolean): Promise<CreditPo
   return portfolios
 }
 
-// ── Admin-only deletion (production safety) ──────────────────────────────────
-// These functions are intended to be called only from admin-authenticated
-// server functions. They permanently remove records from the store.
+// ── Deletion functions ───────────────────────────────────────────────────────
 
 export async function deleteAgent(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('agents', isTest))
-  await store.delete(id)
+  await supabaseAdmin.from('agents').delete().eq('id', id)
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('customers', isTest))
-  await store.delete(id)
+  await supabaseAdmin.from('customers').delete().eq('id', id)
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('transactions', isTest))
-  await store.delete(id)
+  await supabaseAdmin.from('transactions').delete().eq('id', id)
 }
 
 export async function deleteFloatRequest(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-requests', isTest))
-  await store.delete(id)
+  await supabaseAdmin.from('float_requests').delete().eq('id', id)
 }
 
 export async function deleteFloatExchange(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('float-exchanges', isTest))
-  await store.delete(id)
+  await supabaseAdmin.from('float_exchanges').delete().eq('id', id)
 }
 
 // ── Vendors ─────────────────────────────────────────────────────────────────
 
 export async function getVendorProfile(id: string): Promise<VendorProfile | null> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('vendors', isTest))
-  return store.get(id, { type: 'json' })
+  const { data, error } = await supabaseAdmin.from('vendors').select('*').eq('id', id).single()
+  if (error) return null
+  return data as VendorProfile
 }
 
 export async function saveVendorProfile(profile: VendorProfile): Promise<void> {
   const isTest = isTestEntity(profile)
-  const store = getStore(getStoreName('vendors', isTest))
-  await store.setJSON(profile.id, profile)
+  const { error } = await supabaseAdmin.from('vendors').upsert({
+    ...profile,
+    isTestAccount: isTest,
+  }, { onConflict: 'id' })
+  if (error) console.error('Error saving vendor:', error)
 }
 
 export async function listVendors(testOnly?: boolean): Promise<VendorProfile[]> {
-  const store = getStore(testOnly ? 'test-vendors' : 'vendors')
-  const { blobs } = await store.list()
-  if (blobs.length === 0) return []
-  const results = await Promise.all(
-    blobs.map(b => store.get(b.key, { type: 'json' }) as Promise<VendorProfile>)
-  )
-  return results.filter(Boolean)
+  let query = supabaseAdmin.from('vendors').select('*').order('createdAt', { ascending: false })
+  if (testOnly) {
+    query = query.eq('isTestAccount', true)
+  }
+  const { data, error } = await query
+  if (error) {
+    console.error('Error listing vendors:', error)
+    return []
+  }
+  return (data || []) as VendorProfile[]
 }
 
 export async function listAllVendors(): Promise<{ real: VendorProfile[]; test: VendorProfile[] }> {
@@ -318,12 +326,19 @@ export async function listVendorsByStatus(status: 'pending' | 'approved' | 'reje
 }
 
 export async function deleteVendor(id: string): Promise<void> {
-  const isTest = id.startsWith('test-')
-  const store = getStore(getStoreName('vendors', isTest))
-  await store.delete(id)
+  await supabaseAdmin.from('vendors').delete().eq('id', id)
 }
 
-// ── Supabase Sync: Vendors ─────────────────────────────────────────────────────
+// ── Supabase helpers (for direct client access) ───────────────────────────────
+
+export async function getVendorsFromSupabase(): Promise<VendorProfile[]> {
+  const { data, error } = await supabaseAdmin.from('vendors').select('*').order('createdAt', { ascending: false })
+  if (error) {
+    console.error('Error fetching vendors from Supabase:', error)
+    return []
+  }
+  return data as VendorProfile[]
+}
 
 export async function syncVendorsToSupabase(): Promise<void> {
   const real = await listVendors(false)
@@ -344,7 +359,7 @@ export async function syncVendorsToSupabase(): Promise<void> {
       createdAt: v.createdAt,
       updatedAt: v.updatedAt,
       walletBalance: v.walletBalance,
-      isTestAccount: v.isTestAccount,
+      isTestAccount: false,
     }, { onConflict: 'id' })
   }
   
@@ -368,28 +383,13 @@ export async function syncVendorsToSupabase(): Promise<void> {
   }
 }
 
-export async function getVendorsFromSupabase(): Promise<VendorProfile[]> {
-  const { data, error } = await supabaseAdmin.from('vendors').select('*').order('createdAt', { ascending: false })
-  if (error) {
-    console.error('Error fetching vendors from Supabase:', error)
-    return []
-  }
-  return data as VendorProfile[]
-}
-
 // ── Test data cleanup ────────────────────────────────────────────────────────
-// Admin can wipe all test data at once without touching real records.
 
 export async function clearAllTestData(): Promise<void> {
-  const testStores = [
-    'test-agents', 'test-customers', 'test-transactions',
-    'test-float-requests', 'test-float-exchanges', 'test-vendors',
-  ]
-  for (const name of testStores) {
-    const store = getStore(name)
-    const { blobs } = await store.list()
-    for (const b of blobs) {
-      await store.delete(b.key)
-    }
-  }
+  await supabaseAdmin.from('agents').delete().eq('isTestAccount', true)
+  await supabaseAdmin.from('customers').delete().eq('isTestAccount', true)
+  await supabaseAdmin.from('transactions').delete().eq('isTestAccount', true)
+  await supabaseAdmin.from('float_requests').delete().eq('isTestAccount', true)
+  await supabaseAdmin.from('float_exchanges').delete().eq('isTestAccount', true)
+  await supabaseAdmin.from('vendors').delete().eq('isTestAccount', true)
 }

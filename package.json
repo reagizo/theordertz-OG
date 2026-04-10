@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "set CLOUDFLARE=false&& vite dev --port 3000",
     "build": "vite build",
     "start": "node dist/server/server.js",
     "preview": "node ./scripts/preview.js",

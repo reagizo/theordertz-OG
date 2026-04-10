@@ -26,7 +26,9 @@ function SupervisorFloatRequestsPage() {
 }
 
 function SupervisorFloatRequests() {
-  const { floatRequests, agents } = Route.useLoaderData()
+  const data = Route.useLoaderData()
+  const floatRequests = data?.floatRequests ?? []
+  const agents = data?.agents ?? []
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [loading, setLoading] = useState<string | null>(null)

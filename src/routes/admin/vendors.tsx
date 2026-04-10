@@ -16,7 +16,9 @@ export const Route = createFileRoute('/admin/vendors')({
 
 function AdminVendorsPage() {
   const { settings } = useSettings()
-  const { vendors: allVendors, testVendors } = Route.useLoaderData()
+  const data = Route.useLoaderData()
+  const allVendors = data?.vendors ?? []
+  const testVendors = data?.testVendors ?? []
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [showTest, setShowTest] = useState(false)

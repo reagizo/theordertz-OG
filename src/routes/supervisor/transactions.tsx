@@ -37,7 +37,9 @@ function SupervisorTransactionsPage() {
 }
 
 function SupervisorTransactions() {
-  const { transactions, customers } = Route.useLoaderData()
+  const data = Route.useLoaderData()
+  const transactions = data?.transactions ?? []
+  const customers = data?.customers ?? []
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)

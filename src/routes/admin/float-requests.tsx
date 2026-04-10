@@ -17,10 +17,9 @@ export const Route = createFileRoute('/admin/float-requests')({
 })
 
 function AdminFloatRequests() {
-  const { floatRequests, floatExchanges } = Route.useLoaderData() as {
-    floatRequests: FloatRequest[]
-    floatExchanges: FloatExchange[]
-  }
+  const data = Route.useLoaderData() as { floatRequests?: FloatRequest[]; floatExchanges?: FloatRequest[] } | undefined
+  const floatRequests = data?.floatRequests ?? []
+  const floatExchanges = data?.floatExchanges ?? []
   const [requests, setRequests] = useState(floatRequests)
   const [exchanges, setExchanges] = useState(floatExchanges)
   const [loading, setLoading] = useState<string | null>(null)

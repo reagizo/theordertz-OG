@@ -52,7 +52,10 @@ const TABS: { id: TabId; label: string }[] = [
 ]
 
 function SupervisorDashboard() {
-  const { transactions, customers, agents } = Route.useLoaderData()
+  const data = Route.useLoaderData()
+  const transactions = data?.transactions ?? []
+  const customers = data?.customers ?? []
+  const agents = data?.agents ?? []
   const [activeTab, setActiveTab] = useState<TabId>('pending')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)

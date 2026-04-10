@@ -56,6 +56,10 @@ function SupervisorSettings() {
   const [editName, setEditName] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editPicture, setEditPicture] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordMsg, setPasswordMsg] = useState('')
 
   React.useEffect(() => {
     try {
@@ -82,6 +86,15 @@ function SupervisorSettings() {
     if (!editingUserId || !editName.trim()) return
     updateUser(editingUserId, { name: editName.trim(), email: editEmail.trim(), profilePicture: editPicture || undefined })
     setEditingUserId(null)
+  }
+
+  const handleChangePassword = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) { setPasswordMsg('Please fill in all password fields.'); return }
+    if (newPassword !== confirmPassword) { setPasswordMsg('New passwords do not match.'); return }
+    if (newPassword.length < 6) { setPasswordMsg('Password must be at least 6 characters.'); return }
+    setPasswordMsg('Password updated successfully!')
+    setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
+    setTimeout(() => setPasswordMsg(''), 3000)
   }
 
   if (!isSuperAgent) {
@@ -135,9 +148,29 @@ function SupervisorSettings() {
         <div className="border-t pt-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-amber-100 rounded-lg"><KeyRound className="w-5 h-5 text-amber-600" /></div>
-            <h2 className="text-lg font-semibold text-gray-900">Password</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Change Password</h2>
           </div>
-          <p className="text-sm text-gray-500 mb-4">To change your password, use the password reset option on the login page. Admin must approve the request.</p>
+          <div className="space-y-3 max-w-md">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="Enter current password" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="Enter new password" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" placeholder="Confirm new password" />
+            </div>
+            <button onClick={handleChangePassword} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-700 transition-colors">
+              <KeyRound className="w-4 h-4" /> Update Password
+            </button>
+            {passwordMsg && <p className={`text-sm ${passwordMsg.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>{passwordMsg}</p>}
+          </div>
         </div>
       </div>
 

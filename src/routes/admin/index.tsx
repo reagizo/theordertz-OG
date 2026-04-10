@@ -79,7 +79,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'completed', label: 'Completed' },
   { id: 'pending', label: 'Pending' },
-  { id: 'agents', label: 'Agent Transactions' },
+  { id: 'agents', label: 'Super Agent Transactions' },
   { id: 'd2d', label: 'D2D Customers' },
   { id: 'premier', label: 'Premier Customers' },
   { id: 'audit', label: 'Audit Trail' },
@@ -96,7 +96,12 @@ type AuditEntry = {
 }
 
 function AdminDashboard() {
-  const { transactions, agents, customers, floatRequests, vendors } = Route.useLoaderData()
+  const data = Route.useLoaderData()
+  const transactions = data?.transactions ?? []
+  const agents = data?.agents ?? []
+  const customers = data?.customers ?? []
+  const floatRequests = data?.floatRequests ?? []
+  const vendors = data?.vendors ?? []
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
@@ -609,10 +614,10 @@ function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Admin Dashboard</h1>
+          <p className="text-gray-300 text-sm mt-1">
             Monitor transactions, agents, and customers
-            <span className="ml-2 text-indigo-600 font-medium">| Super Agent: {settings.superAgentName}</span>
+            <span className="ml-2 text-orange-400 font-medium">| Super Agent: {settings.superAgentName}</span>
           </p>
         </div>
       </div>

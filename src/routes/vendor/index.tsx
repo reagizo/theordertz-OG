@@ -32,7 +32,8 @@ function VendorDashboard() {
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
   
   const vendorId = user?.id || 'current'
-  const { transactions } = Route.useLoaderData()
+  const data = Route.useLoaderData()
+  const transactions = data?.transactions ?? []
 
   const myTransactions = useMemo(() => {
     return transactions.filter(t => t.customerId === vendorId || t.agentId === vendorId)

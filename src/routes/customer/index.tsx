@@ -31,9 +31,14 @@ function CustomerWallet() {
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
       supabase.from('customer_profiles').select('full_name, email, tier').eq('id', user.id).maybeSingle(),
     ]).then(([p, txs, userData, customerData]) => {
-      if (customerData?.data && !p?.fullName) {
-        setProfile({ ...p!, fullName: customerData.data.full_name || p?.fullName, email: customerData.data.email || p?.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
+      console.log('customer_profiles result:', JSON.stringify(customerData))
+      console.log('getCustomerProfileFn result:', p)
+      
+      if (customerData?.data?.full_name) {
+        console.log('Using customer_profiles full_name:', customerData.data.full_name)
+        setProfile({ ...p!, fullName: customerData.data.full_name, email: customerData.data.email || p?.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
       } else {
+        console.log('Using getCustomerProfileFn fullName:', p?.fullName)
         setProfile(p)
       }
       setTransactions(txs)

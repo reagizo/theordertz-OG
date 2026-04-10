@@ -16,6 +16,7 @@ const serverStorage = {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: typeof window === 'undefined' ? serverStorage : localStorage,
+    storageKey: 'supabase-auth',
     autoRefreshToken: typeof window !== 'undefined',
     persistSession: typeof window !== 'undefined',
     detectSessionInUrl: typeof window !== 'undefined',
@@ -25,6 +26,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Admin for Server Functions (uses Service Role Key)
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
+    storage: typeof window === 'undefined' ? serverStorage : localStorage,
+    storageKey: 'supabase-admin',
     autoRefreshToken: false,
     persistSession: false,
   },

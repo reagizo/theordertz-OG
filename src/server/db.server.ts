@@ -603,7 +603,13 @@ export type ResolvedAccess = {
 export async function resolveAccessByEmail(email: string): Promise<ResolvedAccess> {
   const normalized = email.trim().toLowerCase()
 
-  const { data: appUser } = await supabaseAdmin
+  const admin = getSupabaseAdminOrThrow()
+  if (!admin) {
+    console.warn('Supabase admin not available, defaulting to guest')
+    return { role: 'guest', approved: false }
+  }
+
+  const { data: appUser } = await admin
     .from('app_users')
     .select('role')
     .eq('email', normalized)
@@ -614,7 +620,7 @@ export async function resolveAccessByEmail(email: string): Promise<ResolvedAcces
     return { role: appRole, approved: true }
   }
 
-  const { data: customer } = await supabaseAdmin
+  const { data: customer } = await admin
     .from('customer_profiles')
     .select('status')
     .eq('email', normalized)
@@ -624,7 +630,7 @@ export async function resolveAccessByEmail(email: string): Promise<ResolvedAcces
     return { role: approved ? 'customer' : 'guest', approved }
   }
 
-  const { data: agent } = await supabaseAdmin
+  const { data: agent } = await admin
     .from('agent_profiles')
     .select('status')
     .eq('email', normalized)

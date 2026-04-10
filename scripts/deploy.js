@@ -14,11 +14,17 @@ if (!useCF) {
 }
 
 // Build without cloudflare plugin - normal vite build creates dist/server/server.js
+// This build uses env vars from the environment (set in CI or local)
 if (process.env.SKIP_BUILD !== 'true') {
   console.log('Building project for Cloudflare deployment...');
-  // Always build without CLOUDFLARE to get proper worker output
-  const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, 
-    env: { ...process.env, CLOUDFLARE: 'false' } });
+  // Ensure VITE_ env vars are passed through
+  const buildEnv = {
+    ...process.env,
+    CLOUDFLARE: 'false',  // Build without CF plugin
+    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
+    VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '',
+  };
+  const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, env: buildEnv });
   if (buildRes.status && buildRes.status !== 0) {
     console.error('Build failed. Aborting deployment.');
     process.exit(buildRes.status);

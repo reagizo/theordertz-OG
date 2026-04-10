@@ -68,7 +68,7 @@ function LoginPage() {
 
             {!hasSupabaseConfig && (
               <div className="mb-4 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
-                Local auth mode is active. Use a built-in account:
+                Local auth mode is active (Supabase not connected). Use a built-in account:
                 <div className="mt-2 font-semibold text-orange-800">
                   admin@example.com / admin
                   <br />

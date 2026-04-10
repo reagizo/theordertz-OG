@@ -6,6 +6,7 @@ import type {
   FloatRequest,
   FloatExchange,
   CreditPortfolio,
+  VendorProfile,
 } from '@/lib/types'
 
 // Helper to get/set localStorage safely
@@ -198,5 +199,40 @@ export const clearAllTestDataFn = async () => {
   localStorage.removeItem('floatRequests')
   localStorage.removeItem('floatExchanges')
   localStorage.removeItem('creditPortfolios')
+  localStorage.removeItem('vendors')
   return { success: true }
+}
+
+// ── Vendor Functions ───────────────────────────────────────────────────────────
+
+export const listVendorsFn = async () => getStore('vendors')
+
+export const listAllVendorsFn = async () => getStore('vendors')
+
+export const listVendorsByStatusFn = async (data: { status: 'pending' | 'approved' | 'rejected' }) => {
+  return getStore('vendors').filter((v: VendorProfile) => v.status === data.status)
+}
+
+export const getVendorProfileFn = async (data: { id: string }) => {
+  const vendors = getStore('vendors')
+  return vendors.find((v: VendorProfile) => v.id === data.id) || null
+}
+
+export const saveVendorProfileFn = async (data: VendorProfile) => {
+  const vendors = getStore('vendors')
+  const idx = vendors.findIndex((v: VendorProfile) => v.id === data.id)
+  if (idx >= 0) vendors[idx] = data
+  else vendors.push({ ...data, id: data.id || generateId() })
+  setStore('vendors', vendors)
+  return data
+}
+
+export const deleteVendorFn = async (data: { id: string }) => {
+  const vendors = getStore('vendors').filter((v: VendorProfile) => v.id !== data.id)
+  setStore('vendors', vendors)
+  return { success: true }
+}
+
+export const syncVendorsToSupabaseFn = async () => {
+  return { success: true, synced: 0 }
 }

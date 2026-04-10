@@ -5,17 +5,17 @@
   },
   "navigation": {
     "dashboard": "Dasibodi",
-    "transactions": "Mkataba",
-    "agents": "Wafanyakazi",
+    "transactions": "Mikataba",
+    "superAgents": "Wakala Mkuu",
+    "agents": "Wakala",
     "customers": "Wateja",
-    "users": "Watumishi (DB)",
+    "users": "Watumishi",
     "floatRequests": "Maombi ya Float",
     "settings": "Mipangilio",
     "wallet": "Wifedhi Wangu",
-    "requestService": "omba Huduma",
+    "requestService": "Omba Huduma",
     "history": "Historia",
-    "floatExchange": "Badiliko la Float",
-    "superAgent": "Mfanyakazi Mkuu"
+    "floatExchange": "Badiliko la Float"
   },
   "auth": {
     "login": "Ingia",
@@ -24,9 +24,9 @@
     "password": "Nenosiri",
     "fullName": "Jina Kamili",
     "phoneNumber": "Namba ya Simu",
-    "role": "Kifizu",
+    "role": "Kifuzu",
     "admin": "Mkurugenzi",
-    "agent": "Mfanyakazi",
+    "agent": "Wakala",
     "customer": "Mteja",
     "rememberMe": "Kumbukeni",
     "forgotPassword": "Umekumbuka Nenosiri?",
@@ -42,6 +42,7 @@
     "edit": "Hariri",
     "view": "Angalia",
     "search": "Tafuta",
+    "searchPlaceholder": "Tafuta kwa jina, mtoa huduma...",
     "loading": "Inaload...",
     "noData": "Hakuna data",
     "error": "Kosa",
@@ -50,7 +51,28 @@
     "logout": "Tokee",
     "language": "Lugha",
     "english": "Kiingereza",
-    "swahili": "Kiswahili"
+    "swahili": "Kiswahili",
+    "back": "Rudi",
+    "next": "Mbele",
+    "submit": "Wasilisha",
+    "close": "Funga",
+    "add": "Ongeza",
+    "actions": "Vitendo",
+    "status": "Hali",
+    "amount": "Kiasi",
+    "date": "Tarehe",
+    "name": "Jina",
+    "email": "Barua pepe",
+    "phone": "Simu",
+    "total": "Jumla",
+    "approved": "Imepitiwa",
+    "pending": "Inasubiri",
+    "rejected": "Imekataliwa",
+    "all": "Zote",
+    "active": "Inafanya kazi",
+    "inactive": "Haifanyi kazi",
+    "yes": "Ndiyo",
+    "no": "Hapana"
   },
   "pages": {
     "dashboard": {
@@ -58,7 +80,7 @@
       "welcome": "Karibu tena, {name}!",
       "stats": {
         "totalTransactions": "Jumla ya Mikataba",
-        "activeAgents": "Wafanyakazi Wanaozaa",
+        "activeAgents": "Wakala Wanaozaa",
         "totalCustomers": "Jumla ya Wateja",
         "walletBalance": "Kiasi cha Wifedhi"
       }
@@ -67,28 +89,99 @@
       "title": "Omba Huduma",
       "description": "Chagua huduma ungependa kuomba",
       "serviceTypes": {
-        "delivery": "Huduma ya Kuokoa",
-        "transport": "Huduma ya Usafirishaji",
-        "cleaning": "Huduma ya Safi",
-        "maintenance": "Huduma ya Ujenzi"
+        "cash": "Pesa",
+        "utilityBills": "Bill za Huduma",
+        "airtimeBundle": "Airtime",
+        "tvSubscriptions": "TV",
+        "internetSubscriptions": "Internet",
+        "allPayments": "Malipo Yote"
       }
     },
     "history": {
-      "title": "Historia ya Huduma",
-      "empty": "Hakuna historia ya huduma",
+      "title": "Historia",
+      "empty": "Hakuna historia",
       "date": "Tarehe",
       "service": "Huduma",
       "status": "Hali",
       "amount": "Kiasi"
     },
+    "dashboard": {
+      "charts": {
+        "monthlyRevenue": "Mapato ya Kila Mwezi",
+        "transactionTrend": "Mwelekeo wa Mikataba (Siku 30)",
+        "transactionsByTier": "Mikataba kulingana na Kiwango",
+        "transactionsByService": "Mikataba kulingana na Huduma"
+      }
+    },
+      "amount": "Kiasi"
+    },
     "settings": {
       "title": "Mipangilio",
-      "profile": "Mipangilio ya Dunia",
-      "notifications": "Mipangilio ya Mishahara",
-      "security": "Mipangilio ya Usalama",
-      "superAgentName": "Jina la Mfanyakazi Mkuu",
+      "profile": "Mipangilio ya Akaunti",
+      "notifications": "Arifa",
+      "security": "Usalama",
+      "superAgentName": "Jina la Wakala Mkuu",
       "changePassword": "Badilisha Nenosiri"
     }
+  },
+  "roles": {
+    "admin": "Mkurugenzi",
+    "supervisor": "Mratibu",
+    "clerk": "Katibu",
+    "agent": "Wakala",
+    "customer": "Mteja",
+    "superAgent": "Wakala Mkuu"
+  },
+  "transactions": {
+    "title": "Mikataba",
+    "allTransactions": "Mikataba Yote",
+    "agentTransactions": "Mikataba ya Wakala",
+    "superAgentTransactions": "Mikataba ya Wakala Mkuu",
+    "customerTransactions": "Mikataba ya Mteja",
+    "transactionDetails": "Maelezo ya Mkataba",
+    "provider": "Mtoa Huduma",
+    "paymentMethod": "Njia ya Malipo",
+    "cashOnDelivery": "Pesa kwa Mkono",
+    "onCredit": "Kwa Mkopo",
+    "statusApproved": "Imepitiwa",
+    "statusPending": "Inasubiri",
+    "statusRejected": "Imekataliwa",
+    "noTransactions": "Hakuna mikataba"
+  },
+  "customers": {
+    "title": "Wateja",
+    "allCustomers": "Wateja Wote",
+    "addCustomer": "Ongeza Mteja",
+    "editCustomer": "Hariri Mteja",
+    "viewCustomer": "Angalia Mteja",
+    "customerDetails": "Maelezo ya Mteja",
+    "tier": "Kiwango",
+    "tierD2D": "Kila Siku",
+    "tierPremier": "Maalum",
+    "walletBalance": "Kiasi cha Wifedhi",
+    "creditLimit": "Kiwango cha Mkopo",
+    "creditUsed": "Mkopo Ulitumika",
+    "creditAvailable": "Mkopo Ulio",
+    "noCustomers": "Hakuna wateja"
+  },
+  "agents": {
+    "title": "Wakala",
+    "allAgents": "Wakala Wote",
+    "addAgent": "Ongeza Wakala",
+    "editAgent": "Hariri Wakala",
+    "viewAgent": "Angalia Wakala",
+    "agentDetails": "Maelezo ya Wakala",
+    "floatBalance": "Kiasi cha Float",
+    "commission": "Tume",
+    "noAgents": "Hakuna wakala"
+  },
+  "superAgents": {
+    "title": "Wakala Mkuu",
+    "allSuperAgents": "Wakala Mkuu Wote",
+    "addSuperAgent": "Ongeza Wakala Mkuu",
+    "editSuperAgent": "Hariri Wakala Mkuu",
+    "superAgentDetails": "Maelezo ya Wakala Mkuu",
+    "noSuperAgents": "Hakuna wakala mkuu"
   },
   "forms": {
     "validation": {
@@ -99,9 +192,9 @@
     }
   },
   "notifications": {
-    "success": "Amelipwa kikamilifu",
-    "error": "Kupatikana na kosa",
-    "warning": "Tafsirie maelezo yako",
+    "success": "Amefanikiwa",
+    "error": "Kosa lililotokea",
+    "warning": "Tafadhali angalia maelezo yako",
     "info": "Maelezo yamebadilika"
   }
 }

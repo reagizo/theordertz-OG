@@ -23,6 +23,7 @@ import {
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
 import type { Transaction } from '@/lib/types'
 import { useSettings } from '@/contexts/SettingsContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import {
   Users,
   Clock,
@@ -84,9 +85,20 @@ const TABS: { id: TabId; label: string }[] = [
 function AdminDashboard() {
   const { transactions, agents, customers, floatRequests } = Route.useLoaderData()
   const { settings } = useSettings()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
+
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'overview', label: t('common.all') },
+    { id: 'completed', label: t('common.approved') },
+    { id: 'pending', label: t('common.pending') },
+    { id: 'agents', label: t('transactions.superAgentTransactions') },
+    { id: 'd2d', label: t('customers.tierD2D') },
+    { id: 'premier', label: t('customers.tierPremier') },
+    { id: 'audit', label: 'Audit Trail' },
+  ]
 
   // KPI calculations
   const kpis = useMemo(() => {
@@ -547,10 +559,10 @@ function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('pages.dashboard.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Monitor transactions, agents, and customers
-            <span className="ml-2 text-indigo-600 font-medium">| Super Agent: {settings.superAgentName}</span>
+            {t('pages.dashboard.title')}
+            <span className="ml-2 text-indigo-600 font-medium">| {t('navigation.superAgents')}: {settings.superAgentName}</span>
           </p>
         </div>
       </div>
@@ -616,7 +628,7 @@ function AdminDashboard() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, provider, or service..."
+                placeholder={t('common.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
               />
             </div>
@@ -630,13 +642,13 @@ function AdminDashboard() {
               {/* Charts row 1 */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-xl p-5">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Monthly Revenue</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('pages.dashboard.charts.monthlyRevenue')}</h3>
                   <div className="h-48 sm:h-64">
                     <Bar data={revenueBarData} options={chartOptions} />
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Transaction Trend (30 days)</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('pages.dashboard.charts.transactionTrend')}</h3>
                   <div className="h-48 sm:h-64">
                     <Line data={trendLineData} options={chartOptions} />
                   </div>
@@ -646,13 +658,13 @@ function AdminDashboard() {
               {/* Charts row 2 */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-xl p-5">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Transactions by Tier</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('pages.dashboard.charts.transactionsByTier')}</h3>
                   <div className="h-48 sm:h-64 flex items-center justify-center">
                     <Doughnut data={tierDoughnutData} options={doughnutOptions} />
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Transactions by Service</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('pages.dashboard.charts.transactionsByService')}</h3>
                   <div className="h-48 sm:h-64">
                     <Bar data={serviceBarData} options={chartOptions} />
                   </div>
@@ -696,7 +708,7 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  Pending Transactions ({pendingTx.length})
+                  {t('common.pending')} {t('transactions.title')} ({pendingTx.length})
                 </h3>
               </div>
               <TransactionTable txs={pendingTx} />
@@ -707,7 +719,7 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  Super Agent Transactions ({agentTx.length})
+                  {t('transactions.superAgentTransactions')} ({agentTx.length})
                 </h3>
               </div>
               <TransactionTable txs={agentTx} />

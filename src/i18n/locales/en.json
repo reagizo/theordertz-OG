@@ -42,6 +42,7 @@
     "edit": "Edit",
     "view": "View",
     "search": "Search",
+    "searchPlaceholder": "Search by name, provider, or service...",
     "loading": "Loading...",
     "noData": "No data available",
     "error": "Error",
@@ -50,7 +51,28 @@
     "logout": "Sign Out",
     "language": "Language",
     "english": "English",
-    "swahili": "Swahili"
+    "swahili": "Swahili",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "close": "Close",
+    "add": "Add",
+    "actions": "Actions",
+    "status": "Status",
+    "amount": "Amount",
+    "date": "Date",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "total": "Total",
+    "approved": "Approved",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No"
   },
   "pages": {
     "dashboard": {
@@ -80,6 +102,22 @@
       "service": "Service",
       "status": "Status",
       "amount": "Amount"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "welcome": "Welcome back, {name}!",
+      "charts": {
+        "monthlyRevenue": "Monthly Revenue",
+        "transactionTrend": "Transaction Trend (30 days)",
+        "transactionsByTier": "Transactions by Tier",
+        "transactionsByService": "Transactions by Service"
+      },
+      "stats": {
+        "totalTransactions": "Total Transactions",
+        "activeAgents": "Active Agents",
+        "totalCustomers": "Total Customers",
+        "walletBalance": "Wallet Balance"
+      }
     },
     "settings": {
       "title": "Settings",

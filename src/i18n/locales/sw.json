@@ -106,6 +106,24 @@
       "amount": "Kiasi"
     },
     "dashboard": {
+      "title": "Dasibodi",
+      "welcome": "Karibu tena, {name}!",
+      "charts": {
+        "monthlyRevenue": "Mapato ya Kila Mwezi",
+        "transactionTrend": "Mwelekeo wa Mikataba (Siku 30)",
+        "transactionsByTier": "Mikataba kulingana na Kiwango",
+        "transactionsByService": "Mikataba kulingana na Huduma"
+      },
+      "stats": {
+        "totalTransactions": "Jumla ya Mikataba",
+        "activeAgents": "Wakala Wanaozaa",
+        "totalCustomers": "Jumla ya Wateja",
+        "walletBalance": "Kiasi cha Wifedhi"
+      }
+    },
+      "amount": "Kiasi"
+    },
+    "dashboard": {
       "charts": {
         "monthlyRevenue": "Mapato ya Kila Mwezi",
         "transactionTrend": "Mwelekeo wa Mikataba (Siku 30)",

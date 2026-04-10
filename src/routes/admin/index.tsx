@@ -571,29 +571,29 @@ function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           icon={Activity}
-          label="Total Transactions"
+          label={t('pages.dashboard.stats.totalTransactions')}
           value={kpis.totalTransactions}
-          sub={`${kpis.approvedCount} approved, ${kpis.pendingCount} pending`}
+          sub={`${kpis.approvedCount} ${t('common.approved')}, ${kpis.pendingCount} ${t('common.pending')}`}
           color="bg-indigo-500"
         />
         <KPICard
           icon={() => <span className="text-white font-bold text-sm">TZS</span>}
-          label="Total Amount"
+          label={t('common.total') + ' ' + t('transactions.title')}
           value={formatTZS(kpis.totalRevenue)}
-          sub={`${kpis.rejectedCount} rejected`}
+          sub={`${kpis.rejectedCount} ${t('common.rejected')}`}
           color="bg-green-500"
         />
         <KPICard
           icon={Clock}
-          label="Pending Amount"
+          label={t('common.pending') + ' ' + t('transactions.title')}
           value={formatTZS(kpis.pendingAmount)}
           sub={`${kpis.pendingCount} transactions awaiting`}
           color="bg-yellow-500"
         />
         <KPICard
           icon={Users}
-          label="Users"
-          value={`${kpis.activeAgents} agents / ${kpis.totalCustomers} customers`}
+          label={t('navigation.agents') + ' / ' + t('navigation.customers')}
+          value={`${kpis.activeAgents} ${t('navigation.agents')} / ${kpis.totalCustomers} ${t('navigation.customers')}`}
           sub={`${kpis.d2dCount} D2D, ${kpis.premierCount} Premier`}
           color="bg-cyan-500"
         />

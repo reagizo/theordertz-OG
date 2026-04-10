@@ -29,11 +29,13 @@ function CustomerWallet() {
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
       supabase.from('customer_profiles').select('full_name, email, tier').eq('email', user.email).maybeSingle(),
     ]).then(([p, txs, userData, customerData]) => {
-      if (customerData?.data?.full_name) {
-        setProfile({ ...p!, fullName: customerData.data.full_name, email: customerData.data.email || p?.email || user.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
-      } else {
-        setProfile(p || { id: user.id, fullName: user.user_metadata?.full_name || user.email, email: user.email, tier: 'd2d', phone: '', nationalId: '', address: '', status: 'approved', createdAt: '', updatedAt: '', walletBalance: 0, creditLimit: 0, creditUsed: 0, isTestAccount: false })
-      }
+      const profileData = p || { id: user.id, fullName: '', email: user.email, tier: 'd2d', phone: '', nationalId: '', address: '', status: 'approved', createdAt: '', updatedAt: '', walletBalance: 0, creditLimit: 0, creditUsed: 0, isTestAccount: false }
+      
+      const fullName = customerData?.data?.full_name || profileData.fullName || user.user_metadata?.full_name || user.email
+      const email = customerData?.data?.email || profileData.email || user.email
+      const tier = customerData?.data?.tier || profileData.tier || 'd2d'
+      
+      setProfile({ ...profileData, fullName, email, tier } as CustomerProfile)
       setTransactions(txs)
       
       const supabasePicture = userData?.data?.profile_picture_url

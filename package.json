@@ -63,6 +63,7 @@
   },
   "overrides": {
     "@xmldom/xmldom": "0.8.12",
+    "esbuild": "0.28.0",
     "h3": "2.0.1-rc.20",
     "h3-v2": "npm:h3@2.0.1-rc.20",
     "minimatch": "3.1.4",

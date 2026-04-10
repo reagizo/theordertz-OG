@@ -148,11 +148,9 @@ export function Sidebar({ role }: SidebarProps) {
   }, [role, user?.email])
 
   useEffect(() => {
-    if (!user?.id || role !== 'admin') return
-    console.log('Admin role fetch running for:', user.id)
-    supabase.from('users').select('role').eq('id', user.id).maybeSingle()
+    if (!user?.email || role !== 'admin') return
+    supabase.from('app_users').select('role').eq('email', user.email).maybeSingle()
       .then(({ data }) => {
-        console.log('Admin role result:', JSON.stringify(data))
         if (data?.role) {
           const roleMap: Record<string, string> = {
             admin: 'Administrator',
@@ -163,7 +161,7 @@ export function Sidebar({ role }: SidebarProps) {
           setUserRoleLabel(roleMap[data.role] || data.role)
         }
       })
-  }, [role, user?.id])
+  }, [role, user?.email])
 
   const roleLabel = role === 'admin' ? (userRoleLabel || t('navigation.agents')) : role === 'agent' ? 'AGENT' : role === 'test' ? 'Test' : t('navigation.customers')
 

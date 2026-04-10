@@ -94,45 +94,14 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (!user?.id || !user?.email) return
-    const savedPicture = localStorage.getItem(`profile_picture_${user.id}`)
-    if (savedPicture) {
-      setUserPicture(savedPicture)
-      supabase.from('users').update({ profile_picture_url: savedPicture }).eq('id', user.id)
-      supabase.from('app_users').update({ profile_picture: savedPicture }).eq('email', user.email)
-      return
-    }
     Promise.all([
       supabase.from('app_users').select('profile_picture').eq('email', user.email).maybeSingle(),
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
     ]).then(([appUserData, userData]) => {
-      const picture = appUserData?.profile_picture || userData?.profile_picture_url
+      const picture = appUserData?.data?.profile_picture || userData?.data?.profile_picture_url
       if (picture) {
         setUserPicture(picture)
         localStorage.setItem(`profile_picture_${user.id}`, picture)
-      } else {
-        let foundPicture: string | undefined
-        try {
-          const raw = localStorage.getItem('app_settings_v3')
-          if (raw) {
-            const settings = JSON.parse(raw)
-            const found = settings.users?.find((u: any) => u.email === user.email)
-            if (found?.profilePicture) foundPicture = found.profilePicture
-          }
-          if (!foundPicture) {
-            const muRaw = localStorage.getItem('mock.user')
-            if (muRaw) {
-              const mu = JSON.parse(muRaw)
-              if (mu?.user_metadata?.profilePicture) foundPicture = mu.user_metadata.profilePicture
-            }
-          }
-        } catch { /* ignore */ }
-
-        if (foundPicture) {
-          setUserPicture(foundPicture)
-          localStorage.setItem(`profile_picture_${user.id}`, foundPicture)
-          supabase.from('users').update({ profile_picture_url: foundPicture }).eq('id', user.id)
-          supabase.from('app_users').update({ profile_picture: foundPicture }).eq('email', user.email)
-        }
       }
     })
   }, [user?.id, user?.email])

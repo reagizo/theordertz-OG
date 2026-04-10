@@ -22,8 +22,6 @@ function AgentDashboard() {
 
   useEffect(() => {
     if (!user?.id || !user?.email) return
-    const saved = localStorage.getItem(`profile_picture_${user.id}`)
-    if (saved) setProfilePicture(saved)
 
     async function load() {
       try {
@@ -36,7 +34,7 @@ function AgentDashboard() {
         setProfile(p)
         setTransactions(txs)
         setFloatExchanges(fxs)
-        if (picData?.data?.profile_picture_url && !saved) {
+        if (picData?.data?.profile_picture_url) {
           setProfilePicture(picData.data.profile_picture_url)
           localStorage.setItem(`profile_picture_${user.id}`, picData.data.profile_picture_url)
         }
@@ -45,7 +43,7 @@ function AgentDashboard() {
       }
     }
     load()
-  }, [user?.id])
+  }, [user?.id, user?.email])
 
   const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

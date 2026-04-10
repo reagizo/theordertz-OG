@@ -12,23 +12,37 @@ const serverStorage = {
   removeItem: () => {},
 }
 
+// Check if Supabase is configured
+const isConfigured = supabaseUrl && supabaseAnonKey
+
 // Client for Browser (uses Anon Key)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: typeof window === 'undefined' ? serverStorage : localStorage,
-    storageKey: 'supabase-auth',
-    autoRefreshToken: typeof window !== 'undefined',
-    persistSession: typeof window !== 'undefined',
-    detectSessionInUrl: typeof window !== 'undefined',
-  },
-})
+export const supabase = createClient(
+  isConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
+  isConfigured ? supabaseAnonKey : 'placeholder',
+  {
+    auth: {
+      storage: typeof window === 'undefined' ? serverStorage : localStorage,
+      storageKey: 'supabase-auth',
+      autoRefreshToken: typeof window !== 'undefined',
+      persistSession: typeof window !== 'undefined',
+      detectSessionInUrl: typeof window !== 'undefined',
+    },
+  }
+)
 
 // Admin for Server Functions (uses Service Role Key)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    storage: typeof window === 'undefined' ? serverStorage : localStorage,
-    storageKey: 'supabase-admin',
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-})
+export const supabaseAdmin = createClient(
+  isConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
+  isConfigured ? supabaseServiceKey : 'placeholder',
+  {
+    auth: {
+      storage: typeof window === 'undefined' ? serverStorage : localStorage,
+      storageKey: 'supabase-admin',
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+)
+
+// Export a flag to check if Supabase is configured
+export const isSupabaseConfigured = isConfigured

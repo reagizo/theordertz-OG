@@ -89,6 +89,7 @@ export function Sidebar({ role }: SidebarProps) {
   const router = useRouter()
   const [userPicture, setUserPicture] = useState<string | undefined>(undefined)
   const [customerProfile, setCustomerProfile] = useState<{ fullName?: string; tier?: string } | null>(null)
+  const [userRoleLabel, setUserRoleLabel] = useState<string>('')
   const nav = useMemo(() => getNavItems(role, t), [role, t])
 
   useEffect(() => {
@@ -146,7 +147,23 @@ export function Sidebar({ role }: SidebarProps) {
       })
   }, [role, user?.email])
 
-  const roleLabel = role === 'admin' ? t('navigation.agents') : role === 'agent' ? 'AGENT' : role === 'test' ? 'Test' : t('navigation.customers')
+  useEffect(() => {
+    if (!user?.id || role !== 'admin') return
+    supabase.from('users').select('role').eq('id', user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data?.role) {
+          const roleMap: Record<string, string> = {
+            admin: 'Administrator',
+            supervisor: 'Supervisor',
+            clerk: 'Clerk',
+            accountant: 'Accountant',
+          }
+          setUserRoleLabel(roleMap[data.role] || data.role)
+        }
+      })
+  }, [role, user?.id])
+
+  const roleLabel = role === 'admin' ? (userRoleLabel || t('navigation.agents')) : role === 'agent' ? 'AGENT' : role === 'test' ? 'Test' : t('navigation.customers')
 
   const handleLogout = async () => {
     await logout()

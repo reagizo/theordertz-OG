@@ -610,7 +610,10 @@ export async function clearAllAlerts(): Promise<void> {
 /** Rows from `public.users`. Shape depends on your Supabase schema. */
 export async function listUsers(): Promise<Record<string, unknown>[]> {
   const { data, error } = await supabaseAdmin.from('users').select('*')
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.warn('listUsers failed:', error.message)
+    return []
+  }
   return (data ?? []) as Record<string, unknown>[]
 }
 

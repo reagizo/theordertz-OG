@@ -5,10 +5,14 @@ const supabaseAnonKey = process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_AN
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey)
 
-const supabaseServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+const getSupabaseServiceKey = () => {
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+    ''
+  )
+}
 
 // Safe storage for server-side (prevents localStorage crash)
 const serverStorage = {
@@ -28,23 +32,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 })
 
 // Admin for Server Functions (uses Service Role Key)
-// Only create this client on the server, and fail fast if the service key is missing.
-export const supabaseAdmin =
-  typeof window === 'undefined' && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
-    : undefined
+// Only create this client on the server when we have a service key.
+export const supabaseAdmin = (() => {
+  if (typeof window !== 'undefined') return undefined
+  const key = getSupabaseServiceKey()
+  if (!key) return undefined
+  return createClient(supabaseUrl, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+})()
 
-// Admin helper: get admin client or throw if not configured
+// Admin helper: get admin client or return undefined if not configured
+// No longer throws - graceful degradation when service key is missing
 export function getSupabaseAdminOrThrow(): any {
-  if (supabaseAdmin) {
-    return supabaseAdmin
-  }
-  throw new Error('Supabase admin client is not configured. Service Role key is missing. Set SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) in your environment.')
+  return supabaseAdmin
 }
 
 export type Database = {

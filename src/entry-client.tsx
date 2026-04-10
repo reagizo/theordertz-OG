@@ -5,7 +5,13 @@ import { routeTree } from './routeTree.gen'
 import { AuthProvider } from './components/AuthProvider'
 import './styles.css'
 
-const router = createRouter({ routeTree })
+const router = createRouter({
+  routeTree,
+  defaultPreloadStaleTime: 0,
+  async onError(error) {
+    console.error('Router error:', error)
+  },
+})
 
 declare module '@tanstack/react-router' {
   interface Register {

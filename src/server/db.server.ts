@@ -8,8 +8,16 @@ import type {
   CreditPortfolio,
 } from '@/lib/types'
 
+const getAdmin = () => {
+  const admin = getSupabaseAdminOrThrow()
+  if (!admin) {
+    throw new Error('Supabase admin client not configured. Service Role key is missing.')
+  }
+  return admin
+}
+
 const supabaseAdmin = {
-  from: (...args: any[]) => getSupabaseAdminOrThrow().from(...args),
+  from: (...args: any[]) => getAdmin().from(...args),
 }
 
 // ── Agents ──────────────────────────────────────────────────────────────────

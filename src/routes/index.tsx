@@ -11,7 +11,7 @@ function Home() {
   const router = useRouter()
   const [colorIndex, setColorIndex] = useState(0)
 
-  const colors = ['#fbb040', '#e8346a', '#4F46E5', '#06B6D4', '#EC4899']
+  const colors = ['#F57C00', '#C62828', '#0A2A66', '#F57C00', '#C62828']
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,7 +40,7 @@ function Home() {
   }, [user, loading, role, router])
 
   return (
-    <div className="min-h-screen bg-[#1a1a3e] flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A2A66] flex items-center justify-center relative overflow-hidden">
       {/* Blur background layers */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e8346a]/20 rounded-full blur-[120px]" />

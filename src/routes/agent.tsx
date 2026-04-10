@@ -20,10 +20,10 @@ function AgentLayout() {
   }, [user, loading, role, router])
 
   if (loading) return (
-    <div className="min-h-screen bg-[#1a1a3e] flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A2A66] flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e8346a]/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#fbb040]/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C62828]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#F57C00]/20 rounded-full blur-[120px]" />
       </div>
       <div className="flex items-center justify-center gap-2 text-white/70">
         <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
@@ -39,7 +39,7 @@ function AgentLayout() {
   return (
     <RoleGuard permission="view_dashboard" resource="agent_dashboard" redirectTo="/login">
       <SettingsProvider>
-        <div className="min-h-screen bg-[#1a1a3e]">
+        <div className="min-h-screen bg-[#0A2A66]">
           <Sidebar role="agent" />
           <div className="lg:pl-64 relative">
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">

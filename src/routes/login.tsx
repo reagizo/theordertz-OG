@@ -33,12 +33,12 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1a3e] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A2A66] flex items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* Blur background layers */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e8346a]/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#fbb040]/20 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#4F46E5]/10 rounded-full blur-[150px]" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C62828]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#F57C00]/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#0A2A66]/30 rounded-full blur-[150px]" />
       </div>
 
       <div className="w-full max-w-md relative z-10 flex flex-col items-center">
@@ -67,7 +67,7 @@ function LoginPage() {
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#fbb040]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F57C00]" />
                 <input
                   type="email"
                   value={email}
@@ -82,7 +82,7 @@ function LoginPage() {
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#fbb040]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F57C00]" />
                 <input
                   type="password"
                   value={password}
@@ -97,7 +97,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#fbb040] to-[#e8346a] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-[#fbb040] to-[#C62828] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -124,10 +124,10 @@ function LoginPage() {
           </div>
 
           <div className="flex items-center justify-center gap-4 text-sm">
-            <Link to="/register/agent" className="text-[#fbb040] font-medium hover:text-[#fbb040]/80 underline underline-offset-4 transition-colors">
+            <Link to="/register/agent" className="text-[#F57C00] font-medium hover:text-[#F57C00]/80 underline underline-offset-4 transition-colors">
               Register as Agent
             </Link>
-            <Link to="/register/customer" className="text-[#e8346a] font-medium hover:text-[#e8346a]/80 underline underline-offset-4 transition-colors">
+            <Link to="/register/customer" className="text-[#C62828] font-medium hover:text-[#C62828]/80 underline underline-offset-4 transition-colors">
               Register as Customer
             </Link>
           </div>

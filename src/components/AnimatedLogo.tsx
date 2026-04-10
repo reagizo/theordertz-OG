@@ -64,7 +64,7 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
         </div>
         {showText && (
           <div className="w-full max-w-sm mt-4">
-            <p className={textClass} style={{ color: '#fbb040', fontFamily: 'Aptos Display, Aptos, sans-serif' }}>
+            <p className={textClass} style={{ color: '#F57C00', fontFamily: 'Aptos Display, Aptos, sans-serif' }}>
               SERVICE INTERFACE PORTAL SYSTEM
             </p>
           </div>
@@ -86,7 +86,7 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
       </div>
       {showText && (
         <div className="w-full max-w-sm mt-4">
-          <p className={textClass} style={{ color: '#fbb040', fontFamily: 'Aptos Display, Aptos, sans-serif' }}>
+          <p className={textClass} style={{ color: '#F57C00', fontFamily: 'Aptos Display, Aptos, sans-serif' }}>
             SERVICE INTERFACE PORTAL SYSTEM
           </p>
         </div>

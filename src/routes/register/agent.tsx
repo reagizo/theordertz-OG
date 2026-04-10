@@ -66,11 +66,11 @@ function AgentRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1a3e] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A2A66] flex items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* Blur background layers */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e8346a]/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#fbb040]/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C62828]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#F57C00]/20 rounded-full blur-[120px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#4F46E5]/10 rounded-full blur-[150px]" />
       </div>
 
@@ -101,7 +101,7 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="fullName" value={form.fullName} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="John Doe" />
                 </div>
               </div>
@@ -110,7 +110,7 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="email" type="email" value={form.email} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="agent@example.com" />
                 </div>
               </div>
@@ -119,14 +119,14 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="phone" value={form.phone} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="+255 7XX XXX XXX" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-white/80 mb-1.5">National ID *</label>
                 <input name="nationalId" value={form.nationalId} onChange={handleChange} required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                   placeholder="XXXXXXXXXXXXXXXXXX" />
               </div>
               <div className="sm:col-span-2">
@@ -134,7 +134,7 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="address" value={form.address} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Street, City, Region" />
                 </div>
               </div>
@@ -143,7 +143,7 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="businessName" value={form.businessName} onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Your business trading name" />
                 </div>
               </div>
@@ -152,7 +152,7 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="password" type="password" value={form.password} onChange={handleChange} required minLength={8}
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Min. 8 characters" />
                 </div>
               </div>
@@ -161,18 +161,18 @@ function AgentRegisterPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fbb040]/50 focus:border-[#fbb040] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
                     placeholder="Re-enter password" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#fbb040]/10 border border-[#fbb040]/30 rounded-xl p-3 text-xs text-[#fbb040]">
+            <div className="bg-[#F57C00]/10 border border-[#F57C00]/30 rounded-xl p-3 text-xs text-[#F57C00]">
               <strong>Note:</strong> Your registration will be reviewed by an administrator. You may need to confirm your email address before accessing your account.
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#fbb040] to-[#e8346a] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+              className="w-full py-3 bg-gradient-to-r from-[#F57C00] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
               {loading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ function AgentRegisterPage() {
 
           <p className="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/50">
             Already have an account?{' '}
-            <Link to="/login" className="text-[#fbb040] font-medium hover:text-[#fbb040]/80 underline underline-offset-4 transition-colors">Sign in</Link>
+            <Link to="/login" className="text-[#F57C00] font-medium hover:text-[#F57C00]/80 underline underline-offset-4 transition-colors">Sign in</Link>
           </p>
         </div>
       </div>

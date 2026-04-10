@@ -1,23 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Aptos+Display:wght@300;400;500;600;700;800&family=Aptos:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Aptos+Display:wght@300;400;500;600;700;800&family=Aptos:wght@300;400;500;600;700&family=Great+Vibes&display=swap');
 
 @import "tailwindcss" source("../");
 
 :root {
-  --brand-1: #4F46E5;
-  --brand-2: #06B6D4;
-  --bg: #0b1020;
+  --primary: #0A2A66;
+  --accent-red: #C62828;
+  --accent-orange: #F57C00;
+  --text: #000000;
+  --background: #FFFFFF;
+  --primary-light: #1a3d7a;
 }
 
 @theme {
-  --color-brand-blue: #1E3A5F;
-  --color-brand-pink: #EC4899;
-  --color-brand-orange: #F97316;
+  --color-primary: #0A2A66;
+  --color-primary-light: #1a3d7a;
+  --color-accent-red: #C62828;
+  --color-accent-orange: #F57C00;
+  --color-brand-blue: #0A2A66;
+  --color-brand-pink: #C62828;
+  --color-brand-orange: #F57C00;
+  --color-brand-dark: #0A2A66;
   --color-brand-light: #FEF3E5;
-  --color-brand-dark: #1a1a3e;
 }
 
 .protected-layout {
-  @apply bg-[#1a1a3e] min-h-screen;
+  @apply bg-[#0A2A66] min-h-screen;
 }
 
 @layer base {
@@ -27,13 +34,16 @@
 
   body {
     font-weight: 400;
-    color: #1E3A5F;
+    color: #000000;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Aptos Display', 'Aptos', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   h1 { font-weight: 700; }
@@ -54,55 +64,31 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-pink-700 transition-all;
+    @apply bg-gradient-to-r from-[#F57C00] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all;
   }
 
   .btn-secondary {
-    @apply bg-pink-50 text-pink-600 font-semibold rounded-xl border border-pink-200 hover:bg-pink-100 transition-all;
+    @apply bg-red-50 text-[#C62828] font-semibold rounded-xl border border-red-200 hover:bg-red-100 transition-all;
   }
 
   .btn-outline {
-    @apply bg-white text-brand-blue font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-all;
+    @apply bg-white text-[#0A2A66] font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-all;
   }
 
   .card {
-    @apply bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60;
+    @apply bg-white rounded-3xl shadow-xl border border-gray-200;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink text-sm transition-all shadow-sm;
+    @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/30 focus:border-[#F57C00] text-sm transition-all shadow-sm;
   }
 
   .label {
-    @apply block text-sm font-medium text-brand-blue mb-1.5;
+    @apply block text-sm font-semibold text-[#0A2A66] mb-1.5;
   }
 
   .brand-bg {
-    @apply bg-gradient-to-br from-[#FFF5EE] via-[#FFE4E8] to-[#E8D5F5] relative overflow-hidden;
-  }
-
-  .brand-arc-top-left {
-    @apply absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full border-[3px] border-orange-300/20 pointer-events-none;
-  }
-
-  .brand-arc-top-left-inner {
-    @apply absolute -top-20 -left-20 w-[400px] h-[400px] rounded-full border-[2px] border-orange-400/15 pointer-events-none;
-  }
-
-  .brand-arc-bottom-right {
-    @apply absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full border-[3px] border-purple-300/20 pointer-events-none;
-  }
-
-  .brand-arc-bottom-right-inner {
-    @apply absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full border-[2px] border-purple-400/15 pointer-events-none;
-  }
-
-  .brand-glow-top {
-    @apply absolute top-0 left-0 w-96 h-96 bg-orange-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none;
-  }
-
-  .brand-glow-bottom {
-    @apply absolute bottom-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none;
+    @apply bg-gradient-to-br from-[#0A2A66] via-[#1a3d7a] to-[#0A2A66] relative overflow-hidden;
   }
 }
 
@@ -116,12 +102,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #EC4899;
+  background: #C62828;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1E3A5F;
+  background: #0A2A66;
 }
 
 @media (max-width: 640px) {

@@ -41,7 +41,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   if (isComplete) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#111827] overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0A2A66] overflow-hidden">
       {phase === "bars" && (
         <div className="absolute inset-0 flex items-end justify-center gap-[3px] px-8">
           {Array.from({ length: NUM_BARS }).map((_, i) => (
@@ -90,7 +90,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
           </div>
           <p 
             className="mt-6 text-center text-lg tracking-[0.25em] uppercase font-semibold animate-fade-in"
-            style={{ color: '#fbb040', fontFamily: 'Aptos Display, Aptos, sans-serif' }}
+            style={{ color: '#F57C00', fontFamily: 'Aptos Display, Aptos, sans-serif' }}
           >
             SERVICE INTERFACE PORTAL SYSTEM
           </p>
@@ -105,7 +105,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
         }
         .animate-bar {
           --target-height: var(--height);
-          background: linear-gradient(to top, #fbb040, #f9a827, #fbb040);
+          background: linear-gradient(to top, #F57C00, #C62828, #F57C00);
           animation: bar 0.7s ease-out forwards;
         }
         @keyframes split {

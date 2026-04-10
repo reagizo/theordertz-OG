@@ -64,7 +64,7 @@ function AvatarWithPicture({ picture, name, size = 'md' }: { picture?: string; n
     )
   }
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0 shadow ring-2 ring-white/20`}>
+    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-[#F57C00] to-[#C62828] flex items-center justify-center text-white font-bold flex-shrink-0 shadow ring-2 ring-white/20`}>
       {name[0]?.toUpperCase() ?? '?'}
     </div>
   )
@@ -90,12 +90,12 @@ export function Sidebar({ role }: SidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-4 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Logo" className="w-9 h-9 flex-shrink-0 object-contain" />
+      <div className="p-4 border-b border-white/20">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Logo" className="w-12 h-12 flex-shrink-0 object-contain" style={{ width: '3rem', height: '3rem' }} />
           <div className="min-w-0">
-            <p className="text-white font-bold text-[10px] leading-tight tracking-wider uppercase" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>SIPS</p>
-            <p className="text-[#fbb040] text-[9px] leading-tight">Portal System</p>
+            <p className="text-white font-bold text-xs leading-tight tracking-wider uppercase" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>THE ORDER-SIPS</p>
+            <p className="text-[#F57C00] text-[9px] leading-tight">Portal System</p>
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@ export function Sidebar({ role }: SidebarProps) {
             key={item.to}
             to={item.to}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-all text-sm font-medium group"
-            activeProps={{ className: 'bg-gradient-to-r from-orange-500/20 to-pink-500/20 text-white border border-white/10' }}
+            activeProps={{ className: 'bg-gradient-to-r from-[#F57C00]/20 to-[#C62828]/20 text-white border border-white/10' }}
             onClick={() => setOpen(false)}
           >
             <item.icon className="w-5 h-5 flex-shrink-0 group-hover:text-pink-300 transition-colors" />
@@ -169,7 +169,7 @@ export function Sidebar({ role }: SidebarProps) {
       )}
 
       {/* Mobile drawer */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#1a1a3e] transform transition-transform lg:hidden ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0A2A66] transform transition-transform lg:hidden ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={() => setOpen(false)}
           className="absolute top-4 right-4 text-white/70 hover:text-white"
@@ -180,7 +180,7 @@ export function Sidebar({ role }: SidebarProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 bg-[#1a1a3e]">
+      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 bg-[#0A2A66]">
         <SidebarContent />
       </div>
     </>

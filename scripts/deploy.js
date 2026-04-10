@@ -19,16 +19,25 @@ if (process.env.SKIP_BUILD !== 'true') {
   console.log('Building project for Cloudflare deployment...');
   
   // Debug: log what we're passing
-  console.log('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '(not set)');
-  console.log('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? '(set)' : '(not set)');
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
+  console.log('VITE_SUPABASE_URL:', supabaseUrl || '(not set)');
+  console.log('VITE_SUPABASE_ANON_KEY:', supabaseKey ? '(set)' : '(not set)');
   
-  // Ensure VITE_ env vars are passed through - use process.env directly
-  const buildEnv = { ...process.env };
-  buildEnv.CLOUDFLARE = 'false';
-  if (!buildEnv.VITE_SUPABASE_URL) buildEnv.VITE_SUPABASE_URL = buildEnv.SUPABASE_URL || '';
-  if (!buildEnv.VITE_SUPABASE_ANON_KEY) buildEnv.VITE_SUPABASE_ANON_KEY = buildEnv.SUPABASE_ANON_KEY || buildEnv.SUPABASE_KEY || '';
+  // Build with explicit env vars passed to the process
+  const buildEnv = {
+    ...process.env,
+    CLOUDFLARE: 'false',
+    VITE_SUPABASE_URL: supabaseUrl,
+    VITE_SUPABASE_ANON_KEY: supabaseKey,
+  };
   
-  const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, env: buildEnv });
+  const buildRes = spawnSync('npm', ['run', 'build'], { 
+    stdio: 'inherit', 
+    shell: true, 
+    env: buildEnv,
+    windowsHide: false
+  });
   if (buildRes.status && buildRes.status !== 0) {
     console.error('Build failed. Aborting deployment.');
     process.exit(buildRes.status);

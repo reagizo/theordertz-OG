@@ -4,6 +4,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { RoleGuard } from '@/components/RoleGuard'
 import { Sidebar } from '@/components/Sidebar'
 import { SettingsProvider } from '@/contexts/SettingsContext'
+import { NotificationSystem } from '@/components/NotificationSystem'
 
 export const Route = createFileRoute('/admin')({
   component: AdminLayout,
@@ -39,6 +40,7 @@ function AdminLayout() {
   return (
     <RoleGuard permission="view_dashboard" resource="admin_dashboard" redirectTo="/login">
       <SettingsProvider>
+        <NotificationSystem />
         <div className="min-h-screen bg-[#0A2A66]">
           <Sidebar role="admin" />
           <div className="lg:pl-64 relative">

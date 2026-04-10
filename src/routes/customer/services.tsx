@@ -445,7 +445,7 @@ function CustomerServices() {
           {/* Agent selection */}
           {approvedAgents.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assign Agent</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Super Agent</label>
               <select name="agentId" value={form.agentId} onChange={handleChange} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                 {approvedAgents.map(a => <option key={a.id} value={a.id}>{a.fullName} {a.businessName ? `(${a.businessName})` : ''}</option>)}
               </select>

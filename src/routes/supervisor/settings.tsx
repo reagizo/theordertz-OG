@@ -101,8 +101,8 @@ function SupervisorSettings() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your profile and account settings</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Settings</h1>
+          <p className="text-gray-300 text-sm mt-1">Manage your profile and account settings</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <p className="text-gray-500">Only Super Agents can access this page.</p>
@@ -114,8 +114,8 @@ function SupervisorSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage Super Agent profile and settings</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Settings</h1>
+        <p className="text-gray-300 text-sm mt-1">Manage Super Agent profile and settings</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
@@ -143,6 +143,22 @@ function SupervisorSettings() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="border-t pt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-green-100 rounded-lg"><Shield className="w-5 h-5 text-green-600" /></div>
+            <h2 className="text-lg font-semibold text-gray-900">Super Agent Name</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <input type="text" value={superAgentNameInput} onChange={(e) => setSuperAgentNameInput(e.target.value)} placeholder="Enter Super Agent name"
+              className="flex-1 max-w-md px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500" />
+            <button onClick={handleSaveSuperAgent} className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all text-sm">
+              <Save className="w-4 h-4" /> Save
+            </button>
+            {superAgentSaved && <span className="text-green-600 text-sm flex items-center gap-1"><Check className="w-4 h-4" /> Saved!</span>}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">This name appears on customer confirmation screens and in the sidebar.</p>
         </div>
 
         <div className="border-t pt-6">

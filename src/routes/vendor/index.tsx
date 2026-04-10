@@ -55,8 +55,8 @@ function VendorDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your transactions and wallet</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Vendor Dashboard</h1>
+          <p className="text-gray-300 text-sm mt-1">Manage your transactions and wallet</p>
         </div>
       </div>
 

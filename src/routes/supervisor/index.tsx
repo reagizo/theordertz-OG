@@ -288,10 +288,10 @@ function SupervisorDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Super Agent Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Super Agent Dashboard</h1>
+          <p className="text-gray-300 text-sm mt-1">
             Approve and manage transaction requests
-            <span className="ml-2 text-indigo-600 font-medium">| Super Agent: {settings.superAgentName}</span>
+            <span className="ml-2 text-orange-400 font-medium">| Super Agent: {settings.superAgentName}</span>
           </p>
         </div>
       </div>

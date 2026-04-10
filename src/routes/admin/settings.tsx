@@ -95,6 +95,9 @@ function AdminSettings() {
   const [editEmail, setEditEmail] = useState('')
   const [editRole, setEditRole] = useState<UserRole>('Clerk')
   const [editPicture, setEditPicture] = useState('')
+  const [editNewPassword, setEditNewPassword] = useState('')
+  const [editConfirmPassword, setEditConfirmPassword] = useState('')
+  const [editPictureInput, setEditPictureInput] = useState<HTMLInputElement | null>(null)
   const [settingsTab, setSettingsTab] = useState<'general' | 'alerts' | 'audit' | 'test-accounts' | 'super-agents' | 'password-resets'>('general')
 
   const isTestAdmin = currentUserEmail === TEST_ADMIN_EMAIL
@@ -130,12 +133,28 @@ function AdminSettings() {
     setNewUserName(''); setNewUserEmail(''); setNewUserRole('Clerk'); setNewUserTier('d2d'); setNewUserPicture(''); setNewUserPassword(''); setNewUserConfirmPassword(''); setShowAddUser(false)
   }
 
-  const startEdit = (u: AppUser) => { setEditingUserId(u.id); setEditName(u.name); setEditEmail(u.email); setEditRole(u.role); setEditPicture(u.profilePicture ?? '') }
+  const startEdit = (u: AppUser) => { setEditingUserId(u.id); setEditName(u.name); setEditEmail(u.email); setEditRole(u.role); setEditPicture(u.profilePicture ?? ''); setEditNewPassword(''); setEditConfirmPassword('') }
   const cancelEdit = () => setEditingUserId(null)
   const saveEdit = () => {
     if (!editingUserId || !editName.trim()) return
-    updateUser(editingUserId, { name: editName.trim(), email: editEmail.trim(), role: editRole, profilePicture: editPicture || undefined })
+    const updates: Partial<AppUser> = { name: editName.trim(), email: editEmail.trim(), role: editRole, profilePicture: editPicture || undefined }
+    if (editNewPassword) {
+      if (editNewPassword !== editConfirmPassword) { alert('Passwords do not match'); return }
+      if (editNewPassword.length < 6) { alert('Password must be at least 6 characters'); return }
+      updates.password = editNewPassword
+    }
+    updateUser(editingUserId, updates)
     setEditingUserId(null)
+    setEditNewPassword('')
+    setEditConfirmPassword('')
+  }
+
+  const handleEditPictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => { if (ev.target?.result) setEditPicture(ev.target.result as string) }
+    reader.readAsDataURL(file)
   }
 
   const formatDateTime = (d: string) => new Date(d).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -144,8 +163,8 @@ function AdminSettings() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Settings</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage Super Agent name, password, users, and alerts</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Admin Settings</h1>
+          <p className="text-gray-300 text-sm mt-1">Manage Super Agent name, password, users, and alerts</p>
         </div>
         {unreadAlerts.length > 0 && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
@@ -305,13 +324,14 @@ function AdminSettings() {
                         <th className="px-4 py-3">User</th>
                         <th className="px-4 py-3">Email</th>
                         <th className="px-4 py-3">Role</th>
+                        <th className="px-4 py-3">Password</th>
                         <th className="px-4 py-3">Created</th>
                         <th className="px-4 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {settings.users.length === 0 ? (
-                        <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No users added yet. Click "Add User" to get started.</td></tr>
+                        <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">No users added yet. Click "Add User" to get started.</td></tr>
                       ) : (
                         settings.users.map((u) => {
                           const isEditing = editingUserId === u.id
@@ -321,7 +341,23 @@ function AdminSettings() {
                                 <>
                                   <td className="px-4 py-3">
                                     <div className="flex items-center gap-3">
-                                      <AvatarWithPicture picture={editPicture} name={editName} size="sm" />
+                                      <div className="relative">
+                                        <AvatarWithPicture picture={editPicture} name={editName} size="sm" />
+                                        <button 
+                                          type="button"
+                                          onClick={() => editPictureInput?.click()}
+                                          className="absolute bottom-0 right-0 p-1 bg-indigo-600 rounded-full text-white hover:bg-indigo-700"
+                                        >
+                                          <Upload className="w-3 h-3" />
+                                        </button>
+                                        <input 
+                                          ref={(el) => setEditPictureInput(el)}
+                                          type="file" 
+                                          accept="image/*" 
+                                          onChange={handleEditPictureUpload} 
+                                          className="hidden" 
+                                        />
+                                      </div>
                                       <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
                                         className="px-2 py-1 border border-gray-200 rounded text-sm w-32 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
                                     </div>
@@ -335,6 +371,24 @@ function AdminSettings() {
                                       className="px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
                                       {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                                     </select>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="space-y-2">
+                                      <input 
+                                        type="password" 
+                                        value={editNewPassword} 
+                                        onChange={(e) => setEditNewPassword(e.target.value)}
+                                        placeholder="New password"
+                                        className="px-2 py-1 border border-gray-200 rounded text-sm w-36 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" 
+                                      />
+                                      <input 
+                                        type="password" 
+                                        value={editConfirmPassword} 
+                                        onChange={(e) => setEditConfirmPassword(e.target.value)}
+                                        placeholder="Confirm password"
+                                        className="px-2 py-1 border border-gray-200 rounded text-sm w-36 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" 
+                                      />
+                                    </div>
                                   </td>
                                   <td className="px-4 py-3 text-gray-500">—</td>
                                   <td className="px-4 py-3 text-right">
@@ -356,6 +410,7 @@ function AdminSettings() {
                                   <td className="px-4 py-3">
                                     <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${ROLE_COLORS[u.role]}`}>{u.role}</span>
                                   </td>
+                                  <td className="px-4 py-3 text-gray-500 text-xs">••••••••</td>
                                   <td className="px-4 py-3 text-gray-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
                                   <td className="px-4 py-3 text-right">
                                     <div className="flex items-center justify-end gap-1">

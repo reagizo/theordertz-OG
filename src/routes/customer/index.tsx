@@ -70,8 +70,8 @@ function CustomerWallet() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Wallet</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">My Wallet</h1>
+          <p className="text-gray-300 text-sm mt-1">
             {displayName}
             {profile?.tier && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${profile.tier === 'premier' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>

@@ -91,8 +91,8 @@ function SupervisorTransactions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transaction Requests</h1>
-        <p className="text-gray-500 text-sm mt-1">Review, approve, reject, or return transaction requests</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Transaction Requests</h1>
+        <p className="text-gray-300 text-sm mt-1">Review, approve, reject, or return transaction requests</p>
       </div>
 
       <div className="flex flex-wrap gap-2">

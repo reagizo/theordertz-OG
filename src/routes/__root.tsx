@@ -9,9 +9,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'THE ORDER-SIPS - Service Interface Portal System' },
+      { title: 'The Order-Reagizo Service Company' },
       { name: 'theme-color', content: '#0A2A66' },
-      { name: 'description', content: 'THE ORDER-SIPS - Service Interface Portal System' },
+      { name: 'description', content: 'The Order-Reagizo Service Company' },
     ],
     links: [
       { rel: 'icon', type: 'image/png', href: '/logo.png' },

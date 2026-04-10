@@ -75,8 +75,8 @@ function AgentDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Agent Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Agent Dashboard</h1>
+          <p className="text-gray-300 text-sm mt-1">
             Welcome, {displayName}
             {profile?.status === 'pending' && (
               <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs">Account Pending Approval</span>

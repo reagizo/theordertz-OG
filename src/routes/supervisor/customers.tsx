@@ -41,8 +41,8 @@ function SupervisorCustomers() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customers</h1>
-        <p className="text-gray-500 text-sm mt-1">View and manage customer profiles</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Customers</h1>
+        <p className="text-gray-300 text-sm mt-1">View and manage customer profiles</p>
       </div>
 
       <div className="flex flex-wrap gap-2">

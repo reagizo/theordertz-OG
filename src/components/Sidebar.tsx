@@ -104,6 +104,11 @@ export function Sidebar({ role }: SidebarProps) {
   const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'User'
   const userPicture = user?.user_metadata?.profilePicture
 
+  const currentUserEmail = user?.email
+  const currentSettingsUser = currentUserEmail ? settings.users.find(u => u.email === currentUserEmail) : null
+  const sidebarDisplayName = currentSettingsUser?.name ?? displayName
+  const sidebarPicture = currentSettingsUser?.profilePicture ?? userPicture
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
@@ -111,8 +116,7 @@ export function Sidebar({ role }: SidebarProps) {
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Logo" className="w-12 h-12 flex-shrink-0 object-contain" style={{ width: '3rem', height: '3rem' }} />
           <div className="min-w-0">
-            <p className="text-white font-bold text-xs leading-tight tracking-wider uppercase" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>THE ORDER-SIPS</p>
-            <p className="text-[#F57C00] text-[9px] leading-tight">Portal System</p>
+            <p className="text-white font-bold text-lg leading-tight tracking-wider uppercase" style={{ fontFamily: 'Aptos Display, Aptos, sans-serif' }}>SIPS</p>
           </div>
         </div>
       </div>
@@ -120,10 +124,10 @@ export function Sidebar({ role }: SidebarProps) {
       {/* User Info */}
       <div className="px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <AvatarWithPicture picture={userPicture} name={displayName} />
+          <AvatarWithPicture picture={sidebarPicture} name={sidebarDisplayName} />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-white truncate">
-              {displayName}
+              {sidebarDisplayName}
             </p>
             <p className="text-xs text-pink-300">{roleLabel}</p>
           </div>

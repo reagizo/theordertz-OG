@@ -84,8 +84,8 @@ function AdminCustomers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage customer accounts, wallets, and credit portfolios</p>
+          <h1 className="text-2xl font-bold text-white">Customers</h1>
+          <p className="text-gray-300 text-sm mt-1">Manage customer accounts, wallets, and credit portfolios</p>
         </div>
         <div className="flex gap-2 text-sm">
           <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">

@@ -84,8 +84,8 @@ function AdminFloatRequests() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Float Management</h1>
-        <p className="text-gray-500 text-sm mt-1">Review and approve float requests and exchanges</p>
+        <h1 className="text-2xl font-bold text-white">Float Management</h1>
+        <p className="text-gray-300 text-sm mt-1">Review and approve float requests and exchanges</p>
       </div>
 
       {/* Tabs */}

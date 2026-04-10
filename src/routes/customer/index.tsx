@@ -29,12 +29,17 @@ function CustomerWallet() {
       getCustomerProfileFn({ data: { id: user.id } }),
       listTransactionsByCustomerFn({ data: { customerId: user.id } }),
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
-    ]).then(([p, txs, userData]) => {
-      setProfile(p)
+      supabase.from('customer_profiles').select('full_name, email, tier').eq('id', user.id).maybeSingle(),
+    ]).then(([p, txs, userData, customerData]) => {
+      if (customerData?.data && !p?.fullName) {
+        setProfile({ ...p!, fullName: customerData.data.full_name || p?.fullName, email: customerData.data.email || p?.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
+      } else {
+        setProfile(p)
+      }
       setTransactions(txs)
-      if (userData?.profile_picture_url && !saved) {
-        setProfilePicture(userData.profile_picture_url)
-        localStorage.setItem(`customer_picture_${user.id}`, userData.profile_picture_url)
+      if (userData?.data?.profile_picture_url && !saved) {
+        setProfilePicture(userData.data.profile_picture_url)
+        localStorage.setItem(`customer_picture_${user.id}`, userData.data.profile_picture_url)
       }
     }).finally(() => setLoading(false))
   }, [user?.id])

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useRef } from 'react'
-import { listSuperAgentsFn, saveSuperAgentProfileFn, deleteSuperAgentFn, saveAppUserFn } from '@/server/db.functions'
+import { listSuperAgentsFn, saveSuperAgentProfileFn, deleteSuperAgentFn, saveAppUserFn, getAppUserByEmailFn } from '@/server/db.functions'
 import { formatDate } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, UserPlus, Trash2, Edit, Shield, Upload, X, Camera } from 'lucide-react'
 import type { SuperAgentProfile } from '@/lib/types'
@@ -112,18 +112,35 @@ function AdminSuperAgents() {
     try {
       const now = new Date().toISOString()
       let userId = editingAgent?.userId
+      let userMessage = ''
 
       if (form.createUserAccount && !editingAgent) {
-        const appUser = {
-          id: generateId(),
-          name: form.fullName,
-          email: form.email,
-          role: 'super_agent',
-          profile_picture: profilePicture || null,
-          password: form.password,
+        // Check if email already exists
+        const existingUser = await getAppUserByEmailFn({ data: { email: form.email } })
+        
+        if (existingUser) {
+          // Link to existing user
+          userId = existingUser.id
+          userMessage = 'Linked to existing user account.'
+          
+          // Optionally update the existing user's profile picture
+          if (profilePicture) {
+            await saveAppUserFn({ data: { ...existingUser, profile_picture: profilePicture } })
+          }
+        } else {
+          // Create new user
+          const appUser = {
+            id: generateId(),
+            name: form.fullName,
+            email: form.email,
+            role: 'super_agent',
+            profile_picture: profilePicture || null,
+            password: form.password,
+          }
+          await saveAppUserFn({ data: appUser })
+          userId = appUser.id
+          userMessage = 'User account created.'
         }
-        await saveAppUserFn({ data: appUser })
-        userId = appUser.id
       }
 
       const profile: SuperAgentProfile = {
@@ -147,7 +164,7 @@ function AdminSuperAgents() {
         setMessage('Super Agent updated successfully')
       } else {
         setSuperAgents(prev => [profile, ...prev])
-        setMessage('Super Agent added successfully! ' + (form.createUserAccount ? 'User account created.' : ''))
+        setMessage('Super Agent added successfully! ' + userMessage)
       }
 
       addAuditEntry({

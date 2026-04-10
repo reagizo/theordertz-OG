@@ -216,6 +216,10 @@ export const listUsersFn = createServerFn().handler(() => listUsers())
 
 export const listAppUsersFn = createServerFn().handler(() => listAppUsers())
 
+export const getAppUserByEmailFn = createServerFn({ method: 'GET' })
+  .inputValidator((data: { email: string }) => data)
+  .handler(({ data }) => getAppUserByEmail(data.email))
+
 export const saveAppUserFn = createServerFn({ method: 'POST' })
   .handler(({ data }) => saveAppUser(data))
 

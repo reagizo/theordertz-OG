@@ -685,6 +685,24 @@ export async function listAppUsers(): Promise<any[]> {
   }))
 }
 
+export async function getAppUserByEmail(email: string): Promise<any | null> {
+  const { data, error } = await supabaseAdmin
+    .from('app_users')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle()
+  if (error || !data) return null
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    profilePicture: data.profile_picture,
+    password: data.password,
+    createdAt: data.created_at,
+  }
+}
+
 export async function saveAppUser(user: any): Promise<void> {
   const { error } = await supabaseAdmin
     .from('app_users')

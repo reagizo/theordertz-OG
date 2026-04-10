@@ -38,6 +38,11 @@ export default defineConfig(({ mode }) => {
     'process.env.SUPABASE_SERVICE_KEY': JSON.stringify(
       env.SUPABASE_SERVICE_KEY || '',
     ),
+    'process.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
+    'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
+    'process.env.VITE_SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(
+      env.SUPABASE_SERVICE_ROLE_KEY || '',
+    ),
   },
   plugins: [
     ...(useCloudflare ? [cloudflare()] : []),

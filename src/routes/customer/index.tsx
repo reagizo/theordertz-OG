@@ -21,7 +21,7 @@ function CustomerWallet() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id || !user?.email) return
     const saved = localStorage.getItem(`customer_picture_${user.id}`)
     if (saved) setProfilePicture(saved)
 
@@ -29,17 +29,14 @@ function CustomerWallet() {
       getCustomerProfileFn({ data: { id: user.id } }),
       listTransactionsByCustomerFn({ data: { customerId: user.id } }),
       supabase.from('users').select('profile_picture_url').eq('id', user.id).maybeSingle(),
-      supabase.from('customer_profiles').select('full_name, email, tier').eq('id', user.id).maybeSingle(),
+      supabase.from('customer_profiles').select('full_name, email, tier').eq('email', user.email).maybeSingle(),
     ]).then(([p, txs, userData, customerData]) => {
-      console.log('customer_profiles result:', JSON.stringify(customerData))
-      console.log('getCustomerProfileFn result:', p)
+      console.log('customer_profiles by email:', JSON.stringify(customerData))
       
       if (customerData?.data?.full_name) {
-        console.log('Using customer_profiles full_name:', customerData.data.full_name)
-        setProfile({ ...p!, fullName: customerData.data.full_name, email: customerData.data.email || p?.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
+        setProfile({ ...p!, fullName: customerData.data.full_name, email: customerData.data.email || p?.email || user.email, tier: customerData.data.tier || p?.tier } as CustomerProfile)
       } else {
-        console.log('Using getCustomerProfileFn fullName:', p?.fullName)
-        setProfile(p)
+        setProfile(p || { id: user.id, fullName: user.user_metadata?.full_name || user.email, email: user.email, tier: 'd2d', phone: '', nationalId: '', address: '', status: 'approved', createdAt: '', updatedAt: '', walletBalance: 0, creditLimit: 0, creditUsed: 0, isTestAccount: false })
       }
       setTransactions(txs)
       if (userData?.data?.profile_picture_url && !saved) {
@@ -47,7 +44,7 @@ function CustomerWallet() {
         localStorage.setItem(`customer_picture_${user.id}`, userData.data.profile_picture_url)
       }
     }).finally(() => setLoading(false))
-  }, [user?.id])
+  }, [user?.id, user?.email])
 
   const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

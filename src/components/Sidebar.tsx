@@ -149,8 +149,10 @@ export function Sidebar({ role }: SidebarProps) {
 
   useEffect(() => {
     if (!user?.id || role !== 'admin') return
+    console.log('Admin role fetch running for:', user.id)
     supabase.from('users').select('role').eq('id', user.id).maybeSingle()
       .then(({ data }) => {
+        console.log('Admin role result:', JSON.stringify(data))
         if (data?.role) {
           const roleMap: Record<string, string> = {
             admin: 'Administrator',

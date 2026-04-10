@@ -16,6 +16,7 @@ if (!useCF) {
 // Build without cloudflare plugin - normal vite build creates dist/server/server.js
 if (process.env.SKIP_BUILD !== 'true') {
   console.log('Building project for Cloudflare deployment...');
+  // Always build without CLOUDFLARE to get proper worker output
   const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, 
     env: { ...process.env, CLOUDFLARE: 'false' } });
   if (buildRes.status && buildRes.status !== 0) {

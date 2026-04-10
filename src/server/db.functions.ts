@@ -53,6 +53,10 @@ import {
   saveSetting,
   listUsers,
   resolveAccessByEmail,
+  listSuperAgents,
+  getSuperAgentProfile,
+  saveSuperAgentProfile,
+  deleteSuperAgent,
 } from '@/server/db.server'
 
 // ── Agent Functions ──────────────────────────────────────────────────────────

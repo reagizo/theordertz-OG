@@ -3,8 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
 
-// Only enable Supabase if both URL and key are actually set (non-empty)
-export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'))
+// Check if Supabase is properly configured (non-empty values)
+const hasRealConfig = Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'))
+
+// Export - true unless definitely not configured
+export const hasSupabaseConfig = hasRealConfig
+
+// Debug - log in browser console what we're working with
+if (typeof window !== 'undefined') {
+  console.log('Supabase config check:', { supabaseUrl: supabaseUrl ? 'set' : 'empty', supabaseAnonKey: supabaseAnonKey ? 'set' : 'empty', hasSupabaseConfig })
+}
 
 const getSupabaseServiceKey = () => {
   return (

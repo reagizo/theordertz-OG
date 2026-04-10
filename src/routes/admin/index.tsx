@@ -75,7 +75,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'completed', label: 'Completed' },
   { id: 'pending', label: 'Pending' },
-  { id: 'agents', label: 'Agent Transactions' },
+  { id: 'agents', label: 'Super Agent Transactions' },
   { id: 'd2d', label: 'D2D Customers' },
   { id: 'premier', label: 'Premier Customers' },
   { id: 'audit', label: 'Audit Trail' },
@@ -707,7 +707,7 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  Agent Transactions ({agentTx.length})
+                  Super Agent Transactions ({agentTx.length})
                 </h3>
               </div>
               <TransactionTable txs={agentTx} />

@@ -17,13 +17,17 @@ if (!useCF) {
 // This build uses env vars from the environment (set in CI or local)
 if (process.env.SKIP_BUILD !== 'true') {
   console.log('Building project for Cloudflare deployment...');
-  // Ensure VITE_ env vars are passed through
-  const buildEnv = {
-    ...process.env,
-    CLOUDFLARE: 'false',  // Build without CF plugin
-    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
-    VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '',
-  };
+  
+  // Debug: log what we're passing
+  console.log('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '(not set)');
+  console.log('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? '(set)' : '(not set)');
+  
+  // Ensure VITE_ env vars are passed through - use process.env directly
+  const buildEnv = { ...process.env };
+  buildEnv.CLOUDFLARE = 'false';
+  if (!buildEnv.VITE_SUPABASE_URL) buildEnv.VITE_SUPABASE_URL = buildEnv.SUPABASE_URL || '';
+  if (!buildEnv.VITE_SUPABASE_ANON_KEY) buildEnv.VITE_SUPABASE_ANON_KEY = buildEnv.SUPABASE_ANON_KEY || buildEnv.SUPABASE_KEY || '';
+  
   const buildRes = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true, env: buildEnv });
   if (buildRes.status && buildRes.status !== 0) {
     console.error('Build failed. Aborting deployment.');

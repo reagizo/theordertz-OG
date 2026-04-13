@@ -106,13 +106,17 @@ function AdminDashboard() {
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([])
 
+  // Helper to get date from either snake_case or camelCase property
+  const getDate = (obj: any) => (obj as any).created_at || obj.createdAt
+  const getUpdatedAt = (obj: any) => (obj as any).updated_at || obj.updatedAt
+
   // Build audit trail from transactions
   useEffect(() => {
     const entries: AuditEntry[] = transactions
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a, b) => new Date(getUpdatedAt(b)).getTime() - new Date(getUpdatedAt(a)).getTime())
       .map((tx) => ({
         id: `audit-${tx.id}-${tx.status}`,
-        timestamp: tx.updatedAt,
+        timestamp: getUpdatedAt(tx),
         action: `Transaction ${tx.status}`,
         entityType: 'Transaction',
         entityName: `${tx.customerName} → ${tx.agentName}`,
@@ -121,10 +125,10 @@ function AdminDashboard() {
       }))
 
     const agentEntries: AuditEntry[] = agents
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a, b) => new Date(getUpdatedAt(b)).getTime() - new Date(getUpdatedAt(a)).getTime())
       .map((a) => ({
         id: `audit-agent-${a.id}`,
-        timestamp: a.updatedAt,
+        timestamp: getUpdatedAt(a),
         action: `Agent ${a.status}`,
         entityType: 'Agent',
         entityName: a.fullName,
@@ -133,10 +137,10 @@ function AdminDashboard() {
       }))
 
     const customerEntries: AuditEntry[] = customers
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a, b) => new Date(getUpdatedAt(b)).getTime() - new Date(getUpdatedAt(a)).getTime())
       .map((c) => ({
         id: `audit-customer-${c.id}`,
-        timestamp: c.updatedAt,
+        timestamp: getUpdatedAt(c),
         action: `Customer ${c.status}`,
         entityType: 'Customer',
         entityName: c.fullName,
@@ -179,13 +183,15 @@ function AdminDashboard() {
     }
   }, [transactions, agents, customers, floatRequests, vendors])
 
-  // Chart data: Monthly revenue
-  const monthlyRevenueData = useMemo(() => {
+  // Chart data: Revenue by month
+  const revenueData = useMemo(() => {
     const months: Record<string, number> = {}
     transactions
       .filter((t) => t.status === 'approved')
       .forEach((t) => {
-        const d = new Date(t.createdAt)
+        const dateStr = (t as any).created_at || t.createdAt
+        if (!dateStr) return
+        const d = new Date(dateStr)
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
         months[key] = (months[key] || 0) + t.amount
       })
@@ -227,7 +233,9 @@ function AdminDashboard() {
       days[key] = 0
     }
     transactions.forEach((t) => {
-      const key = t.createdAt.split('T')[0]
+      const dateStr = (t as any).created_at || t.createdAt
+      if (!dateStr) return
+      const key = dateStr.split('T')[0]
       if (days[key] !== undefined) days[key]++
     })
     const sorted = Object.entries(days).sort(([a], [b]) => a.localeCompare(b))
@@ -254,7 +262,7 @@ function AdminDashboard() {
           serviceLabel(t.serviceType).toLowerCase().includes(q)
         )
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      .sort((a, b) => new Date(getDate(b)).getTime() - new Date(getDate(a)).getTime()),
     [transactions, searchQuery]
   )
 
@@ -270,7 +278,7 @@ function AdminDashboard() {
           t.provider.toLowerCase().includes(q)
         )
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      .sort((a, b) => new Date(getDate(b)).getTime() - new Date(getDate(a)).getTime()),
     [transactions, searchQuery]
   )
 
@@ -284,7 +292,7 @@ function AdminDashboard() {
           t.agentName.toLowerCase().includes(q)
         )
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      .sort((a, b) => new Date(getDate(b)).getTime() - new Date(getDate(a)).getTime()),
     [transactions, searchQuery]
   )
 
@@ -299,7 +307,7 @@ function AdminDashboard() {
           t.agentName.toLowerCase().includes(q)
         )
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      .sort((a, b) => new Date(getDate(b)).getTime() - new Date(getDate(a)).getTime()),
     [transactions, searchQuery]
   )
 
@@ -314,7 +322,7 @@ function AdminDashboard() {
           t.agentName.toLowerCase().includes(q)
         )
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      .sort((a, b) => new Date(getDate(b)).getTime() - new Date(getDate(a)).getTime()),
     [transactions, searchQuery]
   )
 
@@ -426,11 +434,11 @@ function AdminDashboard() {
         </div>
         <div>
           <span className="text-gray-500">Created</span>
-          <p className="font-medium">{formatDateTime(tx.createdAt)}</p>
+          <p className="font-medium">{formatDateTime(getDate(tx))}</p>
         </div>
         <div>
           <span className="text-gray-500">Updated</span>
-          <p className="font-medium">{formatDateTime(tx.updatedAt)}</p>
+          <p className="font-medium">{formatDateTime(getUpdatedAt(tx))}</p>
         </div>
         {tx.subscriptionNumber && (
           <div>
@@ -542,7 +550,7 @@ function AdminDashboard() {
               {tx.status}
             </span>
           </td>
-          <td className="px-4 py-3 text-gray-500 text-sm">{formatDateTime(tx.createdAt)}</td>
+          <td className="px-4 py-3 text-gray-500 text-sm">{formatDateTime(getDate(tx))}</td>
         </tr>
         {isExpanded && (
           <tr>

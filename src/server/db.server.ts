@@ -29,15 +29,15 @@ export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
   const isTest = isTestEntity(profile)
   const { error } = await supabaseAdmin.from('agents').upsert({
     ...profile,
-    isTestAccount: isTest,
+    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving agent:', error)
 }
 
 export async function listAgents(testOnly?: boolean): Promise<AgentProfile[]> {
-  let query = supabaseAdmin.from('agents').select('*').order('createdAt', { ascending: false })
+  let query = supabaseAdmin.from('agents').select('*').order('created_at', { ascending: false })
   if (testOnly) {
-    query = query.eq('isTestAccount', true)
+    query = query.eq('is_test_account', true)
   }
   const { data, error } = await query
   if (error) {
@@ -64,15 +64,15 @@ export async function saveCustomerProfile(profile: CustomerProfile): Promise<voi
   const isTest = isTestEntity(profile)
   const { error } = await supabaseAdmin.from('customers').upsert({
     ...profile,
-    isTestAccount: isTest,
+    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving customer:', error)
 }
 
 export async function listCustomers(testOnly?: boolean): Promise<CustomerProfile[]> {
-  let query = supabaseAdmin.from('customers').select('*').order('createdAt', { ascending: false })
+  let query = supabaseAdmin.from('customers').select('*').order('created_at', { ascending: false })
   if (testOnly) {
-    query = query.eq('isTestAccount', true)
+    query = query.eq('is_test_account', true)
   }
   const { data, error } = await query
   if (error) {
@@ -104,15 +104,15 @@ export async function saveTransaction(tx: Transaction): Promise<void> {
   const isTest = isTestEntity(tx)
   const { error } = await supabaseAdmin.from('transactions').upsert({
     ...tx,
-    isTestAccount: isTest,
+    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving transaction:', error)
 }
 
 export async function listTransactions(testOnly?: boolean): Promise<Transaction[]> {
-  let query = supabaseAdmin.from('transactions').select('*').order('createdAt', { ascending: false })
+  let query = supabaseAdmin.from('transactions').select('*').order('created_at', { ascending: false })
   if (testOnly) {
-    query = query.eq('isTestAccount', true)
+    query = query.eq('is_test_account', true)
   }
   const { data, error } = await query
   if (error) {
@@ -156,15 +156,15 @@ export async function saveFloatRequest(req: FloatRequest): Promise<void> {
   const isTest = isTestEntity(req)
   const { error } = await supabaseAdmin.from('float_requests').upsert({
     ...req,
-    isTestAccount: isTest,
+    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving float request:', error)
 }
 
 export async function listFloatRequests(testOnly?: boolean): Promise<FloatRequest[]> {
-  let query = supabaseAdmin.from('float_requests').select('*').order('createdAt', { ascending: false })
+  let query = supabaseAdmin.from('float_requests').select('*').order('created_at', { ascending: false })
   if (testOnly) {
-    query = query.eq('isTestAccount', true)
+    query = query.eq('is_test_account', true)
   }
   const { data, error } = await query
   if (error) {
@@ -197,15 +197,15 @@ export async function saveFloatExchange(exchange: FloatExchange): Promise<void> 
   const isTest = isTestEntity(exchange)
   const { error } = await supabaseAdmin.from('float_exchanges').upsert({
     ...exchange,
-    isTestAccount: isTest,
+    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving float exchange:', error)
 }
 
 export async function listFloatExchanges(testOnly?: boolean): Promise<FloatExchange[]> {
-  let query = supabaseAdmin.from('float_exchanges').select('*').order('createdAt', { ascending: false })
+  let query = supabaseAdmin.from('float_exchanges').select('*').order('created_at', { ascending: false })
   if (testOnly) {
-    query = query.eq('isTestAccount', true)
+    query = query.eq('is_test_account', true)
   }
   const { data, error } = await query
   if (error) {
@@ -297,15 +297,15 @@ export async function saveVendorProfile(profile: VendorProfile): Promise<void> {
   const isTest = isTestEntity(profile)
   const { error } = await supabaseAdmin.from('vendors').upsert({
     ...profile,
-    isTestAccount: isTest,
+    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving vendor:', error)
 }
 
 export async function listVendors(testOnly?: boolean): Promise<VendorProfile[]> {
-  let query = supabaseAdmin.from('vendors').select('*').order('createdAt', { ascending: false })
+  let query = supabaseAdmin.from('vendors').select('*').order('created_at', { ascending: false })
   if (testOnly) {
-    query = query.eq('isTestAccount', true)
+    query = query.eq('is_test_account', true)
   }
   const { data, error } = await query
   if (error) {
@@ -332,7 +332,7 @@ export async function deleteVendor(id: string): Promise<void> {
 // ── Supabase helpers (for direct client access) ───────────────────────────────
 
 export async function getVendorsFromSupabase(): Promise<VendorProfile[]> {
-  const { data, error } = await supabaseAdmin.from('vendors').select('*').order('createdAt', { ascending: false })
+  const { data, error } = await supabaseAdmin.from('vendors').select('*').order('created_at', { ascending: false })
   if (error) {
     console.error('Error fetching vendors from Supabase:', error)
     return []
@@ -343,42 +343,42 @@ export async function getVendorsFromSupabase(): Promise<VendorProfile[]> {
 export async function syncVendorsToSupabase(): Promise<void> {
   const real = await listVendors(false)
   const test = await listVendors(true)
-  
+
   for (const v of real) {
     await supabaseAdmin.from('vendors').upsert({
       id: v.id,
-      fullName: v.fullName,
+      full_name: v.fullName,
       email: v.email,
       phone: v.phone,
-      businessName: v.businessName,
-      businessType: v.businessType,
+      business_name: v.businessName,
+      business_type: v.businessType,
       address: v.address,
-      tinNumber: v.tinNumber,
-      vrNumber: v.vrNumber,
+      tin_number: v.tinNumber,
+      vr_number: v.vrNumber,
       status: v.status,
-      createdAt: v.createdAt,
-      updatedAt: v.updatedAt,
-      walletBalance: v.walletBalance,
-      isTestAccount: false,
+      created_at: v.createdAt,
+      updated_at: v.updatedAt,
+      wallet_balance: v.walletBalance,
+      is_test_account: false,
     }, { onConflict: 'id' })
   }
-  
+
   for (const v of test) {
     await supabaseAdmin.from('vendors').upsert({
       id: v.id,
-      fullName: v.fullName,
+      full_name: v.fullName,
       email: v.email,
       phone: v.phone,
-      businessName: v.businessName,
-      businessType: v.businessType,
+      business_name: v.businessName,
+      business_type: v.businessType,
       address: v.address,
-      tinNumber: v.tinNumber,
-      vrNumber: v.vrNumber,
+      tin_number: v.tinNumber,
+      vr_number: v.vrNumber,
       status: v.status,
-      createdAt: v.createdAt,
-      updatedAt: v.updatedAt,
-      walletBalance: v.walletBalance,
-      isTestAccount: true,
+      created_at: v.createdAt,
+      updated_at: v.updatedAt,
+      wallet_balance: v.walletBalance,
+      is_test_account: true,
     }, { onConflict: 'id' })
   }
 }
@@ -386,10 +386,10 @@ export async function syncVendorsToSupabase(): Promise<void> {
 // ── Test data cleanup ────────────────────────────────────────────────────────
 
 export async function clearAllTestData(): Promise<void> {
-  await supabaseAdmin.from('agents').delete().eq('isTestAccount', true)
-  await supabaseAdmin.from('customers').delete().eq('isTestAccount', true)
-  await supabaseAdmin.from('transactions').delete().eq('isTestAccount', true)
-  await supabaseAdmin.from('float_requests').delete().eq('isTestAccount', true)
-  await supabaseAdmin.from('float_exchanges').delete().eq('isTestAccount', true)
-  await supabaseAdmin.from('vendors').delete().eq('isTestAccount', true)
+  await supabaseAdmin.from('agents').delete().eq('is_test_account', true)
+  await supabaseAdmin.from('customers').delete().eq('is_test_account', true)
+  await supabaseAdmin.from('transactions').delete().eq('is_test_account', true)
+  await supabaseAdmin.from('float_requests').delete().eq('is_test_account', true)
+  await supabaseAdmin.from('float_exchanges').delete().eq('is_test_account', true)
+  await supabaseAdmin.from('vendors').delete().eq('is_test_account', true)
 }

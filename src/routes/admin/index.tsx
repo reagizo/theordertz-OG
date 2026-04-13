@@ -338,11 +338,11 @@ function AdminDashboard() {
 
   // Chart configs
   const revenueBarData = {
-    labels: monthlyRevenueData.labels,
+    labels: revenueData.labels,
     datasets: [
       {
         label: 'Revenue (TZS)',
-        data: monthlyRevenueData.values,
+        data: revenueData.values,
         backgroundColor: 'rgba(79, 70, 229, 0.7)',
         borderColor: chartColors.indigo,
         borderWidth: 1,

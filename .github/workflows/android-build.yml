@@ -38,6 +38,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Clear Gradle cache
+        run: rm -rf ~/.gradle/caches
+
       - name: Sync Capacitor
         run: npx cap sync android
 

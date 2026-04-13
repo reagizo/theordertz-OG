@@ -61,6 +61,7 @@ export interface Transaction {
   utilityBillType?: UtilityBillType
   allPaymentType?: AllPaymentType
   isOnCredit?: boolean
+  isTestAccount?: boolean
 }
 
 export interface FloatExchange {

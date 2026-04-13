@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useAuth } from '@/components/AuthProvider'
 import { listTransactionsFn, saveTransactionFn, saveAgentProfileFn, getAgentProfileFn, saveCustomerProfileFn, getCustomerProfileFn } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, Search } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
+import { TEST_ADMIN_EMAIL, REAL_ADMIN_EMAIL } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/transactions')({
   loader: () => listTransactionsFn(),
@@ -11,6 +13,7 @@ export const Route = createFileRoute('/admin/transactions')({
 })
 
 function AdminTransactions() {
+  const { user } = useAuth()
   const initialData = Route.useLoaderData() as Transaction[]
   const [transactions, setTransactions] = useState(initialData)
   const [search, setSearch] = useState('')
@@ -20,7 +23,17 @@ function AdminTransactions() {
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState('')
 
+  const currentUserEmail = user?.email || ''
+  const isTestAdmin = currentUserEmail === TEST_ADMIN_EMAIL
+  const isRealAdmin = currentUserEmail === REAL_ADMIN_EMAIL
+
   const filtered = transactions.filter(tx => {
+    // Filter by admin type
+    if (isTestAdmin && !tx.isTestAccount) return false
+    if (isRealAdmin) {
+      // Real admin sees all transactions (no filter)
+    }
+    
     const matchSearch = !search || tx.customerName.toLowerCase().includes(search.toLowerCase()) || tx.agentName.toLowerCase().includes(search.toLowerCase()) || tx.provider.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === 'all' || tx.status === statusFilter
     const matchTier = tierFilter === 'all' || tx.customerTier === tierFilter

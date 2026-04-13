@@ -105,7 +105,7 @@ function AdminSettings() {
 
   const filteredAlerts = settings.registrationAlerts.filter(alert => {
     if (isTestAdmin) return alert.isTestAccount === true
-    if (isRealAdmin) return alert.isTestAccount !== true
+    if (isRealAdmin) return true  // Real admin sees all alerts (both test and real)
     return true
   })
   const unreadAlerts = filteredAlerts.filter(a => !a.read)

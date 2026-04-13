@@ -46,11 +46,15 @@ export function NotificationSystem() {
         audio.volume = 0.3
         audio.play().catch(() => {})
         
-        if (Notification.permission === 'granted') {
-          new Notification('New Registration', {
-            body: `${alert.name} has registered`,
-            icon: '/logo.png',
-          })
+        try {
+          if (typeof window !== 'undefined' && 'Notification' in window && window.Notification.permission === 'granted') {
+            new window.Notification('New Registration', {
+              body: `${alert.name} has registered`,
+              icon: '/logo.png',
+            })
+          }
+        } catch (e) {
+          // Notification API not available or blocked
         }
       })
     }
@@ -60,8 +64,12 @@ export function NotificationSystem() {
   }, [settings.registrationAlerts])
 
   useEffect(() => {
-    if (Notification.permission === 'default') {
-      Notification.requestPermission()
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification.permission === 'default') {
+        window.Notification.requestPermission()
+      }
+    } catch (e) {
+      // Notification API not available or blocked
     }
   }, [])
 

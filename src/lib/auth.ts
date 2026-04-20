@@ -1,4 +1,6 @@
-// Simple local authentication fallback (no Netlify). Stores user state in localStorage.
+// Supabase-based authentication
+import { supabase, supabaseAdmin } from './supabase'
+
 export type User = {
   id: string
   email: string
@@ -8,231 +10,375 @@ export type User = {
   user_metadata?: { full_name?: string; profilePicture?: string }
 }
 
-const MOCK_USERS: Array<{ email: string; password: string; role: string; name?: string; isTestAccount?: boolean }> = []
-
-// Test accounts — unlimited usage, isolated demo data, no real audit trail pollution
-const TEST_ACCOUNTS: Array<{ email: string; password: string; role: string; name?: string }> = [
-  { email: 'rkaijage@gmail.com', password: '@Eva0191!', role: 'admin', name: 'REAGAN ROBERT KAIJAGE' },
-  { email: 'admin@example.com', password: 'admin', role: 'admin', name: 'Owner - Administrator' },
-]
-
-// Password reset requests storage
-const PASSWORD_RESET_KEY = 'mock.password.reset.requests'
-
-export type PasswordResetRequest = {
-  id: string
-  email: string
-  newPassword: string
-  status: 'pending' | 'approved' | 'rejected'
-  requestedAt: string
-  processedAt?: string
-  processedBy?: string
-}
-
-function loadPasswordResetRequests(): PasswordResetRequest[] {
-  const ls = getLocalStorage()
-  if (!ls) return []
-  try {
-    const raw = ls.getItem(PASSWORD_RESET_KEY)
-    if (!raw) return []
-    return JSON.parse(raw) as PasswordResetRequest[]
-  } catch {
-    return []
-  }
-}
-
-function savePasswordResetRequests(list: PasswordResetRequest[]) {
-  const ls = getLocalStorage()
-  if (ls) ls.setItem(PASSWORD_RESET_KEY, JSON.stringify(list))
-}
-
-export function requestPasswordReset(email: string, newPassword: string): PasswordResetRequest {
-  const ls = getLocalStorage()
-  const requests = loadPasswordResetRequests()
-  const existing = requests.find(r => r.email === email && r.status === 'pending')
-  if (existing) return existing
-  
-  const request: PasswordResetRequest = {
-    id: crypto.randomUUID(),
-    email,
-    newPassword,
-    status: 'pending',
-    requestedAt: new Date().toISOString(),
-  }
-  requests.push(request)
-  savePasswordResetRequests(requests)
-  return request
-}
-
-export function listPendingPasswordResets(): PasswordResetRequest[] {
-  return loadPasswordResetRequests().filter(r => r.status === 'pending')
-}
-
-export function approvePasswordReset(requestId: string): boolean {
-  const requests = loadPasswordResetRequests()
-  const request = requests.find(r => r.id === requestId)
-  if (!request || request.status !== 'pending') return false
-  
-  // Update the user's password in MOCK_USERS
-  const user = MOCK_USERS.find(u => u.email === request.email)
-  if (user) {
-    user.password = request.newPassword
-  } else {
-    // Check test accounts
-    const testUser = TEST_ACCOUNTS.find(u => u.email === request.email)
-    if (testUser) {
-      testUser.password = request.newPassword
-    }
-  }
-  
-  request.status = 'approved'
-  request.processedAt = new Date().toISOString()
-  savePasswordResetRequests(requests)
-  return true
-}
-
-export function rejectPasswordReset(requestId: string): boolean {
-  const requests = loadPasswordResetRequests()
-  const request = requests.find(r => r.id === requestId)
-  if (!request || request.status !== 'pending') return false
-  
-  request.status = 'rejected'
-  request.processedAt = new Date().toISOString()
-  savePasswordResetRequests(requests)
-  return true
-}
-
-// Helper to safely access localStorage only in the browser
-const getLocalStorage = () => {
-  if (typeof window === 'undefined') return null
-  return window.localStorage
-}
-
-export async function login(email: string, password: string): Promise<User> {
-  const found = MOCK_USERS.find(u => u.email === email && u.password === password)
-  const testFound = TEST_ACCOUNTS.find(u => u.email === email && u.password === password)
-
-  if (!found && !testFound) {
-    const err: any = new Error('Invalid email or password.')
-    err.status = 401
-    throw err
-  }
-
-  const source = found || testFound!
-  const isTest = !!testFound
-
-  const user: User = {
-    id: (isTest ? 'test-' : 'mock-') + email,
-    email,
-    name: source.name,
-    app_metadata: { roles: [source.role], isTestAccount: isTest },
-  }
-  
-  const ls = getLocalStorage()
-  if (ls) ls.setItem('mock.user', JSON.stringify(user))
-  
-  return user
-}
-
-// --- Pending registrations (admin approval) ---
-export type PendingRegistration = { email: string; role: 'agent' | 'customer'; name?: string; isTestAccount?: boolean }
-const PENDING_KEY = 'mock.pending.registrations'
-
-function loadPending(): PendingRegistration[] {
-  const ls = getLocalStorage()
-  if (!ls) return []
-  try {
-    const raw = ls.getItem(PENDING_KEY)
-    if (!raw) return []
-    return JSON.parse(raw) as PendingRegistration[]
-  } catch {
-    return []
-  }
-}
-
-function savePending(list: PendingRegistration[]) {
-  const ls = getLocalStorage()
-  if (ls) ls.setItem(PENDING_KEY, JSON.stringify(list))
-}
-
-export async function requestRegistration(email: string, role: 'agent' | 'customer', meta?: Record<string, unknown>): Promise<void> {
-  const pending = loadPending()
-  if (pending.find(p => p.email === email)) return
-  pending.push({ email, role, name: meta?.name as string | undefined, isTestAccount: meta?.isTestAccount as boolean | undefined })
-  savePending(pending)
-}
-
-export async function listPendingRegistrations(): Promise<PendingRegistration[]> {
-  return loadPending()
-}
-
-export async function approveRegistration(email: string): Promise<User | null> {
-  const pending = loadPending()
-  const foundIndex = pending.findIndex(p => p.email === email)
-  if (foundIndex === -1) return null
-  const p = pending[foundIndex]
-  const isTest = !!p.isTestAccount
-  const newUser: User = {
-    id: (isTest ? 'test-' : 'mock-') + email,
-    email,
-    name: p.name,
-    app_metadata: { roles: [p.role], isTestAccount: isTest },
-  }
-  MOCK_USERS.push({ email: email, password: 'Temp123!', role: p.role, name: p.name, isTestAccount: isTest })
-  pending.splice(foundIndex, 1)
-  savePending(pending)
-  const ls = getLocalStorage()
-  if (ls) ls.setItem('mock.user', JSON.stringify(newUser))
-  return newUser
-}
-
-export async function signup(email: string, _password: string, meta: Record<string, unknown>): Promise<User> {
-  const isTest = !!meta?.isTestAccount
-  const user: User = {
-    id: (isTest ? 'test-' : 'mock-') + email,
-    email,
-    name: meta?.full_name as string | undefined,
-    app_metadata: { roles: ['customer'], isTestAccount: isTest },
-    user_metadata: { full_name: meta?.full_name as string | undefined },
-  }
-  const ls = getLocalStorage()
-  if (ls) ls.setItem('mock.user', JSON.stringify(user))
-  return user
-}
-
-export function getCurrentUser(): User | null {
-  const ls = getLocalStorage()
-  if (!ls) return null
-  const raw = ls.getItem('mock.user')
-  if (!raw) return null
-  try {
-    return JSON.parse(raw) as User
-  } catch {
-    return null
-  }
-}
-
-export function setCurrentUser(u: User): void {
-  const ls = getLocalStorage()
-  if (ls) ls.setItem('mock.user', JSON.stringify(u))
-}
-
-export function logout(): void {
-  const ls = getLocalStorage()
-  if (ls) ls.removeItem('mock.user')
-}
-
+// Helper functions for backward compatibility
 export function isTestUser(user?: User | null): boolean {
   return !!user?.app_metadata?.isTestAccount
 }
 
-export function getTestAccounts() {
-  return TEST_ACCOUNTS.map(a => ({ ...a, isTestAccount: true }))
+export function getCurrentUserRole(user?: User | null): string {
+  return user?.app_metadata?.roles?.[0] ?? 'guest'
 }
 
-// Seed live data (live onboarding flow) for testing without demo seeds
+// Password reset requests (now stored in Supabase)
+export type PasswordResetRequest = {
+  id: string
+  email: string
+  new_password_hash: string
+  status: 'pending' | 'approved' | 'rejected'
+  requested_at: string
+  processed_at?: string
+  processed_by?: string
+}
+
+export async function requestPasswordReset(email: string, newPassword: string): Promise<PasswordResetRequest> {
+  // Hash the password (simple implementation - in production use proper hashing)
+  const passwordHash = newPassword // TODO: Implement proper hashing
+  
+  const { data, error } = await supabase
+    .from('password_reset_requests')
+    .insert({
+      email,
+      new_password_hash: passwordHash,
+      status: 'pending',
+    })
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data as PasswordResetRequest
+}
+
+export async function listPendingPasswordResets(): Promise<PasswordResetRequest[]> {
+  const { data, error } = await supabase
+    .from('password_reset_requests')
+    .select('*')
+    .eq('status', 'pending')
+    .order('requested_at', { ascending: false })
+  
+  if (error) throw error
+  return (data || []) as PasswordResetRequest[]
+}
+
+export async function approvePasswordReset(requestId: string): Promise<boolean> {
+  // Get the request
+  const { data: request, error: fetchError } = await supabase
+    .from('password_reset_requests')
+    .select('*')
+    .eq('id', requestId)
+    .single()
+  
+  if (fetchError || !request) return false
+  
+  // Update user password in users table
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ password_hash: request.new_password_hash })
+    .eq('email', request.email)
+  
+  if (updateError) return false
+  
+  // Mark request as approved
+  const { error: statusError } = await supabase
+    .from('password_reset_requests')
+    .update({
+      status: 'approved',
+      processed_at: new Date().toISOString(),
+    })
+    .eq('id', requestId)
+  
+  return !statusError
+}
+
+export async function rejectPasswordReset(requestId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('password_reset_requests')
+    .update({
+      status: 'rejected',
+      processed_at: new Date().toISOString(),
+    })
+    .eq('id', requestId)
+  
+  return !error
+}
+
+// Registration management (now uses Supabase)
+export type PendingRegistration = { 
+  email: string
+  role: 'agent' | 'customer'
+  name?: string
+  is_test_account?: boolean
+}
+
+export async function requestRegistration(
+  email: string, 
+  role: 'agent' | 'customer', 
+  meta?: Record<string, unknown>
+): Promise<void> {
+  // Check if user already exists
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('email')
+    .eq('email', email)
+    .single()
+  
+  if (existingUser) return
+  
+  // Create registration alert for admin
+  const { error } = await supabase
+    .from('registration_alerts')
+    .insert({
+      alert_type: role,
+      name: meta?.name as string || email,
+      email,
+      customer_tier: role === 'customer' ? 'd2d' : null,
+      message: `New ${role} registration request from ${email}`,
+      is_test_account: !!meta?.isTestAccount,
+    })
+  
+  if (error) throw error
+}
+
+export async function listPendingRegistrations(): Promise<PendingRegistration[]> {
+  const { data, error } = await supabase
+    .from('registration_alerts')
+    .select('*')
+    .eq('is_read', false)
+    .order('created_at', { ascending: false })
+  
+  if (error) throw error
+  
+  return (data || []).map(alert => ({
+    email: alert.email,
+    role: alert.alert_type as 'agent' | 'customer',
+    name: alert.name,
+    is_test_account: alert.is_test_account,
+  }))
+}
+
+export async function approveRegistration(email: string): Promise<User | null> {
+  // Get the registration alert
+  const { data: alert, error: fetchError } = await supabase
+    .from('registration_alerts')
+    .select('*')
+    .eq('email', email)
+    .eq('is_read', false)
+    .single()
+  
+  if (fetchError || !alert) return null
+  
+  // Create user in users table
+  const tempPassword = 'Temp123!' // TODO: Send password reset email instead
+  const { data: newUser, error: createError } = await supabase
+    .from('users')
+    .insert({
+      email,
+      password_hash: tempPassword, // TODO: Use proper hashing
+      full_name: alert.name || email,
+      role: alert.alert_type,
+      is_test_account: alert.is_test_account,
+      is_active: true,
+    })
+    .select()
+    .single()
+  
+  if (createError) return null
+  
+  // Mark alert as read
+  await supabase
+    .from('registration_alerts')
+    .update({ is_read: true })
+    .eq('id', alert.id)
+  
+  return {
+    id: newUser.id,
+    email: newUser.email,
+    name: newUser.full_name,
+    app_metadata: {
+      roles: [newUser.role],
+      isTestAccount: newUser.is_test_account,
+    },
+  }
+}
+
+// Sync Supabase Auth user to custom users table
+async function syncUserToCustomTable(authUser: any): Promise<void> {
+  // Check if user exists in custom users table
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', authUser.id)
+    .single()
+
+  if (existingUser) {
+    // User exists, update Supabase user metadata with role if not set
+    if (!authUser.user_metadata?.roles) {
+      await supabase.auth.updateUser({
+        data: {
+          roles: [existingUser.role],
+          is_test_account: existingUser.is_test_account,
+        }
+      })
+    }
+    return
+  }
+
+  // Create user in custom table
+  const { error } = await supabase
+    .from('users')
+    .insert({
+      id: authUser.id,
+      email: authUser.email,
+      password_hash: '', // Password managed by Supabase Auth
+      full_name: authUser.user_metadata?.full_name || authUser.email,
+      role: authUser.user_metadata?.roles?.[0] || 'customer',
+      is_test_account: authUser.user_metadata?.is_test_account || false,
+      is_active: true,
+    })
+
+  if (error) {
+    console.error('Error syncing user to custom table:', error)
+  }
+}
+
+export async function login(email: string, password: string): Promise<User> {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) throw error
+
+  const user = data.user
+
+  if (!user) throw new Error('Login failed')
+
+  // Fetch role from custom users table using admin client to bypass RLS
+  const { data: customUser } = await supabaseAdmin
+    .from('users')
+    .select('role, is_test_account')
+    .eq('id', user.id)
+    .single()
+
+  let role = customUser?.role
+  let isTestAccount = customUser?.is_test_account || false
+
+  // Determine the correct role based on email or Supabase metadata
+  const getRoleForEmail = (email: string): string => {
+    if (email === 'rkaijage@gmail.com' || email === 'admin@example.com') return 'admin'
+    if (email.includes('agent')) return 'agent'
+    if (email.includes('admin')) return 'admin'
+    return 'customer'
+  }
+
+  const correctRole = user.user_metadata?.roles?.[0] || getRoleForEmail(email)
+  const correctIsTestAccount = user.user_metadata?.is_test_account || 
+    email.includes('test') || 
+    email.includes('example.com')
+
+  // If user doesn't exist in custom table, create them using admin client
+  if (!customUser) {
+    const { error: insertError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        id: user.id,
+        email: user.email,
+        password_hash: '',
+        full_name: user.user_metadata?.full_name || user.email,
+        role: correctRole,
+        is_test_account: correctIsTestAccount,
+        is_active: true,
+      })
+
+    if (insertError) {
+      console.error('Error creating user in custom table:', insertError)
+    }
+
+    role = correctRole
+    isTestAccount = correctIsTestAccount
+  } else {
+    // User exists, check if role is wrong and fix it using admin client
+    if (role !== correctRole || isTestAccount !== correctIsTestAccount) {
+      await supabaseAdmin
+        .from('users')
+        .update({ 
+          role: correctRole,
+          is_test_account: correctIsTestAccount
+        })
+        .eq('id', user.id)
+      role = correctRole
+      isTestAccount = correctIsTestAccount
+    }
+  }
+
+  return {
+    id: user.id,
+    email: user.email ?? '',
+    name: user.user_metadata?.full_name ?? '',
+    app_metadata: {
+      roles: [role || 'customer'],
+      isTestAccount,
+    },
+  }
+}
+
+export async function signup(email: string, password: string, meta: Record<string, unknown>): Promise<User> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: meta.full_name,
+        roles: ['customer'],
+        is_test_account: meta.isTestAccount,
+      },
+    },
+  })
+
+  if (error) throw error
+
+  const user = data.user
+
+  if (!user) throw new Error('Signup failed')
+
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.user_metadata?.full_name,
+    app_metadata: {
+      roles: user.user_metadata?.roles || ['customer'],
+      isTestAccount: user.user_metadata?.is_test_account || false,
+    },
+  }
+}
+
+export async function logout(): Promise<void> {
+  await supabase.auth.signOut()
+}
+
+// ... (rest of the code remains the same)
+export async function getCurrentUser(): Promise<User | null> {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error) return null
+
+  const user = data.user
+
+  if (!user) return null
+
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.user_metadata?.full_name,
+    app_metadata: {
+      roles: user.user_metadata?.roles,
+      isTestAccount: user.user_metadata?.is_test_account,
+    },
+  }
+}
+
 export async function seedLiveData(): Promise<void> {
-  const pending = loadPending()
+  // Seed live data (live onboarding flow) for testing without demo seeds
+  const pending = await listPendingRegistrations()
   const seedPending: Array<{ email: string; role: 'agent' | 'customer'; name?: string }> = [
     { email: 'live-agent1@example.com', role: 'agent', name: 'Live Agent One' },
     { email: 'live-customer1@example.com', role: 'customer', name: 'Live Customer One' },
@@ -241,17 +387,56 @@ export async function seedLiveData(): Promise<void> {
     const exists = pending.find(p => p.email === s.email)
     if (!exists) await requestRegistration(s.email, s.role, { name: s.name })
   }
-  const existsAdmin = MOCK_USERS.find(u => u.email === 'live-admin@example.com')
-  if (!existsAdmin) {
-    MOCK_USERS.push({ email: 'live-admin@example.com', password: 'LivePwd!', role: 'admin', name: 'Live Admin' })
+  const existsAdmin = await supabase
+    .from('users')
+    .select('email')
+    .eq('email', 'live-admin@example.com')
+    .single()
+  if (!existsAdmin.data) {
+    await supabase
+      .from('users')
+      .insert({
+        email: 'live-admin@example.com',
+        password_hash: 'LivePwd!', // TODO: Use proper hashing
+        full_name: 'Live Admin',
+        role: 'admin',
+        is_test_account: false,
+        is_active: true,
+      })
   }
-  const existsAgent = MOCK_USERS.find(u => u.email === 'live-agent1@example.com')
-  if (!existsAgent) {
-    MOCK_USERS.push({ email: 'live-agent1@example.com', password: 'LivePwd!', role: 'agent', name: 'Live Agent One' })
+  const existsAgent = await supabase
+    .from('users')
+    .select('email')
+    .eq('email', 'live-agent1@example.com')
+    .single()
+  if (!existsAgent.data) {
+    await supabase
+      .from('users')
+      .insert({
+        email: 'live-agent1@example.com',
+        password_hash: 'LivePwd!', // TODO: Use proper hashing
+        full_name: 'Live Agent One',
+        role: 'agent',
+        is_test_account: false,
+        is_active: true,
+      })
   }
-  const existsCustomer = MOCK_USERS.find(u => u.email === 'live-customer1@example.com')
-  if (!existsCustomer) {
-    MOCK_USERS.push({ email: 'live-customer1@example.com', password: 'LivePwd!', role: 'customer', name: 'Live Customer One' })
+  const existsCustomer = await supabase
+    .from('users')
+    .select('email')
+    .eq('email', 'live-customer1@example.com')
+    .single()
+  if (!existsCustomer.data) {
+    await supabase
+      .from('users')
+      .insert({
+        email: 'live-customer1@example.com',
+        password_hash: 'LivePwd!', // TODO: Use proper hashing
+        full_name: 'Live Customer One',
+        role: 'customer',
+        is_test_account: false,
+        is_active: true,
+      })
   }
 }
 
@@ -262,24 +447,165 @@ export async function seedProductionLiveData(): Promise<void> {
     { email: 'live-agent3@example.com', role: 'agent', name: 'Live Agent Three' },
     { email: 'live-customer2@example.com', role: 'customer', name: 'Live Customer Two' },
   ]
-  const pending = loadPending()
+  const pending = await listPendingRegistrations()
   for (const a of additionalPending) {
     const exists = pending.find(p => p.email === a.email)
     if (!exists) await requestRegistration(a.email, a.role, { name: a.name })
   }
-  const toAdd: Array<{ email: string; password: string; role: 'admin'|'agent'|'customer'; name?: string }> = [
-    { email: 'live-admin2@example.com', password: 'LivePwd!', role: 'admin', name: 'Live Admin 2' },
-    { email: 'live-agent2@example.com', password: 'LivePwd!', role: 'agent', name: 'Live Agent Two' },
-    { email: 'live-customer2@example.com', password: 'LivePwd!', role: 'customer', name: 'Live Customer Two' },
-  ]
-  for (const u of toAdd) {
-    const exists = MOCK_USERS.find(x => x.email === u.email)
-    if (!exists) {
-      MOCK_USERS.push({ email: u.email, password: u.password, role: u.role, name: u.name })
-    }
-  }
 }
 
 export function getRegisteredAccountsCount(): number {
-  return MOCK_USERS.length
+  // TODO: Implement this function using Supabase
+  return 0
+}
+
+// Function to check and sync data across Supabase tables
+export async function checkAndSyncData() {
+  console.log('=== Checking Supabase Tables ===\n')
+
+  const results: Record<string, any> = {}
+
+  // Check users table
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('id, email, role, is_test_account, is_active, full_name')
+    .order('created_at', { ascending: false })
+  
+  console.log('--- USERS TABLE ---')
+  if (usersError) {
+    console.error('Error fetching users:', usersError)
+  } else {
+    console.log(`Total users: ${users?.length || 0}`)
+    users?.forEach(u => {
+      console.log(`  - ${u.email} | Role: ${u.role} | Test: ${u.is_test_account} | Active: ${u.is_active}`)
+    })
+  }
+  results.users = users
+
+  // Check agents table using admin client to bypass RLS
+  const { data: agents, error: agentsError } = await supabaseAdmin
+    .from('agents')
+    .select('id, business_name, status, float_balance, commission_earned')
+    .order('created_at', { ascending: false })
+  
+  console.log('\n--- AGENTS TABLE ---')
+  if (agentsError) {
+    console.error('Error fetching agents:', agentsError)
+  } else {
+    console.log(`Total agents: ${agents?.length || 0}`)
+    agents?.forEach(a => {
+      console.log(`  - ${a.business_name || 'N/A'} | Status: ${a.status} | Float: ${a.float_balance} | Commission: ${a.commission_earned}`)
+    })
+  }
+  results.agents = agents
+
+  // Check customers table using admin client to bypass RLS
+  const { data: customers, error: customersError } = await supabaseAdmin
+    .from('customers')
+    .select('id, tier, status, wallet_balance, credit_limit, credit_used')
+    .order('created_at', { ascending: false })
+  
+  console.log('\n--- CUSTOMERS TABLE ---')
+  if (customersError) {
+    console.error('Error fetching customers:', customersError)
+  } else {
+    console.log(`Total customers: ${customers?.length || 0}`)
+    customers?.forEach(c => {
+      console.log(`  - ID: ${c.id} | Tier: ${c.tier} | Status: ${c.status} | Wallet: ${c.wallet_balance} | Credit: ${c.credit_used}/${c.credit_limit}`)
+    })
+  }
+  results.customers = customers
+
+  // Check transactions table using admin client to bypass RLS
+  const { data: transactions, error: transactionsError } = await supabaseAdmin
+    .from('transactions')
+    .select('id, service_type, amount, status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(10)
+  
+  console.log('\n--- TRANSACTIONS TABLE ---')
+  if (transactionsError) {
+    console.error('Error fetching transactions:', transactionsError)
+  } else {
+    console.log(`Total transactions: ${transactions?.length || 0} (showing last 10)`)
+    transactions?.forEach(t => {
+      console.log(`  - ID: ${t.id} | Service: ${t.service_type} | Amount: ${t.amount} | Status: ${t.status} | Date: ${t.created_at}`)
+    })
+  }
+  results.transactions = transactions
+
+  // Check for orphaned records and sync them
+  console.log('\n--- SYNCING ORPHANED RECORDS ---')
+  
+  const agentUsers = users?.filter(u => u.role === 'agent') || []
+  const customerUsers = users?.filter(u => u.role === 'customer') || []
+  
+  let syncedAgents = 0
+  let syncedCustomers = 0
+
+  for (const agentUser of agentUsers) {
+    const { data: agentRecord } = await supabaseAdmin
+      .from('agents')
+      .select('id')
+      .eq('id', agentUser.id)
+      .single()
+    
+    if (!agentRecord) {
+      console.log(`  Creating agent record for ${agentUser.email}`)
+      const { error: insertError } = await supabaseAdmin
+        .from('agents')
+        .insert({
+          id: agentUser.id,
+          business_name: agentUser.full_name || agentUser.email,
+          status: 'approved',
+          float_balance: 0,
+          commission_rate: 2.50,
+          commission_earned: 0,
+        })
+      
+      if (!insertError) {
+        syncedAgents++
+      } else {
+        console.error(`    Error: ${insertError.message}`)
+      }
+    }
+  }
+
+  for (const customerUser of customerUsers) {
+    const { data: customerRecord } = await supabaseAdmin
+      .from('customers')
+      .select('id')
+      .eq('id', customerUser.id)
+      .single()
+    
+    if (!customerRecord) {
+      console.log(`  Creating customer record for ${customerUser.email}`)
+      const { error: insertError } = await supabaseAdmin
+        .from('customers')
+        .insert({
+          id: customerUser.id,
+          tier: 'd2d',
+          status: 'approved',
+          wallet_balance: 0,
+          credit_limit: 0,
+          credit_used: 0,
+        })
+      
+      if (!insertError) {
+        syncedCustomers++
+      } else {
+        console.error(`    Error: ${insertError.message}`)
+      }
+    }
+  }
+
+  console.log(`\nSynced ${syncedAgents} agent records`)
+  console.log(`Synced ${syncedCustomers} customer records`)
+
+  console.log('\n=== END OF CHECK ===')
+  
+  return {
+    results,
+    synced: { agents: syncedAgents, customers: syncedCustomers }
+  }
 }

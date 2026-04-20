@@ -13,6 +13,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Register Firebase Cloud Messaging service worker
+if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then((registration) => {
+      console.log('Firebase messaging service worker registered:', registration)
+    })
+    .catch((error) => {
+      console.error('Firebase messaging service worker registration failed:', error)
+    })
+}
+
 const rootElement = document.getElementById('root')
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)

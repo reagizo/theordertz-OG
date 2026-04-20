@@ -1,25 +1,39 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { listFloatRequestsFn, saveFloatRequestFn, getAgentProfileFn, saveAgentProfileFn, listFloatExchangesFn, saveFloatExchangeFn } from '@/server/db.functions'
+import { useAuth } from '@/components/AuthProvider'
+import { listAllFloatRequestsFn, saveFloatRequestFn, getAgentProfileFn, saveAgentProfileFn, listAllFloatExchangesFn, saveFloatExchangeFn } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor, carrierLabel } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, TrendingUp, ArrowLeftRight, AlertCircle } from 'lucide-react'
 import type { FloatRequest, FloatExchange } from '@/lib/types'
 
 export const Route = createFileRoute('/admin/float-requests')({
   loader: async () => {
-    const [floatRequests, floatExchanges] = await Promise.all([
-      listFloatRequestsFn(),
-      listFloatExchangesFn(),
+    const [floatRequestsResult, floatExchangesResult] = await Promise.all([
+      listAllFloatRequestsFn(),
+      listAllFloatExchangesFn(),
     ])
-    return { floatRequests, floatExchanges }
+    return { 
+      floatRequests: floatRequestsResult,
+      floatExchanges: floatExchangesResult
+    }
   },
   component: AdminFloatRequests,
 })
 
 function AdminFloatRequests() {
-  const data = Route.useLoaderData() as { floatRequests?: FloatRequest[]; floatExchanges?: FloatRequest[] } | undefined
-  const floatRequests = data?.floatRequests ?? []
-  const floatExchanges = data?.floatExchanges ?? []
+  const { user } = useAuth()
+  const data = Route.useLoaderData() as { floatRequests?: { real?: FloatRequest[]; test?: FloatRequest[] }; floatExchanges?: { real?: FloatExchange[]; test?: FloatExchange[] } } | undefined
+  
+  const currentUserEmail = user?.email || ''
+  const isTestAdmin = currentUserEmail === 'admin@example.com'
+  
+  // Filter data based on user email
+  const floatRequests = isTestAdmin 
+    ? (data?.floatRequests?.test ?? [])
+    : (data?.floatRequests?.real ?? [])
+  const floatExchanges = isTestAdmin 
+    ? (data?.floatExchanges?.test ?? [])
+    : (data?.floatExchanges?.real ?? [])
   const [requests, setRequests] = useState(floatRequests)
   const [exchanges, setExchanges] = useState(floatExchanges)
   const [loading, setLoading] = useState<string | null>(null)

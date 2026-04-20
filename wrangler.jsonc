@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "theordertz-og",
+  "name": "theordertz",
   "compatibility_date": "2026-04-04",
   "observability": {
     "enabled": true
@@ -8,5 +8,12 @@
   "main": "@tanstack/react-start/server-entry",
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "vars": {
+    "VITE_SUPABASE_URL": "",
+    "VITE_SUPABASE_ANON_KEY": "",
+    "VITE_SUPABASE_SERVICE_ROLE_KEY": "",
+    "FIREBASE_PROJECT_ID": "the-ordertz",
+    "FIREBASE_ACCESS_TOKEN": ""
+  }
 }

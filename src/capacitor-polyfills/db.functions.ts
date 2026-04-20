@@ -8,6 +8,7 @@ import type {
   CreditPortfolio,
   VendorProfile,
 } from '@/lib/types'
+import { markForSync, syncPushAll, syncPullAll } from '@/lib/sync'
 
 // Helper to get/set localStorage safely
 const getStore = (key: string): any[] => {
@@ -38,6 +39,7 @@ export const saveAgentProfileFn = async (data: AgentProfile) => {
   if (idx >= 0) agents[idx] = data
   else agents.push({ ...data, id: data.id || generateId() })
   setStore('agents', agents)
+  markForSync('agents', data.id || agents[agents.length - 1].id)
   return data
 }
 
@@ -58,6 +60,7 @@ export const saveCustomerProfileFn = async (data: CustomerProfile) => {
   if (idx >= 0) customers[idx] = data
   else customers.push({ ...data, id: data.id || generateId() })
   setStore('customers', customers)
+  markForSync('customers', data.id || customers[customers.length - 1].id)
   return data
 }
 
@@ -82,6 +85,7 @@ export const saveTransactionFn = async (data: Transaction) => {
   if (idx >= 0) txns[idx] = data
   else txns.push({ ...data, id: data.id || generateId() })
   setStore('transactions', txns)
+  markForSync('transactions', data.id || txns[txns.length - 1].id)
   return data
 }
 
@@ -116,6 +120,7 @@ export const saveFloatRequestFn = async (data: FloatRequest) => {
   if (idx >= 0) requests[idx] = data
   else requests.push({ ...data, id: data.id || generateId() })
   setStore('floatRequests', requests)
+  markForSync('floatRequests', data.id || requests[requests.length - 1].id)
   return data
 }
 
@@ -140,6 +145,7 @@ export const saveFloatExchangeFn = async (data: FloatExchange) => {
   if (idx >= 0) exchanges[idx] = data
   else exchanges.push({ ...data, id: data.id || generateId() })
   setStore('floatExchanges', exchanges)
+  markForSync('floatExchanges', data.id || exchanges[exchanges.length - 1].id)
   return data
 }
 
@@ -224,6 +230,7 @@ export const saveVendorProfileFn = async (data: VendorProfile) => {
   if (idx >= 0) vendors[idx] = data
   else vendors.push({ ...data, id: data.id || generateId() })
   setStore('vendors', vendors)
+  markForSync('vendors', data.id || vendors[vendors.length - 1].id)
   return data
 }
 
@@ -234,5 +241,7 @@ export const deleteVendorFn = async (data: { id: string }) => {
 }
 
 export const syncVendorsToSupabaseFn = async () => {
-  return { success: true, synced: 0 }
+  const pushed = await syncPushAll()
+  await syncPullAll()
+  return { success: true, synced: pushed }
 }

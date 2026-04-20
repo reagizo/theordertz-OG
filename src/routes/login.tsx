@@ -26,9 +26,25 @@ function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login(email, password)
-      await new Promise(resolve => setTimeout(resolve, 300))
-      router.navigate({ to: '/' })
+      const user = await login(email, password)
+      
+      if (!user) {
+        throw new Error('Login failed: No user returned')
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Navigate directly to role-based route
+      const role = user.app_metadata?.roles?.[0] ?? 'guest'
+      if (role === 'admin') {
+        router.navigate({ to: '/admin' })
+      } else if (role === 'agent') {
+        router.navigate({ to: '/agent' })
+      } else if (role === 'customer') {
+        router.navigate({ to: '/customer' })
+      } else {
+        router.navigate({ to: '/' })
+      }
     } catch (err: unknown) {
       const e = err as { message?: string }
       setError(e?.message ?? 'Login failed. Please try again.')

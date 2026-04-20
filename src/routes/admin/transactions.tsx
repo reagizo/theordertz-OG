@@ -1,20 +1,32 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
-import { listTransactionsFn, saveTransactionFn, saveAgentProfileFn, getAgentProfileFn, saveCustomerProfileFn, getCustomerProfileFn } from '@/server/db.functions'
+import { listAllTransactionsFn, saveTransactionFn, saveAgentProfileFn, getAgentProfileFn, saveCustomerProfileFn, getCustomerProfileFn } from '@/server/db.functions'
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, Search } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 import { TEST_ADMIN_EMAIL, REAL_ADMIN_EMAIL } from '@/contexts/SettingsContext'
 
 export const Route = createFileRoute('/admin/transactions')({
-  loader: () => listTransactionsFn(),
+  loader: async () => {
+    const result = await listAllTransactionsFn()
+    return result
+  },
   component: AdminTransactions,
 })
 
 function AdminTransactions() {
   const { user } = useAuth()
-  const initialData = Route.useLoaderData() as Transaction[]
+  const data = Route.useLoaderData() as { real?: Transaction[]; test?: Transaction[] }
+
+  const currentUserEmail = user?.email || ''
+  const isTestAdmin = currentUserEmail === TEST_ADMIN_EMAIL
+  const isRealAdmin = currentUserEmail === REAL_ADMIN_EMAIL
+
+  // Filter data based on user email
+  const initialData = isTestAdmin
+    ? (data?.test ?? [])
+    : (data?.real ?? [])
   const [transactions, setTransactions] = useState(initialData)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -22,10 +34,6 @@ function AdminTransactions() {
   const [paymentFilter, setPaymentFilter] = useState<string>('all')
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState('')
-
-  const currentUserEmail = user?.email || ''
-  const isTestAdmin = currentUserEmail === TEST_ADMIN_EMAIL
-  const isRealAdmin = currentUserEmail === REAL_ADMIN_EMAIL
 
   const filtered = transactions.filter(tx => {
     // Filter by admin type

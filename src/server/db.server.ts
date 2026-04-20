@@ -253,14 +253,11 @@ export async function getCreditPortfolio(customerId: string): Promise<CreditPort
 
 export async function listCreditPortfolios(testOnly?: boolean): Promise<CreditPortfolio[]> {
   const customers = await listCustomers(testOnly)
-  const portfolios: CreditPortfolio[] = []
-  for (const c of customers) {
-    if (c.tier === 'premier' || c.creditLimit > 0) {
-      const portfolio = await getCreditPortfolio(c.id)
-      if (portfolio) portfolios.push(portfolio)
-    }
-  }
-  return portfolios
+  const eligibleCustomers = customers.filter(c => c.tier === 'premier' || c.creditLimit > 0)
+  const portfolios = await Promise.all(
+    eligibleCustomers.map(c => getCreditPortfolio(c.id))
+  )
+  return portfolios.filter((p): p is CreditPortfolio => p !== null)
 }
 
 // ── Deletion functions ───────────────────────────────────────────────────────
@@ -344,8 +341,8 @@ export async function syncVendorsToSupabase(): Promise<void> {
   const real = await listVendors(false)
   const test = await listVendors(true)
 
-  for (const v of real) {
-    await supabaseAdmin.from('vendors').upsert({
+  await supabaseAdmin.from('vendors').upsert(
+    real.map(v => ({
       id: v.id,
       fullName: v.fullName,
       email: v.email,
@@ -360,11 +357,12 @@ export async function syncVendorsToSupabase(): Promise<void> {
       updatedAt: v.updatedAt,
       walletBalance: v.walletBalance,
       istestaccount: false,
-    }, { onConflict: 'id' })
-  }
+    })),
+    { onConflict: 'id' }
+  )
 
-  for (const v of test) {
-    await supabaseAdmin.from('vendors').upsert({
+  await supabaseAdmin.from('vendors').upsert(
+    test.map(v => ({
       id: v.id,
       fullName: v.fullName,
       email: v.email,
@@ -379,17 +377,20 @@ export async function syncVendorsToSupabase(): Promise<void> {
       updatedAt: v.updatedAt,
       walletBalance: v.walletBalance,
       istestaccount: true,
-    }, { onConflict: 'id' })
-  }
+    })),
+    { onConflict: 'id' }
+  )
 }
 
 // ── Test data cleanup ────────────────────────────────────────────────────────
 
 export async function clearAllTestData(): Promise<void> {
-  await supabaseAdmin.from('agents').delete().eq('is_test_account', true)
-  await supabaseAdmin.from('customers').delete().eq('is_test_account', true)
-  await supabaseAdmin.from('transactions').delete().eq('is_test_account', true)
-  await supabaseAdmin.from('float_requests').delete().eq('is_test_account', true)
-  await supabaseAdmin.from('float_exchanges').delete().eq('is_test_account', true)
-  await supabaseAdmin.from('vendors').delete().eq('istestaccount', true)
+  await Promise.all([
+    supabaseAdmin.from('agents').delete().eq('is_test_account', true),
+    supabaseAdmin.from('customers').delete().eq('is_test_account', true),
+    supabaseAdmin.from('transactions').delete().eq('is_test_account', true),
+    supabaseAdmin.from('float_requests').delete().eq('is_test_account', true),
+    supabaseAdmin.from('float_exchanges').delete().eq('is_test_account', true),
+    supabaseAdmin.from('vendors').delete().eq('istestaccount', true),
+  ])
 }

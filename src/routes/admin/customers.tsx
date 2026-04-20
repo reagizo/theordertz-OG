@@ -1,17 +1,30 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { listCustomersFn, saveCustomerProfileFn, listTransactionsByCustomerFn, getCreditPortfolioFn } from '@/server/db.functions'
+import { useAuth } from '@/components/AuthProvider'
+import { listAllCustomersFn, saveCustomerProfileFn, listTransactionsByCustomerFn, getCreditPortfolioFn } from '@/server/db.functions'
 import { formatTZS, formatDate, statusColor, tierLabel } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, User, CreditCard } from 'lucide-react'
 import type { CustomerProfile, Transaction, CreditPortfolio } from '@/lib/types'
 
 export const Route = createFileRoute('/admin/customers')({
-  loader: () => listCustomersFn(),
+  loader: async () => {
+    const result = await listAllCustomersFn()
+    return result
+  },
   component: AdminCustomers,
 })
 
 function AdminCustomers() {
-  const initial = Route.useLoaderData() as CustomerProfile[]
+  const { user } = useAuth()
+  const data = Route.useLoaderData() as { real?: CustomerProfile[]; test?: CustomerProfile[] }
+  
+  const currentUserEmail = user?.email || ''
+  const isTestAdmin = currentUserEmail === 'admin@example.com'
+  
+  // Filter data based on user email
+  const initial = isTestAdmin 
+    ? (data?.test ?? []) 
+    : (data?.real ?? [])
   const [customers, setCustomers] = useState(initial)
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState('')
@@ -25,6 +38,13 @@ function AdminCustomers() {
     try {
       const updated = { ...c, status, updatedAt: new Date().toISOString() }
       await saveCustomerProfileFn({ data: updated })
+      
+      // If approved, also activate the user in Firebase Auth users collection
+      if (status === 'approved') {
+        const { activateUserInFirebase } = await import('@/lib/firebase-auth')
+        await activateUserInFirebase(c.id)
+      }
+      
       setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
       if (selected?.id === c.id) setSelected(updated)
       setMessage(`Customer ${status} successfully`)

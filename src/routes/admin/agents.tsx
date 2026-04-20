@@ -1,17 +1,30 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { listAgentsFn, saveAgentProfileFn } from '@/server/db.functions'
+import { useAuth } from '@/components/AuthProvider'
+import { listAllAgentsFn, saveAgentProfileFn } from '@/server/db.functions'
 import { formatTZS, formatDate, statusColor } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, UserCheck } from 'lucide-react'
 import type { AgentProfile } from '@/lib/types'
 
 export const Route = createFileRoute('/admin/agents')({
-  loader: () => listAgentsFn(),
+  loader: async () => {
+    const result = await listAllAgentsFn()
+    return result
+  },
   component: AdminAgents,
 })
 
 function AdminAgents() {
-  const initial = Route.useLoaderData() as AgentProfile[]
+  const { user } = useAuth()
+  const data = Route.useLoaderData() as { real?: AgentProfile[]; test?: AgentProfile[] }
+  
+  const currentUserEmail = user?.email || ''
+  const isTestAdmin = currentUserEmail === 'admin@example.com'
+  
+  // Filter data based on user email
+  const initial = isTestAdmin 
+    ? (data?.test ?? []) 
+    : (data?.real ?? [])
   const [agents, setAgents] = useState(initial)
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState('')

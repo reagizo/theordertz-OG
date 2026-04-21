@@ -15,19 +15,37 @@ let auth: any = null
 let db: any = null
 let messaging: any = null
 
-if (typeof window !== 'undefined') {
-  import('firebase/app').then(({ initializeApp, getApps }) => {
-    import('firebase/auth').then(({ getAuth }) => {
-      import('firebase/firestore').then(({ getFirestore }) => {
-        import('firebase/messaging').then(({ getMessaging }) => {
-          app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-          auth = getAuth(app)
-          db = getFirestore(app)
-          messaging = getMessaging(app)
-        }).catch(console.error)
-      }).catch(console.error)
-    }).catch(console.error)
-  }).catch(console.error)
+async function initializeFirebase() {
+  if (typeof window === 'undefined') return false
+
+  try {
+    // Firebase v12 uses ES modules
+    const { initializeApp, getApps } = await import('firebase/app')
+    const { getFirestore } = await import('firebase/firestore')
+    const { getMessaging } = await import('firebase/messaging')
+
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+    db = getFirestore(app)
+
+    // Messaging only works in browser with service worker
+    try {
+      messaging = getMessaging(app)
+    } catch (e) {
+      console.warn('Firebase Messaging not available:', e)
+    }
+
+    // Note: Firebase Auth is NOT initialized since we use Supabase for authentication
+    // Only initialize Firebase Auth if explicitly needed for specific features
+    return true
+  } catch (error) {
+    console.error('Firebase initialization error:', error)
+    return false
+  }
 }
 
-export { app, auth, db, messaging }
+// Initialize Firebase when module loads (without Auth)
+if (typeof window !== 'undefined') {
+  initializeFirebase()
+}
+
+export { app, auth, db, messaging, initializeFirebase }

@@ -237,24 +237,24 @@ export async function login(email: string, password: string): Promise<User> {
 
   if (!user) throw new Error('Login failed')
 
-  // Determine the correct role based on email or Supabase metadata
-  const getRoleForEmail = (email: string): string => {
-    if (email === 'rkaijage@gmail.com' || email === 'admin@example.com') return 'admin'
-    if (email.includes('agent')) return 'agent'
-    if (email.includes('admin')) return 'admin'
-    return 'customer'
+  // Get role from user metadata (set during signup) first
+  let role = user.user_metadata?.roles?.[0]
+  let isTestAccount = user.user_metadata?.is_test_account
+
+  // Fallback to email-based role determination if metadata is missing
+  if (!role) {
+    const getRoleForEmail = (email: string): string => {
+      if (email === 'rkaijage@gmail.com' || email === 'admin@example.com') return 'admin'
+      if (email.includes('agent')) return 'agent'
+      if (email.includes('admin')) return 'admin'
+      return 'customer'
+    }
+    role = getRoleForEmail(email)
   }
 
-  const correctRole = user.user_metadata?.roles?.[0] || getRoleForEmail(email)
-  const correctIsTestAccount = user.user_metadata?.is_test_account ||
-    email.includes('test') ||
-    email.includes('example.com')
-
-  let role = correctRole
-  let isTestAccount = correctIsTestAccount
-
-  // Custom table sync disabled to prevent RLS errors
-  // Login proceeds using Supabase Auth data with email-based role determination
+  if (isTestAccount === undefined) {
+    isTestAccount = email.includes('test') || email.includes('example.com')
+  }
 
   return {
     id: user.id,
@@ -262,7 +262,7 @@ export async function login(email: string, password: string): Promise<User> {
     name: user.user_metadata?.full_name ?? '',
     app_metadata: {
       roles: [role || 'customer'],
-      isTestAccount,
+      isTestAccount: isTestAccount || false,
     },
   }
 }
@@ -274,7 +274,7 @@ export async function signup(email: string, password: string, meta: Record<strin
     options: {
       data: {
         full_name: meta.full_name,
-        roles: ['customer'],
+        roles: [meta.role || 'customer'],
         is_test_account: meta.isTestAccount,
       },
     },

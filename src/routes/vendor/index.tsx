@@ -1,16 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useMemo } from 'react'
-import { listTransactionsByCustomerFn, listVendorsFn } from '@/server/db.functions'
-import { formatTZS, formatDateTime, statusColor } from '@/lib/utils'
+import { listTransactionsByCustomerFn, listVendorsFn, getVendorProfileFn } from '@/server/db.functions'
+import { formatTZS, formatDateTime, statusColor, formatDate } from '@/lib/utils'
 import { useAuth } from '@/components/AuthProvider'
 import { SettingsProvider } from '@/contexts/SettingsContext'
-import type { Transaction } from '@/lib/types'
-import { LayoutDashboard, ArrowLeftRight, Wallet, Clock, CheckCircle, XCircle, DollarSign, Activity, Search, ChevronDown, ChevronUp } from 'lucide-react'
+import type { VendorProfile } from '@/lib/types'
+import { LayoutDashboard, Wallet, Clock, CheckCircle, XCircle, DollarSign, Search, User } from 'lucide-react'
 
 export const Route = createFileRoute('/vendor/')({
   loader: async () => {
     const [transactions, vendors] = await Promise.all([
-      listTransactionsByCustomerFn({ customerId: 'current' }),
+      listTransactionsByCustomerFn({ data: { customerId: 'current' } }),
       listVendorsFn(),
     ])
     return { transactions, vendors }
@@ -29,11 +29,16 @@ function VendorDashboardPage() {
 function VendorDashboard() {
   const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
-  const [expandedTx, setExpandedTx] = useState<string | null>(null)
-  
+  const [profile, setProfile] = useState<VendorProfile | null>(null)
+
   const vendorId = user?.id || 'current'
   const data = Route.useLoaderData()
   const transactions = data?.transactions ?? []
+
+  useEffect(() => {
+    if (!user?.id) return
+    getVendorProfileFn({ data: { id: user.id } }).then(setProfile)
+  }, [user?.id])
 
   const myTransactions = useMemo(() => {
     return transactions.filter(t => t.customerId === vendorId || t.agentId === vendorId)
@@ -98,6 +103,34 @@ function VendorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Vendor Profile Info */}
+      {profile && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <User className="w-5 h-5 text-gray-600" />
+            <h3 className="font-semibold text-gray-900">Vendor Profile</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div><span className="text-gray-500">Full Name:</span> <span className="font-medium ml-1">{profile.fullName}</span></div>
+            <div><span className="text-gray-500">Email:</span> <span className="font-medium ml-1">{profile.email}</span></div>
+            <div><span className="text-gray-500">Phone:</span> <span className="font-medium ml-1">{profile.phone}</span></div>
+            <div><span className="text-gray-500">Business Name:</span> <span className="font-medium ml-1">{profile.businessName}</span></div>
+            <div><span className="text-gray-500">Business Type:</span> <span className="font-medium ml-1">{profile.businessType}</span></div>
+            <div><span className="text-gray-500">Address:</span> <span className="font-medium ml-1">{profile.address}</span></div>
+            {profile.tinNumber && <div><span className="text-gray-500">TIN Number:</span> <span className="font-medium ml-1">{profile.tinNumber}</span></div>}
+            {profile.vrNumber && <div><span className="text-gray-500">VRN Number:</span> <span className="font-medium ml-1">{profile.vrNumber}</span></div>}
+            <div><span className="text-gray-500">Status:</span> 
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(profile.status)}`}>
+                {profile.status}
+              </span>
+            </div>
+            <div><span className="text-gray-500">Wallet Balance:</span> <span className="font-medium ml-1">{formatTZS(profile.walletBalance)}</span></div>
+            <div><span className="text-gray-500">Registered:</span> <span className="font-medium ml-1">{formatDate(profile.createdAt)}</span></div>
+            <div><span className="text-gray-500">Last Updated:</span> <span className="font-medium ml-1">{formatDate(profile.updatedAt)}</span></div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="border-b border-gray-200 px-6 py-4">

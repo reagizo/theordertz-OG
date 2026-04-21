@@ -196,13 +196,35 @@ function AgentDashboard() {
       {profile && (
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div><span className="text-gray-500">Full Name:</span> <span className="font-medium ml-1">{profile.fullName}</span></div>
             <div><span className="text-gray-500">Email:</span> <span className="font-medium ml-1">{profile.email}</span></div>
             <div><span className="text-gray-500">Phone:</span> <span className="font-medium ml-1">{profile.phone}</span></div>
             <div><span className="text-gray-500">National ID:</span> <span className="font-medium ml-1">{profile.nationalId}</span></div>
-            <div><span className="text-gray-500">Commission Rate:</span> <span className="font-medium ml-1">{profile.commissionRate}%</span></div>
+            <div><span className="text-gray-500">Address:</span> <span className="font-medium ml-1">{profile.address}</span></div>
+            <div><span className="text-gray-500">Status:</span> 
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(profile.status)}`}>
+                {profile.status}
+              </span>
+            </div>
             {profile.businessName && <div><span className="text-gray-500">Business:</span> <span className="font-medium ml-1">{profile.businessName}</span></div>}
+            <div><span className="text-gray-500">Commission Rate:</span> <span className="font-medium ml-1">{profile.commissionRate}%</span></div>
+            <div><span className="text-gray-500">Float Balance:</span> <span className="font-medium ml-1">{formatTZS(profile.floatBalance)}</span></div>
+            <div><span className="text-gray-500">Commission Earned:</span> <span className="font-medium ml-1">{formatTZS(profile.commissionEarned)}</span></div>
+            {profile.services && profile.services.length > 0 && (
+              <div className="sm:col-span-2">
+                <span className="text-gray-500">Services:</span>
+                <div className="flex flex-wrap gap-1 ml-1">
+                  {profile.services.map((service: string) => (
+                    <span key={service} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+                      {service.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div><span className="text-gray-500">Registered:</span> <span className="font-medium ml-1">{formatDate(profile.createdAt)}</span></div>
+            <div><span className="text-gray-500">Last Updated:</span> <span className="font-medium ml-1">{formatDate(profile.updatedAt)}</span></div>
           </div>
         </div>
       )}

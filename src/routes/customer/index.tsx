@@ -228,10 +228,22 @@ function CustomerWallet() {
       {profile && (
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Details</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div><span className="text-gray-500">Full Name:</span> <span className="font-medium ml-1">{profile.fullName}</span></div>
+            <div><span className="text-gray-500">Email:</span> <span className="font-medium ml-1">{profile.email}</span></div>
             <div><span className="text-gray-500">Phone:</span> <span className="font-medium ml-1">{profile.phone}</span></div>
             <div><span className="text-gray-500">Address:</span> <span className="font-medium ml-1">{profile.address}</span></div>
+            <div><span className="text-gray-500">Status:</span> 
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(profile.status)}`}>
+                {profile.status}
+              </span>
+            </div>
             <div><span className="text-gray-500">Tier:</span> <span className="font-medium ml-1">{tierLabel(profile.tier)}</span></div>
+            <div><span className="text-gray-500">Wallet Balance:</span> <span className="font-medium ml-1">{formatTZS(profile.walletBalance)}</span></div>
+            <div><span className="text-gray-500">Credit Limit:</span> <span className="font-medium ml-1">{formatTZS(profile.creditLimit)}</span></div>
+            <div><span className="text-gray-500">Credit Used:</span> <span className="font-medium ml-1">{formatTZS(profile.creditUsed)}</span></div>
+            <div><span className="text-gray-500">Registered:</span> <span className="font-medium ml-1">{formatDate(profile.createdAt)}</span></div>
+            <div><span className="text-gray-500">Last Updated:</span> <span className="font-medium ml-1">{formatDate(profile.updatedAt)}</span></div>
           </div>
         </div>
       )}

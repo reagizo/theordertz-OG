@@ -214,6 +214,9 @@ function AdminDashboard() {
         setRegistrationAlerts(refreshedAlerts)
       }
       setSelectedServices(prev => ({ ...prev, [alert.id]: [] }))
+      
+      // Reload data to refresh the UI with updated status
+      window.location.reload()
     } catch (error) {
       console.error('Failed to approve registration:', error)
     } finally {

@@ -3,16 +3,22 @@ export function formatTZS(amount: number | undefined | null): string {
   return `TZS ${amount.toLocaleString('en-US')}`
 }
 
-export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
+export function formatDate(dateStr: string | undefined | null): string {
+  if (!dateStr) return 'N/A'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return 'N/A'
+  return date.toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
 }
 
-export function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('en-GB', {
+export function formatDateTime(dateStr: string | undefined | null): string {
+  if (!dateStr) return 'N/A'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return 'N/A'
+  return date.toLocaleString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

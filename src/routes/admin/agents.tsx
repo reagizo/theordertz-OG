@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { listAllAgentsFn, saveAgentProfileFn } from '@/server/db.functions'
 import { formatTZS, formatDate, statusColor } from '@/lib/utils'
-import { CheckCircle, XCircle, Clock, UserCheck } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, UserCheck, Bell } from 'lucide-react'
 import type { AgentProfile } from '@/lib/types'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export const Route = createFileRoute('/admin/agents')({
   loader: async () => {
@@ -17,18 +18,39 @@ export const Route = createFileRoute('/admin/agents')({
 function AdminAgents() {
   const { user } = useAuth()
   const data = Route.useLoaderData() as { real?: AgentProfile[]; test?: AgentProfile[] }
-  
+
   const currentUserEmail = user?.email || ''
   const isTestAdmin = currentUserEmail === 'admin@example.com'
-  
+
   // Filter data based on user email
-  const initial = isTestAdmin 
-    ? (data?.test ?? []) 
+  const initial = isTestAdmin
+    ? (data?.test ?? [])
     : (data?.real ?? [])
   const [agents, setAgents] = useState(initial)
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [selectedAgent, setSelectedAgent] = useState<AgentProfile | null>(null)
+  const [registrationAlerts, setRegistrationAlerts] = useState<any[]>([])
+
+  // Fetch registration alerts from Supabase
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('registration_alerts')
+          .select('*')
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+
+        if (!error && data) {
+          setRegistrationAlerts(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch registration alerts:', error)
+      }
+    }
+    fetchAlerts()
+  }, [])
 
   const updateStatus = async (agent: AgentProfile, status: 'approved' | 'rejected') => {
     setLoading(agent.id)
@@ -44,6 +66,72 @@ function AdminAgents() {
     }
   }
 
+  const handleApproveRegistration = async (alert: any) => {
+    setLoading(alert.id)
+    try {
+      // Create user in users table
+      const tempPassword = 'Temp123!'
+      const { data: newUser, error: createError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          email: alert.email,
+          password_hash: tempPassword,
+          full_name: alert.name || alert.email,
+          role: alert.alert_type,
+          is_test_account: alert.is_test_account,
+          is_active: true,
+        })
+        .select()
+        .single()
+
+      if (createError) throw createError
+
+      // Create agent record
+      if (alert.alert_type === 'agent') {
+        await supabaseAdmin
+          .from('agents')
+          .insert({
+            id: newUser.id,
+            business_name: alert.name || alert.email,
+            status: 'approved',
+            float_balance: 0,
+            commission_rate: 2.50,
+            commission_earned: 0,
+          })
+
+        // Refresh agents list
+        const result = await listAllAgentsFn()
+        const newData = isTestAdmin ? (result?.test ?? []) : (result?.real ?? [])
+        setAgents(newData)
+      }
+
+      // Mark alert as read
+      await supabaseAdmin
+        .from('registration_alerts')
+        .update({ is_read: true })
+        .eq('id', alert.id)
+
+      // Refresh alerts
+      const { data: refreshedAlerts } = await supabaseAdmin
+        .from('registration_alerts')
+        .select('*')
+        .eq('is_read', false)
+        .order('created_at', { ascending: false })
+      if (refreshedAlerts) {
+        setRegistrationAlerts(refreshedAlerts)
+      }
+
+      setMessage(`Registration approved for ${alert.email}`)
+      setTimeout(() => setMessage(''), 3000)
+    } catch (error) {
+      console.error('Failed to approve registration:', error)
+      setMessage('Failed to approve registration')
+      setTimeout(() => setMessage(''), 3000)
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -53,7 +141,10 @@ function AdminAgents() {
         </div>
         <div className="flex gap-2 text-sm">
           <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
-            {agents.filter(a => a.status === 'pending').length} Pending
+            {registrationAlerts.filter(a => a.alert_type === 'agent').length} Pending Registrations
+          </span>
+          <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
+            {agents.filter(a => a.status === 'pending').length} Pending Agents
           </span>
           <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">
             {agents.filter(a => a.status === 'approved').length} Active
@@ -63,6 +154,39 @@ function AdminAgents() {
 
       {message && (
         <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">{message}</div>
+      )}
+
+      {/* Registration Alerts Section */}
+      {registrationAlerts.filter(a => a.alert_type === 'agent').length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Bell className="w-5 h-5 text-yellow-600" />
+            Pending Agent Registrations ({registrationAlerts.filter(a => a.alert_type === 'agent').length})
+          </h3>
+          <div className="space-y-2">
+            {registrationAlerts
+              .filter(a => a.alert_type === 'agent')
+              .map((alert) => (
+                <div
+                  key={alert.id}
+                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-yellow-100"
+                >
+                  <div>
+                    <p className="font-medium text-gray-900">{alert.name}</p>
+                    <p className="text-sm text-gray-600">{alert.email}</p>
+                    <p className="text-xs text-gray-400">{new Date(alert.created_at).toLocaleString()}</p>
+                  </div>
+                  <button
+                    onClick={() => handleApproveRegistration(alert)}
+                    disabled={loading === alert.id}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {loading === alert.id ? 'Approving...' : 'Approve'}
+                  </button>
+                </div>
+              ))}
+          </div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,7 +1,0 @@
-name = "theordertz-sync-service"
-main = "index.ts"
-compatibility_date = "2026-04-04"
-
-[vars]
-VITE_SUPABASE_URL = "https://dlgtwwknvlncprphejaj.supabase.co"
-# VITE_SUPABASE_SERVICE_ROLE_KEY - Set as wrangler secret: wrangler secret put VITE_SUPABASE_SERVICE_ROLE_KEY

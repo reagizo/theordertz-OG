@@ -112,6 +112,7 @@ function AdminDashboard() {
   const isTestAdmin = currentUserEmail === 'admin@example.com'
   const [registrationAlerts, setRegistrationAlerts] = useState<any[]>([])
   const [loadingAlerts, setLoadingAlerts] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabId>('overview')
 
   // Fetch registration alerts from Supabase
   useEffect(() => {
@@ -846,6 +847,31 @@ function AdminDashboard() {
 
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              {/* Pending registrations notification */}
+              {registrationAlerts.filter(a => !a.is_read).length > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-yellow-600" />
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {registrationAlerts.filter(a => !a.is_read).length} Pending Registration{registrationAlerts.filter(a => !a.is_read).length > 1 ? 's' : ''}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Go to the Registrations tab to review and approve
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('registrations')}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700"
+                    >
+                      View Registrations
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Charts row 1 */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-xl p-5">

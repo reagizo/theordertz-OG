@@ -100,9 +100,10 @@ export async function listAgents(): Promise<AgentProfile[]> {
 
 export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: AgentProfile[] }> {
   const agents = await listAgents()
-  // Note: is_test_account is on users table, not agents table
-  // For now, return all agents in both categories
-  return { real: agents, test: [] }
+  // Separate real and test accounts based on is_test_account from users table
+  const real = agents.filter(a => !a.isTestAccount)
+  const test = agents.filter(a => a.isTestAccount)
+  return { real, test }
 }
 
 // ── Customers ────────────────────────────────────────────────────────────────
@@ -188,9 +189,10 @@ export async function listCustomers(): Promise<CustomerProfile[]> {
 
 export async function listAllCustomers(): Promise<{ real: CustomerProfile[]; test: CustomerProfile[] }> {
   const customers = await listCustomers()
-  // Note: is_test_account is on users table, not customers table
-  // For now, return all customers in both categories
-  return { real: customers, test: [] }
+  // Separate real and test accounts based on is_test_account from users table
+  const real = customers.filter(c => !c.isTestAccount)
+  const test = customers.filter(c => c.isTestAccount)
+  return { real, test }
 }
 
 export async function listCustomersByTier(tier: 'd2d' | 'premier'): Promise<CustomerProfile[]> {

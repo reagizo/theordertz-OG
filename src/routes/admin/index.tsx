@@ -21,13 +21,11 @@ import {
   listAllFloatRequestsFn,
   listAllVendorsFn,
 } from '@/server/db.functions'
-import { getRegistrationAlerts } from '@/server/db.firebase'
 import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from '@/lib/utils'
 import type { Transaction } from '@/lib/types'
 import { SettingsProvider, useSettings } from '@/contexts/SettingsContext'
 import { useAuth } from '@/components/AuthProvider'
 import { supabaseAdmin } from '@/lib/supabase'
-// import { SyncStatus } from '@/components/SyncStatus' // Temporarily disabled - Firebase not configured
 import {
   Users,
   Clock,
@@ -113,14 +111,19 @@ function AdminDashboard() {
   const [registrationAlerts, setRegistrationAlerts] = useState<any[]>([])
   const [loadingAlerts, setLoadingAlerts] = useState(false)
 
-  // Fetch registration alerts from Firebase
+  // Fetch registration alerts from Supabase
   useEffect(() => {
     const fetchAlerts = async () => {
       setLoadingAlerts(true)
       try {
-        const result = await getRegistrationAlerts()
-        if (result.success && result.data) {
-          setRegistrationAlerts(result.data)
+        const { data, error } = await supabaseAdmin
+          .from('registration_alerts')
+          .select('*')
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+        
+        if (!error && data) {
+          setRegistrationAlerts(data)
         }
       } catch (error) {
         console.error('Failed to fetch registration alerts:', error)
@@ -167,29 +170,25 @@ function AdminDashboard() {
             .from('users')
             .update({ is_active: true })
             .eq('id', customer.id)
-          // Trigger sync to Firebase
-          try {
-            const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
-            await fetch(`${syncServiceUrl}/sync/users`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            })
-          } catch (e) {
-            console.error('Sync trigger failed:', e)
-          }
         }
         // Update customer status
         const updated = { ...customer, status: 'approved', updatedAt: new Date().toISOString() }
         // This would need to call saveCustomerProfileFn, but we don't have it imported here
         // For now, just mark the alert as read
       }
-      // Mark alert as read
-      const { markAlertRead } = await import('@/server/db.firebase')
-      await markAlertRead({ data: { id: alert.id } })
+      // Mark alert as read in Supabase
+      await supabaseAdmin
+        .from('registration_alerts')
+        .update({ is_read: true })
+        .eq('id', alert.id)
       // Refresh alerts
-      const result = await getRegistrationAlerts()
-      if (result.success && result.data) {
-        setRegistrationAlerts(result.data)
+      const { data: refreshedAlerts } = await supabaseAdmin
+        .from('registration_alerts')
+        .select('*')
+        .eq('is_read', false)
+        .order('created_at', { ascending: false })
+      if (refreshedAlerts) {
+        setRegistrationAlerts(refreshedAlerts)
       }
     } catch (error) {
       console.error('Failed to approve registration:', error)

@@ -15,8 +15,7 @@
     "cap:sync": "npm run build:mobile",
     "cap:android": "npm run build:mobile && npx cap open android",
     "cap:ios": "npm run build:mobile && npx cap open ios",
-    "cap:live": "npm run build:mobile && npx cap run",
-    "migrate:firebase": "npx tsx scripts/migrate-supabase-to-firebase.ts"
+    "cap:live": "npm run build:mobile && npx cap run"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
@@ -32,8 +31,6 @@
     "@tanstack/store": "^0.9.1",
     "@vitejs/plugin-react": "^5.0.4",
     "chart.js": "^4.5.1",
-    "firebase": "^12.12.1",
-    "firebase-admin": "^12.7.0",
     "lucide-react": "^0.576.0",
     "react": "^19.2.0",
     "react-chartjs-2": "^5.3.1",

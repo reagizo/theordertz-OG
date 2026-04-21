@@ -37,7 +37,7 @@ function AdminCustomers() {
     setLoading(c.id)
     try {
       const updated = { ...c, status, updatedAt: new Date().toISOString() }
-      await saveCustomerProfileFn({ data: updated })
+      await saveCustomerProfileFn(updated)
 
       // If approved, also activate the user in Supabase users table
       if (status === 'approved') {
@@ -47,16 +47,6 @@ function AdminCustomers() {
             .from('users')
             .update({ is_active: true })
             .eq('id', c.id)
-          // Trigger sync to Firebase
-          try {
-            const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
-            await fetch(`${syncServiceUrl}/sync/users`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            })
-          } catch (e) {
-            console.error('Sync trigger failed:', e)
-          }
         }
       }
 
@@ -73,7 +63,7 @@ function AdminCustomers() {
     setLoading(c.id)
     try {
       const updated = { ...c, walletBalance: Math.max(0, c.walletBalance + delta), updatedAt: new Date().toISOString() }
-      await saveCustomerProfileFn({ data: updated })
+      await saveCustomerProfileFn(updated)
       setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
       if (selected?.id === c.id) setSelected(updated)
     } finally {
@@ -85,11 +75,11 @@ function AdminCustomers() {
     setLoading(c.id)
     try {
       const updated = { ...c, creditLimit: newLimit, updatedAt: new Date().toISOString() }
-      await saveCustomerProfileFn({ data: updated })
+      await saveCustomerProfileFn(updated)
       setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
       if (selected?.id === c.id) setSelected(updated)
       if (selectedPortfolio) {
-        const portfolio = await getCreditPortfolioFn({ data: { customerId: c.id } })
+        const portfolio = await getCreditPortfolioFn({ customerId: c.id })
         if (portfolio) setSelectedPortfolio(portfolio)
       }
     } finally {
@@ -101,8 +91,8 @@ function AdminCustomers() {
     setSelected(c)
     setShowPortfolio(true)
     const [txs, portfolio] = await Promise.all([
-      listTransactionsByCustomerFn({ data: { customerId: c.id } }),
-      getCreditPortfolioFn({ data: { customerId: c.id } }),
+      listTransactionsByCustomerFn({ customerId: c.id }),
+      getCreditPortfolioFn({ customerId: c.id }),
     ])
     setCustomerTransactions(txs)
     if (portfolio) setSelectedPortfolio(portfolio)
@@ -111,7 +101,7 @@ function AdminCustomers() {
   const viewDetails = async (c: CustomerProfile) => {
     setSelected(c)
     setShowPortfolio(false)
-    const txs = await listTransactionsByCustomerFn({ data: { customerId: c.id } })
+    const txs = await listTransactionsByCustomerFn({ customerId: c.id })
     setCustomerTransactions(txs)
   }
 

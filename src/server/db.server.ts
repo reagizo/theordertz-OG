@@ -9,21 +9,6 @@ import type {
   VendorProfile,
 } from '@/lib/types'
 
-// Trigger sync to Firebase after Supabase writes
-async function triggerSyncToFirebase(tableName: string) {
-  try {
-    const syncServiceUrl = process.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
-    await fetch(`${syncServiceUrl}/sync/${tableName}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    console.log(`Sync triggered for ${tableName}`)
-  } catch (error) {
-    console.error(`Failed to trigger sync for ${tableName}:`, error)
-    // Don't throw - sync failures shouldn't block the main operation
-  }
-}
-
 function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; customerId?: string } | { id?: string }): boolean {
   if ('isTestAccount' in item && item.isTestAccount) return true
   if ('agentId' in item && typeof item.agentId === 'string' && item.agentId.startsWith('test-')) return true
@@ -79,8 +64,6 @@ export async function saveCustomerProfile(profile: CustomerProfile): Promise<voi
     ...profile,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving customer:', error)
-  // Trigger sync to Firebase
-  await triggerSyncToFirebase('customers')
 }
 
 export async function listCustomers(): Promise<CustomerProfile[]> {
@@ -122,8 +105,6 @@ export async function saveTransaction(tx: Transaction): Promise<void> {
     is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving transaction:', error)
-  // Trigger sync to Firebase
-  await triggerSyncToFirebase('transactions')
 }
 
 export async function listTransactions(testOnly?: boolean): Promise<Transaction[]> {
@@ -281,27 +262,22 @@ export async function listCreditPortfolios(): Promise<CreditPortfolio[]> {
 
 export async function deleteAgent(id: string): Promise<void> {
   await supabaseAdmin.from('agents').delete().eq('id', id)
-  await triggerSyncToFirebase('agents')
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
   await supabaseAdmin.from('customers').delete().eq('id', id)
-  await triggerSyncToFirebase('customers')
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
   await supabaseAdmin.from('transactions').delete().eq('id', id)
-  await triggerSyncToFirebase('transactions')
 }
 
 export async function deleteFloatRequest(id: string): Promise<void> {
   await supabaseAdmin.from('float_requests').delete().eq('id', id)
-  await triggerSyncToFirebase('float_requests')
 }
 
 export async function deleteFloatExchange(id: string): Promise<void> {
   await supabaseAdmin.from('float_exchanges').delete().eq('id', id)
-  await triggerSyncToFirebase('float_exchanges')
 }
 
 // ── Vendors ─────────────────────────────────────────────────────────────────
@@ -414,7 +390,4 @@ export async function clearAllTestData(): Promise<void> {
     supabaseAdmin.from('users').delete().eq('is_test_account', true),
     supabaseAdmin.from('registration_alerts').delete().eq('is_test_account', true),
   ])
-  // Trigger sync for all tables
-  await triggerSyncToFirebase('users')
-  await triggerSyncToFirebase('registration_alerts')
 }

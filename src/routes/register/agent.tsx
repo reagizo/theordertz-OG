@@ -2,7 +2,6 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { saveAgentProfileFn } from '@/server/db.functions'
-import { syncTestAccount, syncRealAccount, syncRegistrationAlert } from '@/server/db.firebase'
 import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react'
 import AnimatedLogo from '@/components/AnimatedLogo'
@@ -54,10 +53,8 @@ function AgentRegisterContent() {
       const accountData = { name: form.fullName, email: form.email, role: 'Agent' as const, profilePicture: undefined, password: form.password }
       if (isTest) {
         addTestAccount(accountData)
-        await syncTestAccount({ data: accountData })
       } else {
         addRealAccount(accountData)
-        await syncRealAccount({ data: accountData })
       }
       addRegistrationAlert({
         type: 'agent',
@@ -65,15 +62,6 @@ function AgentRegisterContent() {
         email: form.email,
         message: `New agent registration from ${form.phone || form.email}. Awaiting admin approval.`,
         isTestAccount: isTest,
-      })
-      await syncRegistrationAlert({
-        data: {
-          type: 'agent',
-          name: form.fullName,
-          email: form.email,
-          message: `New agent registration from ${form.phone || form.email}. Awaiting admin approval.`,
-          is_test_account: isTest,
-        }
       })
       router.navigate({ to: '/agent' })
     } catch (err: unknown) {

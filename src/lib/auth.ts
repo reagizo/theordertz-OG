@@ -1,21 +1,6 @@
 // Supabase-based authentication
 import { supabase, supabaseAdmin } from './supabase'
 
-// Trigger sync to Firebase after Supabase writes
-async function triggerSyncToFirebase(tableName: string) {
-  try {
-    const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
-    await fetch(`${syncServiceUrl}/sync/${tableName}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    console.log(`Sync triggered for ${tableName}`)
-  } catch (error) {
-    console.error(`Failed to trigger sync for ${tableName}:`, error)
-    // Don't throw - sync failures shouldn't block the main operation
-  }
-}
-
 export type User = {
   id: string
   email: string
@@ -210,7 +195,6 @@ export async function approveRegistration(email: string): Promise<User | null> {
         commission_rate: 2.50,
         commission_earned: 0,
       })
-    await triggerSyncToFirebase('agents')
   } else if (alert.alert_type === 'customer') {
     await supabaseAdmin
       .from('customers')
@@ -222,11 +206,7 @@ export async function approveRegistration(email: string): Promise<User | null> {
         credit_limit: 0,
         credit_used: 0,
       })
-    await triggerSyncToFirebase('customers')
   }
-
-  await triggerSyncToFirebase('users')
-  await triggerSyncToFirebase('registration_alerts')
   
   // Mark alert as read
   await supabase
@@ -423,32 +403,6 @@ export async function seedProductionLiveData(): Promise<void> {
 export function getRegisteredAccountsCount(): number {
   // TODO: Implement this function using Supabase
   return 0
-}
-
-// Trigger full sync of all tables to Firebase
-export async function triggerFullSync(): Promise<void> {
-  const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
-
-  try {
-    await fetch(`${syncServiceUrl}/sync/all`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    console.log('Full sync triggered')
-  } catch (error) {
-    console.error('Failed to trigger full sync:', error)
-  }
-}
-
-// Start periodic sync (call this from your app initialization)
-export function startPeriodicSync(intervalMinutes: number = 5): () => void {
-  const intervalMs = intervalMinutes * 60 * 1000
-  const intervalId = setInterval(() => {
-    triggerFullSync()
-  }, intervalMs)
-
-  // Return cleanup function
-  return () => clearInterval(intervalId)
 }
 
 // Function to check and sync data across Supabase tables

@@ -87,7 +87,7 @@ export const markAlertReadInSupabase = createServerFn({ method: 'POST' })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
     try {
-      const { error } = await supabaseAdmin.from('registration_alerts').update({ read: true }).eq('id', data.id)
+      const { error } = await supabaseAdmin.from('registration_alerts').update({ is_read: true }).eq('id', data.id)
       if (error) throw error
       return { success: true }
     } catch (error) {

@@ -168,35 +168,89 @@ function AdminDashboard() {
       const { saveAgentProfileFn, saveCustomerProfileFn, saveVendorProfileFn } = await import('@/server/db.functions')
       
       if (alert.alert_type === 'agent') {
-        const agent = agents.find((a: any) => a.email === alert.email)
-        if (agent) {
-          const updated = {
-            ...agent,
-            status: 'approved',
-            services: services || [],
-            updatedAt: new Date().toISOString()
-          }
-          await saveAgentProfileFn(updated)
+        // Create user first
+        const tempPassword = 'Temp123!'
+        const { data: newUser, error: createError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            email: alert.email,
+            password_hash: tempPassword,
+            full_name: alert.name || alert.email,
+            role: 'agent',
+            is_test_account: alert.is_test_account,
+            is_active: true,
+          })
+          .select()
+          .single()
+
+        if (createError) throw createError
+
+        // Create agent record
+        const agentProfile = {
+          id: newUser.id,
+          businessName: alert.name || alert.email,
+          status: 'approved',
+          floatBalance: 0,
+          commissionRate: 2.50,
+          commissionEarned: 0,
+          updatedAt: new Date().toISOString(),
         }
+        await saveAgentProfileFn(agentProfile)
       } else if (alert.alert_type === 'customer') {
-        const customer = customers.find((c: any) => c.email === alert.email)
-        if (customer) {
-          const { hasServiceRoleKey } = await import('@/lib/supabase')
-          if (hasServiceRoleKey) {
-            await supabaseAdmin
-              .from('users')
-              .update({ is_active: true })
-              .eq('id', customer.id)
-          }
-          const updated = { ...customer, status: 'approved', updatedAt: new Date().toISOString() }
-          await saveCustomerProfileFn(updated)
+        // Create user first
+        const tempPassword = 'Temp123!'
+        const { data: newUser, error: createError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            email: alert.email,
+            password_hash: tempPassword,
+            full_name: alert.name || alert.email,
+            role: 'customer',
+            is_test_account: alert.is_test_account,
+            is_active: true,
+          })
+          .select()
+          .single()
+
+        if (createError) throw createError
+
+        // Create customer record
+        const customerProfile = {
+          id: newUser.id,
+          tier: alert.customer_tier || 'd2d',
+          status: 'approved',
+          walletBalance: 0,
+          creditLimit: 0,
+          creditUsed: 0,
+          updatedAt: new Date().toISOString(),
         }
+        await saveCustomerProfileFn(customerProfile)
       } else if (alert.alert_type === 'vendor') {
-        const vendor = vendors.find((v: any) => v.email === alert.email)
-        if (vendor) {
-          const updated = { ...vendor, status: 'approved', updatedAt: new Date().toISOString() }
-          await saveVendorProfileFn(updated)
+        // Create user first
+        const tempPassword = 'Temp123!'
+        const { data: newUser, error: createError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            email: alert.email,
+            password_hash: tempPassword,
+            full_name: alert.name || alert.email,
+            role: 'vendor',
+            is_test_account: alert.is_test_account,
+            is_active: true,
+          })
+          .select()
+          .single()
+
+        if (createError) throw createError
+
+        // Create vendor record
+        const vendorProfile = {
+          id: newUser.id,
+          businessName: alert.name || alert.email,
+          status: 'approved',
+          updatedAt: new Date().toISOString(),
         }
+        await saveVendorProfileFn(vendorProfile)
       }
       
       // Mark alert as read in Supabase

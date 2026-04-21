@@ -26,8 +26,8 @@ import { formatTZS, formatDateTime, statusColor, serviceLabel, tierLabel } from 
 import type { Transaction } from '@/lib/types'
 import { SettingsProvider, useSettings } from '@/contexts/SettingsContext'
 import { useAuth } from '@/components/AuthProvider'
-import { activateUserInFirebase } from '@/lib/firebase-auth'
-import { SyncStatus } from '@/components/SyncStatus'
+import { supabaseAdmin } from '@/lib/supabase'
+// import { SyncStatus } from '@/components/SyncStatus' // Temporarily disabled - Firebase not configured
 import {
   Users,
   Clock,
@@ -157,10 +157,27 @@ function AdminDashboard() {
 
   const handleApproveRegistration = async (alert: any) => {
     try {
-      // Find the user in customers list and activate them
+      // Find the user in customers list and activate them in Supabase
       const customer = customers.find((c: any) => c.email === alert.email)
       if (customer) {
-        await activateUserInFirebase(customer.id)
+        // Update user is_active status in Supabase
+        const { hasServiceRoleKey } = await import('@/lib/supabase')
+        if (hasServiceRoleKey) {
+          await supabaseAdmin
+            .from('users')
+            .update({ is_active: true })
+            .eq('id', customer.id)
+          // Trigger sync to Firebase
+          try {
+            const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
+            await fetch(`${syncServiceUrl}/sync/users`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            })
+          } catch (e) {
+            console.error('Sync trigger failed:', e)
+          }
+        }
         // Update customer status
         const updated = { ...customer, status: 'approved', updatedAt: new Date().toISOString() }
         // This would need to call saveCustomerProfileFn, but we don't have it imported here
@@ -692,7 +709,7 @@ function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Sync Status Component */}
-      <SyncStatus />
+      {/* <SyncStatus /> */} {/* Temporarily disabled - Firebase not configured */}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

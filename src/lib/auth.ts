@@ -256,6 +256,39 @@ export async function login(email: string, password: string): Promise<User> {
     isTestAccount = email.includes('test') || email.includes('example.com')
   }
 
+  // Check approval status for agents and customers
+  if (role === 'agent') {
+    const { data: agentData } = await supabaseAdmin
+      .from('agents')
+      .select('status')
+      .eq('id', user.id)
+      .single()
+    
+    if (agentData?.status === 'rejected') {
+      await supabase.auth.signOut()
+      throw new Error('Your agent account has been rejected. Please contact the administrator.')
+    }
+    if (agentData?.status === 'pending') {
+      await supabase.auth.signOut()
+      throw new Error('Your agent account is pending approval. Please wait for administrator approval.')
+    }
+  } else if (role === 'customer') {
+    const { data: customerData } = await supabaseAdmin
+      .from('customers')
+      .select('status')
+      .eq('id', user.id)
+      .single()
+    
+    if (customerData?.status === 'rejected') {
+      await supabase.auth.signOut()
+      throw new Error('Your customer account has been rejected. Please contact the administrator.')
+    }
+    if (customerData?.status === 'pending') {
+      await supabase.auth.signOut()
+      throw new Error('Your customer account is pending approval. Please wait for administrator approval.')
+    }
+  }
+
   return {
     id: user.id,
     email: user.email ?? '',

@@ -56,7 +56,19 @@ function AdminAgents() {
     setLoading(agent.id)
     try {
       const updated = { ...agent, status, updatedAt: new Date().toISOString() }
-      await saveAgentProfileFn({ data: updated })
+      await saveAgentProfileFn(updated)
+      
+      // If rejected, deactivate the user in Supabase users table
+      if (status === 'rejected') {
+        const { hasServiceRoleKey } = await import('@/lib/supabase')
+        if (hasServiceRoleKey) {
+          await supabaseAdmin
+            .from('users')
+            .update({ is_active: false })
+            .eq('id', agent.id)
+        }
+      }
+      
       setAgents(prev => prev.map(a => a.id === agent.id ? updated : a))
       if (selectedAgent?.id === agent.id) setSelectedAgent(updated)
       setMessage(`Agent ${status} successfully`)

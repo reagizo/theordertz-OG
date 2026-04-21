@@ -39,15 +39,13 @@ function AdminCustomers() {
       const updated = { ...c, status, updatedAt: new Date().toISOString() }
       await saveCustomerProfileFn(updated)
 
-      // If approved, also activate the user in Supabase users table
-      if (status === 'approved') {
-        const { supabaseAdmin, hasServiceRoleKey } = await import('@/lib/supabase')
-        if (hasServiceRoleKey) {
-          await supabaseAdmin
-            .from('users')
-            .update({ is_active: true })
-            .eq('id', c.id)
-        }
+      // Update user active status in Supabase users table
+      const { hasServiceRoleKey } = await import('@/lib/supabase')
+      if (hasServiceRoleKey) {
+        await supabaseAdmin
+          .from('users')
+          .update({ is_active: status === 'approved' })
+          .eq('id', c.id)
       }
 
       setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))

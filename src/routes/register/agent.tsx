@@ -26,6 +26,7 @@ function AgentRegisterContent() {
   const { addTestAccount, addRealAccount, addRegistrationAlert } = useSettings()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', nationalId: '', address: '', businessName: '', password: '', confirmPassword: '',
   })
@@ -66,7 +67,7 @@ function AgentRegisterContent() {
       })
       // Create registration alert in Supabase for both admins to see
       await requestRegistration(form.email, 'agent', { name: form.fullName, isTestAccount: isTest })
-      router.navigate({ to: '/agent' })
+      setShowSuccess(true)
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string }
       if (e?.status === 422) setError('Email already in use or invalid input.')
@@ -107,7 +108,27 @@ function AgentRegisterContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {showSuccess ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Registration Submitted</h3>
+              <p className="text-white/80 text-sm mb-6">
+                Your application has been sent to administrator, once approved you may log in using your credentials set
+              </p>
+              <button
+                onClick={() => router.navigate({ to: '/login' })}
+                className="px-6 py-3 bg-gradient-to-r from-[#F57C00] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-sm"
+              >
+                Go to Login
+              </button>
+            </div>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-white/80 mb-1.5">Full Name *</label>
@@ -204,6 +225,8 @@ function AgentRegisterContent() {
             Already have an account?{' '}
             <Link to="/login" className="text-[#F57C00] font-medium hover:text-[#F57C00]/80 underline underline-offset-4 transition-colors">Sign in</Link>
           </p>
+            </>
+          )}
         </div>
       </div>
     </div>

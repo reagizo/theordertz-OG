@@ -27,8 +27,9 @@ function VendorRegisterContent() {
   const { addTestAccount, addRealAccount, addRegistrationAlert } = useSettings()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [form, setForm] = useState({
-    fullName: '', email: '', phone: '', businessName: '', businessType: '', address: '', 
+    fullName: '', email: '', phone: '', businessName: '', businessType: '', address: '',
     tinNumber: '', vrNumber: '', password: '', confirmPassword: '',
   })
 
@@ -68,7 +69,7 @@ function VendorRegisterContent() {
         message: `New vendor registration for ${form.businessName || form.fullName}. Awaiting admin approval.`,
         isTestAccount: isTest,
       })
-      router.navigate({ to: '/vendor' })
+      setShowSuccess(true)
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string }
       if (e?.status === 422) setError('Email already in use or invalid input.')
@@ -107,121 +108,143 @@ function VendorRegisterContent() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Contact Name *</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="fullName" value={form.fullName} onChange={handleChange} required
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="Contact person full name" />
-                  </div>
+            {showSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Email Address *</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="email" type="email" value={form.email} onChange={handleChange} required
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="you@example.com" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Phone Number *</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="phone" value={form.phone} onChange={handleChange} required
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="+255 7XX XXX XXX" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Name *</label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="businessName" value={form.businessName} onChange={handleChange} required
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="Your business name" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Type *</label>
-                  <select name="businessType" value={form.businessType} onChange={handleChange} required
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white text-sm transition-all shadow-sm">
-                    <option value="" className="text-gray-900">Select business type</option>
-                    {BUSINESS_TYPES.map(bt => (
-                      <option key={bt} value={bt} className="text-gray-900">{bt}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Address *</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="address" value={form.address} onChange={handleChange} required
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="Street, City, Region" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">TIN Number (Optional)</label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="tinNumber" value={form.tinNumber} onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="TIN" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">VRN (Optional)</label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="vrNumber" value={form.vrNumber} onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="VAT Reg. Number" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Password *</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="password" type="password" value={form.password} onChange={handleChange} required minLength={8}
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="Min. 8 characters" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-1.5">Confirm Password *</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
-                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                      placeholder="Re-enter password" />
-                  </div>
-                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Registration Submitted</h3>
+                <p className="text-white/80 text-sm mb-6">
+                  Your application has been sent to administrator, once approved you may log in using your credentials set
+                </p>
+                <button
+                  onClick={() => router.navigate({ to: '/login' })}
+                  className="px-6 py-3 bg-gradient-to-r from-[#4F46E5] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-sm"
+                >
+                  Go to Login
+                </button>
               </div>
+            ) : (
+              <>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Contact Name *</label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="fullName" value={form.fullName} onChange={handleChange} required
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="Contact person full name" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Email Address *</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="email" type="email" value={form.email} onChange={handleChange} required
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="you@example.com" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Phone Number *</label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="phone" value={form.phone} onChange={handleChange} required
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="+255 7XX XXX XXX" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Name *</label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="businessName" value={form.businessName} onChange={handleChange} required
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="Your business name" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Type *</label>
+                      <select name="businessType" value={form.businessType} onChange={handleChange} required
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white text-sm transition-all shadow-sm">
+                        <option value="" className="text-gray-900">Select business type</option>
+                        {BUSINESS_TYPES.map(bt => (
+                          <option key={bt} value={bt} className="text-gray-900">{bt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Business Address *</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="address" value={form.address} onChange={handleChange} required
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="Street, City, Region" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">TIN Number (Optional)</label>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="tinNumber" value={form.tinNumber} onChange={handleChange}
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="TIN" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">VRN (Optional)</label>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="vrNumber" value={form.vrNumber} onChange={handleChange}
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="VAT Reg. Number" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Password *</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="password" type="password" value={form.password} onChange={handleChange} required minLength={8}
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="Min. 8 characters" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-white/80 mb-1.5">Confirm Password *</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
+                          className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                          placeholder="Re-enter password" />
+                      </div>
+                    </div>
+                  </div>
 
-              <button type="submit" disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Creating account...
-                  </span>
-                ) : (
-                  <>Register Vendor<ArrowRight className="w-4 h-4" /></>
-                )}
-              </button>
-            </form>
+                  <button type="submit" disabled={loading}
+                    className="w-full py-3 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Creating account...
+                      </span>
+                    ) : (
+                      <>Register Vendor<ArrowRight className="w-4 h-4" /></>
+                    )}
+                  </button>
+                </form>
 
-            <p className="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/50">
-              Already have an account?{' '}
-              <Link to="/login" className="text-[#4F46E5] font-medium hover:text-[#4F46E5]/80 underline underline-offset-4 transition-colors">Sign in</Link>
-            </p>
+                <p className="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/50">
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-[#4F46E5] font-medium hover:text-[#4F46E5]/80 underline underline-offset-4 transition-colors">Sign in</Link>
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

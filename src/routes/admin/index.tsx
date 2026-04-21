@@ -156,7 +156,6 @@ function AdminDashboard() {
   const vendors = isTestAdmin 
     ? (data?.vendors?.test ?? []) 
     : (data?.vendors?.real ?? [])
-  const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([])

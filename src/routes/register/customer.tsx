@@ -7,6 +7,7 @@ import { Mail, Lock, User, Phone, MapPin, ArrowRight } from 'lucide-react'
 import type { CustomerTier } from '@/lib/types'
 import AnimatedLogo from '@/components/AnimatedLogo'
 import { isTestAccountByNameOrEmail, useSettings, SettingsProvider } from '@/contexts/SettingsContext'
+import { requestRegistration } from '@/lib/auth'
 
 export const Route = createFileRoute('/register/customer')({
   component: CustomerRegisterPage,
@@ -26,6 +27,7 @@ function CustomerRegisterContent() {
   const { addTestAccount, addRealAccount, addRegistrationAlert } = useSettings()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', nationalId: '', address: '',
     tier: 'd2d' as CustomerTier, password: '', confirmPassword: '',
@@ -66,7 +68,8 @@ function CustomerRegisterContent() {
         message: `New ${form.tier === 'premier' ? 'Premier' : 'D2D'} customer registration from ${form.phone || form.email}. Awaiting admin approval.`,
         isTestAccount: isTest,
       })
-      router.navigate({ to: '/customer' })
+      await requestRegistration(form.email, 'customer', { name: form.fullName, isTestAccount: isTest })
+      setShowSuccess(true)
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string }
       if (e?.status === 422) setError('Email already in use or invalid input.')
@@ -107,109 +110,131 @@ function CustomerRegisterContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Full Name *</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                  <input name="fullName" value={form.fullName} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                    placeholder="Your full name" />
-                </div>
+          {showSuccess ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Email Address *</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                  <input name="email" type="email" value={form.email} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                    placeholder="you@example.com" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Phone Number *</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                  <input name="phone" value={form.phone} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                    placeholder="+255 7XX XXX XXX" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">National ID *</label>
-                <input name="nationalId" value={form.nationalId} onChange={handleChange} required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                  placeholder="National ID number" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Address *</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                  <input name="address" value={form.address} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                    placeholder="City, Region" />
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Customer Tier *</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex items-start gap-2 p-3 border-2 rounded-xl cursor-pointer transition-all ${form.tier === 'd2d' ? 'border-[#F57C00] bg-[#F57C00]/10' : 'border-white/20 hover:border-white/40'}`}>
-                    <input type="radio" name="tier" value="d2d" checked={form.tier === 'd2d'} onChange={handleChange} className="mt-0.5 accent-[#F57C00]" />
-                    <div>
-                      <p className="text-sm font-medium text-white">Day-to-Day (D2D)</p>
-                      <p className="text-xs text-white/50">Standard customer</p>
-                    </div>
-                  </label>
-                  <label className={`flex items-start gap-2 p-3 border-2 rounded-xl cursor-pointer transition-all ${form.tier === 'premier' ? 'border-[#F57C00] bg-[#F57C00]/10' : 'border-white/20 hover:border-white/40'}`}>
-                    <input type="radio" name="tier" value="premier" checked={form.tier === 'premier'} onChange={handleChange} className="mt-0.5 accent-[#F57C00]" />
-                    <div>
-                      <p className="text-sm font-medium text-white">Premier Customer</p>
-                      <p className="text-xs text-white/50">Credit options available</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Password *</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                  <input name="password" type="password" value={form.password} onChange={handleChange} required minLength={8}
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                    placeholder="Min. 8 characters" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-white/80 mb-1.5">Confirm Password *</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                  <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
-                    placeholder="Re-enter password" />
-                </div>
-              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Registration Submitted</h3>
+              <p className="text-white/80 text-sm mb-6">
+                Your application has been sent to administrator, once approved you may log in using your credentials set
+              </p>
+              <button
+                onClick={() => router.navigate({ to: '/login' })}
+                className="px-6 py-3 bg-gradient-to-r from-[#F57C00] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-sm"
+              >
+                Go to Login
+              </button>
             </div>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Full Name *</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                      <input name="fullName" value={form.fullName} onChange={handleChange} required
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                        placeholder="Your full name" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Email Address *</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                      <input name="email" type="email" value={form.email} onChange={handleChange} required
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                        placeholder="you@example.com" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Phone Number *</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                      <input name="phone" value={form.phone} onChange={handleChange} required
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                        placeholder="+255 7XX XXX XXX" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">National ID *</label>
+                    <input name="nationalId" value={form.nationalId} onChange={handleChange} required
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                      placeholder="National ID number" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Address *</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                      <input name="address" value={form.address} onChange={handleChange} required
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                        placeholder="City, Region" />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Customer Tier *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className={`flex items-start gap-2 p-3 border-2 rounded-xl cursor-pointer transition-all ${form.tier === 'd2d' ? 'border-[#F57C00] bg-[#F57C00]/10' : 'border-white/20 hover:border-white/40'}`}>
+                        <input type="radio" name="tier" value="d2d" checked={form.tier === 'd2d'} onChange={handleChange} className="mt-0.5 accent-[#F57C00]" />
+                        <div>
+                          <p className="text-sm font-medium text-white">Day-to-Day (D2D)</p>
+                          <p className="text-xs text-white/50">Standard customer</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-2 p-3 border-2 rounded-xl cursor-pointer transition-all ${form.tier === 'premier' ? 'border-[#F57C00] bg-[#F57C00]/10' : 'border-white/20 hover:border-white/40'}`}>
+                        <input type="radio" name="tier" value="premier" checked={form.tier === 'premier'} onChange={handleChange} className="mt-0.5 accent-[#F57C00]" />
+                        <div>
+                          <p className="text-sm font-medium text-white">Premier Customer</p>
+                          <p className="text-xs text-white/50">Credit options available</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Password *</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                      <input name="password" type="password" value={form.password} onChange={handleChange} required minLength={8}
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                        placeholder="Min. 8 characters" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/80 mb-1.5">Confirm Password *</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                      <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F57C00]/50 focus:border-[#F57C00] text-white placeholder-white/40 text-sm transition-all shadow-sm"
+                        placeholder="Re-enter password" />
+                    </div>
+                  </div>
+                </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#F57C00] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Creating account...
-                </span>
-              ) : (
-                <>Create Account<ArrowRight className="w-4 h-4" /></>
-              )}
-            </button>
-          </form>
+                <button type="submit" disabled={loading}
+                  className="w-full py-3 bg-gradient-to-r from-[#F57C00] to-[#C62828] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2">
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Creating account...
+                    </span>
+                  ) : (
+                    <>Create Account<ArrowRight className="w-4 h-4" /></>
+                  )}
+                </button>
+              </form>
 
-          <p className="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/50">
-            Already have an account?{' '}
-            <Link to="/login" className="text-[#F57C00] font-medium hover:text-[#F57C00]/80 underline underline-offset-4 transition-colors">Sign in</Link>
-          </p>
+              <p className="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/50">
+                Already have an account?{' '}
+                <Link to="/login" className="text-[#F57C00] font-medium hover:text-[#F57C00]/80 underline underline-offset-4 transition-colors">Sign in</Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

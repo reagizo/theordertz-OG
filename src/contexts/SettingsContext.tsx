@@ -16,7 +16,7 @@ export type AppUser = {
 
 export type RegistrationAlert = {
   id: string
-  type: 'agent' | 'customer' | 'super_agent'
+  type: 'agent' | 'customer' | 'vendor' | 'super_agent'
   name: string
   email: string
   tier?: CustomerTier

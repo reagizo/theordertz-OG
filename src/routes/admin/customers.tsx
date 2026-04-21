@@ -38,13 +38,28 @@ function AdminCustomers() {
     try {
       const updated = { ...c, status, updatedAt: new Date().toISOString() }
       await saveCustomerProfileFn({ data: updated })
-      
-      // If approved, also activate the user in Firebase Auth users collection
+
+      // If approved, also activate the user in Supabase users table
       if (status === 'approved') {
-        const { activateUserInFirebase } = await import('@/lib/firebase-auth')
-        await activateUserInFirebase(c.id)
+        const { supabaseAdmin, hasServiceRoleKey } = await import('@/lib/supabase')
+        if (hasServiceRoleKey) {
+          await supabaseAdmin
+            .from('users')
+            .update({ is_active: true })
+            .eq('id', c.id)
+          // Trigger sync to Firebase
+          try {
+            const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
+            await fetch(`${syncServiceUrl}/sync/users`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            })
+          } catch (e) {
+            console.error('Sync trigger failed:', e)
+          }
+        }
       }
-      
+
       setCustomers(prev => prev.map(x => x.id === c.id ? updated : x))
       if (selected?.id === c.id) setSelected(updated)
       setMessage(`Customer ${status} successfully`)

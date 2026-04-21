@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "theordertz",
+  "name": "theordertz-production",
   "compatibility_date": "2026-04-04",
   "observability": {
     "enabled": true

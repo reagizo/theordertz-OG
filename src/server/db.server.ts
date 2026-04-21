@@ -20,9 +20,33 @@ function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; cu
 // ── Agents ──────────────────────────────────────────────────────────────────
 
 export async function getAgentProfile(id: string): Promise<AgentProfile | null> {
-  const { data, error } = await supabaseAdmin.from('agents').select('*').eq('id', id).single()
+  const { data, error } = await supabaseAdmin
+    .from('agents')
+    .select(`
+      *,
+      users!inner (
+        email,
+        full_name,
+        phone,
+        national_id,
+        address,
+        is_test_account
+      )
+    `)
+    .eq('id', id)
+    .single()
   if (error) return null
-  return data as AgentProfile
+  
+  // Merge agent data with user data
+  return {
+    ...(data as any),
+    email: (data as any).users.email,
+    fullName: (data as any).users.full_name,
+    phone: (data as any).users.phone,
+    nationalId: (data as any).users.national_id,
+    address: (data as any).users.address,
+    isTestAccount: (data as any).users.is_test_account,
+  } as AgentProfile
 }
 
 export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
@@ -35,13 +59,33 @@ export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
 export async function listAgents(): Promise<AgentProfile[]> {
   const { data, error } = await supabaseAdmin
     .from('agents')
-    .select('*')
+    .select(`
+      *,
+      users!inner (
+        email,
+        full_name,
+        phone,
+        national_id,
+        address,
+        is_test_account
+      )
+    `)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('Error listing agents:', error)
     return []
   }
-  return (data || []) as AgentProfile[]
+  
+  // Merge agent data with user data
+  return (data || []).map((agent: any) => ({
+    ...agent,
+    email: agent.users.email,
+    fullName: agent.users.full_name,
+    phone: agent.users.phone,
+    nationalId: agent.users.national_id,
+    address: agent.users.address,
+    isTestAccount: agent.users.is_test_account,
+  })) as AgentProfile[]
 }
 
 export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: AgentProfile[] }> {
@@ -54,9 +98,33 @@ export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: Age
 // ── Customers ────────────────────────────────────────────────────────────────
 
 export async function getCustomerProfile(id: string): Promise<CustomerProfile | null> {
-  const { data, error } = await supabaseAdmin.from('customers').select('*').eq('id', id).single()
+  const { data, error } = await supabaseAdmin
+    .from('customers')
+    .select(`
+      *,
+      users!inner (
+        email,
+        full_name,
+        phone,
+        national_id,
+        address,
+        is_test_account
+      )
+    `)
+    .eq('id', id)
+    .single()
   if (error) return null
-  return data as CustomerProfile
+  
+  // Merge customer data with user data
+  return {
+    ...(data as any),
+    email: (data as any).users.email,
+    fullName: (data as any).users.full_name,
+    phone: (data as any).users.phone,
+    nationalId: (data as any).users.national_id,
+    address: (data as any).users.address,
+    isTestAccount: (data as any).users.is_test_account,
+  } as CustomerProfile
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {
@@ -69,13 +137,33 @@ export async function saveCustomerProfile(profile: CustomerProfile): Promise<voi
 export async function listCustomers(): Promise<CustomerProfile[]> {
   const { data, error } = await supabaseAdmin
     .from('customers')
-    .select('*')
+    .select(`
+      *,
+      users!inner (
+        email,
+        full_name,
+        phone,
+        national_id,
+        address,
+        is_test_account
+      )
+    `)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('Error listing customers:', error)
     return []
   }
-  return (data || []) as CustomerProfile[]
+  
+  // Merge customer data with user data
+  return (data || []).map((customer: any) => ({
+    ...customer,
+    email: customer.users.email,
+    fullName: customer.users.full_name,
+    phone: customer.users.phone,
+    nationalId: customer.users.national_id,
+    address: customer.users.address,
+    isTestAccount: customer.users.is_test_account,
+  })) as CustomerProfile[]
 }
 
 export async function listAllCustomers(): Promise<{ real: CustomerProfile[]; test: CustomerProfile[] }> {

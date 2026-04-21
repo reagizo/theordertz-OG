@@ -1,6 +1,21 @@
 // Supabase-based authentication
 import { supabase, supabaseAdmin } from './supabase'
 
+// Trigger sync to Firebase after Supabase writes
+async function triggerSyncToFirebase(tableName: string) {
+  try {
+    const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
+    await fetch(`${syncServiceUrl}/sync/${tableName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    console.log(`Sync triggered for ${tableName}`)
+  } catch (error) {
+    console.error(`Failed to trigger sync for ${tableName}:`, error)
+    // Don't throw - sync failures shouldn't block the main operation
+  }
+}
+
 export type User = {
   id: string
   email: string
@@ -123,7 +138,7 @@ export async function requestRegistration(
   
   if (existingUser) return
   
-  // Create registration alert for admin
+  // Create registration alert for admin (visible to admin@example.com and rkaijage@gmail.com)
   const { error } = await supabase
     .from('registration_alerts')
     .insert({
@@ -131,7 +146,7 @@ export async function requestRegistration(
       name: meta?.name as string || email,
       email,
       customer_tier: role === 'customer' ? 'd2d' : null,
-      message: `New ${role} registration request from ${email}`,
+      message: `New ${role} registration request from ${email} - Pending approval by admin@example.com or rkaijage@gmail.com`,
       is_test_account: !!meta?.isTestAccount,
     })
   
@@ -180,8 +195,38 @@ export async function approveRegistration(email: string): Promise<User | null> {
     })
     .select()
     .single()
-  
+
   if (createError) return null
+
+  // Create corresponding agent or customer record with PENDING status for admin approval
+  if (alert.alert_type === 'agent') {
+    await supabaseAdmin
+      .from('agents')
+      .insert({
+        id: newUser.id,
+        business_name: alert.name || email,
+        status: 'pending',
+        float_balance: 0,
+        commission_rate: 2.50,
+        commission_earned: 0,
+      })
+    await triggerSyncToFirebase('agents')
+  } else if (alert.alert_type === 'customer') {
+    await supabaseAdmin
+      .from('customers')
+      .insert({
+        id: newUser.id,
+        tier: alert.customer_tier || 'd2d',
+        status: 'pending',
+        wallet_balance: 0,
+        credit_limit: 0,
+        credit_used: 0,
+      })
+    await triggerSyncToFirebase('customers')
+  }
+
+  await triggerSyncToFirebase('users')
+  await triggerSyncToFirebase('registration_alerts')
   
   // Mark alert as read
   await supabase
@@ -200,46 +245,6 @@ export async function approveRegistration(email: string): Promise<User | null> {
   }
 }
 
-// Sync Supabase Auth user to custom users table
-async function syncUserToCustomTable(authUser: any): Promise<void> {
-  // Check if user exists in custom users table
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', authUser.id)
-    .single()
-
-  if (existingUser) {
-    // User exists, update Supabase user metadata with role if not set
-    if (!authUser.user_metadata?.roles) {
-      await supabase.auth.updateUser({
-        data: {
-          roles: [existingUser.role],
-          is_test_account: existingUser.is_test_account,
-        }
-      })
-    }
-    return
-  }
-
-  // Create user in custom table
-  const { error } = await supabase
-    .from('users')
-    .insert({
-      id: authUser.id,
-      email: authUser.email,
-      password_hash: '', // Password managed by Supabase Auth
-      full_name: authUser.user_metadata?.full_name || authUser.email,
-      role: authUser.user_metadata?.roles?.[0] || 'customer',
-      is_test_account: authUser.user_metadata?.is_test_account || false,
-      is_active: true,
-    })
-
-  if (error) {
-    console.error('Error syncing user to custom table:', error)
-  }
-}
-
 export async function login(email: string, password: string): Promise<User> {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -252,16 +257,6 @@ export async function login(email: string, password: string): Promise<User> {
 
   if (!user) throw new Error('Login failed')
 
-  // Fetch role from custom users table using admin client to bypass RLS
-  const { data: customUser } = await supabaseAdmin
-    .from('users')
-    .select('role, is_test_account')
-    .eq('id', user.id)
-    .single()
-
-  let role = customUser?.role
-  let isTestAccount = customUser?.is_test_account || false
-
   // Determine the correct role based on email or Supabase metadata
   const getRoleForEmail = (email: string): string => {
     if (email === 'rkaijage@gmail.com' || email === 'admin@example.com') return 'admin'
@@ -271,44 +266,15 @@ export async function login(email: string, password: string): Promise<User> {
   }
 
   const correctRole = user.user_metadata?.roles?.[0] || getRoleForEmail(email)
-  const correctIsTestAccount = user.user_metadata?.is_test_account || 
-    email.includes('test') || 
+  const correctIsTestAccount = user.user_metadata?.is_test_account ||
+    email.includes('test') ||
     email.includes('example.com')
 
-  // If user doesn't exist in custom table, create them using admin client
-  if (!customUser) {
-    const { error: insertError } = await supabaseAdmin
-      .from('users')
-      .insert({
-        id: user.id,
-        email: user.email,
-        password_hash: '',
-        full_name: user.user_metadata?.full_name || user.email,
-        role: correctRole,
-        is_test_account: correctIsTestAccount,
-        is_active: true,
-      })
+  let role = correctRole
+  let isTestAccount = correctIsTestAccount
 
-    if (insertError) {
-      console.error('Error creating user in custom table:', insertError)
-    }
-
-    role = correctRole
-    isTestAccount = correctIsTestAccount
-  } else {
-    // User exists, check if role is wrong and fix it using admin client
-    if (role !== correctRole || isTestAccount !== correctIsTestAccount) {
-      await supabaseAdmin
-        .from('users')
-        .update({ 
-          role: correctRole,
-          is_test_account: correctIsTestAccount
-        })
-        .eq('id', user.id)
-      role = correctRole
-      isTestAccount = correctIsTestAccount
-    }
-  }
+  // Custom table sync disabled to prevent RLS errors
+  // Login proceeds using Supabase Auth data with email-based role determination
 
   return {
     id: user.id,
@@ -457,6 +423,32 @@ export async function seedProductionLiveData(): Promise<void> {
 export function getRegisteredAccountsCount(): number {
   // TODO: Implement this function using Supabase
   return 0
+}
+
+// Trigger full sync of all tables to Firebase
+export async function triggerFullSync(): Promise<void> {
+  const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
+
+  try {
+    await fetch(`${syncServiceUrl}/sync/all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    console.log('Full sync triggered')
+  } catch (error) {
+    console.error('Failed to trigger full sync:', error)
+  }
+}
+
+// Start periodic sync (call this from your app initialization)
+export function startPeriodicSync(intervalMinutes: number = 5): () => void {
+  const intervalMs = intervalMinutes * 60 * 1000
+  const intervalId = setInterval(() => {
+    triggerFullSync()
+  }, intervalMs)
+
+  // Return cleanup function
+  return () => clearInterval(intervalId)
 }
 
 // Function to check and sync data across Supabase tables

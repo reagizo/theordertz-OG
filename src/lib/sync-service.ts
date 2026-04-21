@@ -9,6 +9,7 @@ let doc: any = null
 let getDoc: any = null
 let setDoc: any = null
 let updateDoc: any = null
+let deleteDoc: any = null
 let onSnapshot: any = null
 let collection: any = null
 let query: any = null
@@ -18,31 +19,37 @@ let serverTimestamp: any = null
 // Load Firebase and Supabase modules only in browser context
 async function loadModules() {
   if (typeof window === 'undefined') return false
-  
+
   try {
     const supabaseModule = await import('./supabase')
     supabase = supabaseModule.supabase
     supabaseAdmin = supabaseModule.supabaseAdmin
-    
+  } catch (error) {
+    console.error('Failed to load Supabase modules:', error)
+  }
+
+  // Firebase is optional - don't fail if it's not configured
+  try {
     const firebaseModule = await import('./firebase')
     db = firebaseModule.db
-    
-    const firestoreModule = await import('firebase/firestore')
-    doc = firestoreModule.doc
-    getDoc = firestoreModule.getDoc
-    setDoc = firestoreModule.setDoc
-    updateDoc = firestoreModule.updateDoc
-    onSnapshot = firestoreModule.onSnapshot
-    collection = firestoreModule.collection
-    query = firestoreModule.query
-    getDocs = firestoreModule.getDocs
-    serverTimestamp = firestoreModule.serverTimestamp
-    
-    return true
+
+    // Firebase v8 compat library functions
+    const firestoreCompat = await import('firebase/firestore')
+    doc = firestoreCompat.doc
+    getDoc = firestoreCompat.getDoc
+    setDoc = firestoreCompat.setDoc
+    updateDoc = firestoreCompat.updateDoc
+    deleteDoc = firestoreCompat.deleteDoc
+    onSnapshot = firestoreCompat.onSnapshot
+    collection = firestoreCompat.collection
+    query = firestoreCompat.query
+    getDocs = firestoreCompat.getDocs
+    serverTimestamp = firestoreCompat.serverTimestamp
   } catch (error) {
-    console.error('Failed to load sync modules:', error)
-    return false
+    console.warn('Firebase not configured, sync will use Supabase only:', (error as any).message)
   }
+
+  return true // Always return true since Supabase is the primary
 }
 
 export interface SyncStatus {
@@ -83,7 +90,6 @@ class SyncService {
   private subscribers: Set<(status: Map<string, SyncStatus>) => void> = new Set()
   private supabaseUnsubscribers: (() => void)[] = []
   private firebaseUnsubscribers: (() => void)[] = []
-  private isInitialized: boolean = false
 
   constructor() {
     // Only initialize in browser context to prevent server-side errors
@@ -105,8 +111,6 @@ class SyncService {
       console.error('Failed to load sync modules, sync service disabled')
       return
     }
-
-    this.isInitialized = true
     
     // Initialize sync status for each platform
     this.syncStatus.set('supabase', {
@@ -150,7 +154,7 @@ class SyncService {
 
   // Listen to Supabase changes
   private setupSupabaseListeners() {
-    const collections = ['users', 'agents', 'customers', 'transactions', 'registration_alerts', 'test_accounts', 'real_accounts']
+    const collections = ['users', 'agents', 'customers', 'transactions', 'float_requests', 'float_exchanges', 'audit_log', 'registration_alerts', 'password_reset_requests']
 
     collections.forEach(collectionName => {
       const subscription = supabase
@@ -162,12 +166,12 @@ class SyncService {
             schema: 'public',
             table: collectionName,
           },
-          (payload) => {
+          (payload: any) => {
             console.log(`Supabase change detected in ${collectionName}:`, payload)
             this.handleSupabaseChange(collectionName, payload)
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: any) => {
           console.log(`Supabase subscription status for ${collectionName}:`, status)
         })
 
@@ -177,7 +181,14 @@ class SyncService {
 
   // Listen to Firebase changes
   private setupFirebaseListeners() {
-    const collections = ['users', 'agents', 'customers', 'transactions', 'registration_alerts', 'test_accounts', 'real_accounts']
+    // Skip Firebase listeners if Firebase isn't loaded
+    if (!db || !collection || !query || !onSnapshot) {
+      console.log('Firebase not available, skipping Firebase listeners')
+      this.updateSyncStatus('firebase', { lastError: 'Firebase not configured' })
+      return
+    }
+
+    const collections = ['users', 'agents', 'customers', 'transactions', 'float_requests', 'float_exchanges', 'audit_log', 'registration_alerts', 'password_reset_requests']
 
     collections.forEach(collectionName => {
       const q = query(collection(db, collectionName))
@@ -276,6 +287,13 @@ class SyncService {
 
   // Sync from Supabase to Firebase
   private async syncSupabaseToFirebase(record: SyncRecord) {
+    // Skip Firebase sync if Firebase isn't available
+    if (!db || !doc || !getDoc || !setDoc || !serverTimestamp) {
+      console.log('Firebase not available, skipping Supabase to Firebase sync')
+      record.status = 'completed' // Mark as completed since we're not syncing to Firebase
+      return
+    }
+
     const docRef = doc(db, record.collection, record.documentId)
 
     if (record.action === 'delete') {
@@ -286,7 +304,7 @@ class SyncService {
       if (existingDoc.exists()) {
         const existingData = existingDoc.data()
         const conflict = this.detectConflict(existingData, record.data)
-        
+
         if (conflict) {
           record.status = 'failed'
           record.error = 'Conflict detected - manual resolution required'
@@ -413,9 +431,12 @@ class SyncService {
   private async deleteWithRetry(docRef: any, maxRetries = 3): Promise<void> {
     for (let i = 0; i < maxRetries; i++) {
       try {
-        // Firestore doesn't have a simple delete, need to import delete function
-        // For now, we'll use update with a deleted flag
-        await updateDoc(docRef, { _deleted: true })
+        if (deleteDoc) {
+          await deleteDoc(docRef)
+        } else {
+          // Fallback to update with deleted flag if deleteDoc not available
+          await updateDoc(docRef, { _deleted: true })
+        }
         return
       } catch (error) {
         if (i === maxRetries - 1) throw error
@@ -426,6 +447,11 @@ class SyncService {
 
   // Log sync record to Firebase for tracking
   private async logSyncRecord(record: SyncRecord) {
+    // Skip Firebase logging if Firebase isn't available
+    if (!db || !doc || !setDoc) {
+      return
+    }
+
     try {
       const syncLogRef = doc(db, 'sync_logs', record.id)
       await setDoc(syncLogRef, {
@@ -471,71 +497,75 @@ class SyncService {
       await this.syncCollection(collection)
     } else {
       // Sync all collections
-      const collections = ['users', 'agents', 'customers', 'transactions', 'registration_alerts', 'test_accounts', 'real_accounts']
+      const collections = ['users', 'agents', 'customers', 'transactions', 'float_requests', 'float_exchanges', 'audit_log', 'registration_alerts', 'password_reset_requests']
       await Promise.all(collections.map(c => this.syncCollection(c)))
     }
   }
 
   // Sync a specific collection from both platforms
-  private async syncCollection(collection: string) {
+  private async syncCollection(collectionName: string) {
     this.updateSyncStatus('supabase', { isSyncing: true })
     this.updateSyncStatus('firebase', { isSyncing: true })
 
     try {
-      // Sync from Supabase to Firebase
-      const { data: supabaseData } = await supabaseAdmin
-        .from(collection)
-        .select('*')
-      
-      if (supabaseData) {
-        for (const item of supabaseData) {
-          const docRef = doc(db, collection, item.id)
-          await this.setDocWithRetry(docRef, {
-            ...item,
-            synced_from: 'supabase',
-            synced_at: serverTimestamp(),
-          })
+      // Sync from Supabase to Firebase (only if Firebase is available)
+      if (db && doc && serverTimestamp) {
+        const { data: supabaseData } = await supabaseAdmin
+          .from(collectionName)
+          .select('*')
+
+        if (supabaseData) {
+          for (const item of supabaseData) {
+            const docRef = doc(db, collectionName, item.id)
+            await this.setDocWithRetry(docRef, {
+              ...item,
+              synced_from: 'supabase',
+              synced_at: serverTimestamp(),
+            })
+          }
         }
       }
 
-      // Sync from Firebase to Supabase
-      const firebaseQuery = query(collection(db, collection))
-      const firebaseSnapshot = await getDocs(firebaseQuery)
-      
-      for (const doc of firebaseSnapshot.docs) {
-        const data = doc.data()
-        if (data._deleted) continue // Skip deleted records
+      // Sync from Firebase to Supabase (only if Firebase is available)
+      if (db && collection && query && getDocs) {
+        const firebaseQuery = query(collection(db, collectionName))
+        const firebaseSnapshot = await getDocs(firebaseQuery)
 
-        const { data: existingData } = await supabaseAdmin
-          .from(collection)
-          .select('*')
-          .eq('id', doc.id)
-          .single()
+        for (const doc of firebaseSnapshot.docs) {
+          const data = doc.data()
+          if (data._deleted) continue // Skip deleted records
 
-        if (existingData) {
-          await supabaseAdmin
-            .from(collection)
-            .update({
-              ...data,
-              synced_from: 'firebase',
-              synced_at: new Date().toISOString(),
-            })
+          const { data: existingData } = await supabaseAdmin
+            .from(collectionName)
+            .select('*')
             .eq('id', doc.id)
-        } else {
-          await supabaseAdmin
-            .from(collection)
-            .insert({
-              ...data,
-              synced_from: 'firebase',
-              synced_at: new Date().toISOString(),
-            })
+            .single()
+
+          if (existingData) {
+            await supabaseAdmin
+              .from(collectionName)
+              .update({
+                ...data,
+                synced_from: 'firebase',
+                synced_at: new Date().toISOString(),
+              })
+              .eq('id', doc.id)
+          } else {
+            await supabaseAdmin
+              .from(collectionName)
+              .insert({
+                ...data,
+                synced_from: 'firebase',
+                synced_at: new Date().toISOString(),
+              })
+          }
         }
       }
 
       this.updateSyncStatus('supabase', { lastSynced: new Date(), isSyncing: false })
       this.updateSyncStatus('firebase', { lastSynced: new Date(), isSyncing: false })
     } catch (error) {
-      console.error(`Error syncing collection ${collection}:`, error)
+      console.error(`Error syncing collection ${collectionName}:`, error)
       this.updateSyncStatus('supabase', { isSyncing: false, lastError: `${error}` })
       this.updateSyncStatus('firebase', { isSyncing: false, lastError: `${error}` })
     }

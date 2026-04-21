@@ -1,4 +1,5 @@
-export function formatTZS(amount: number): string {
+export function formatTZS(amount: number | undefined | null): string {
+  if (amount === undefined || amount === null) return 'TZS 0'
   return `TZS ${amount.toLocaleString('en-US')}`
 }
 

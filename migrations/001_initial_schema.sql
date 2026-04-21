@@ -255,6 +255,10 @@ RETURNS BOOLEAN AS $$
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 -- ── Users RLS ─────────────────────────────────────────────────────────────────
+-- Service role bypass (for admin operations via service role key)
+CREATE POLICY users_service_role_bypass ON users
+  FOR ALL USING (auth.role() = 'service_role');
+
 -- Users can view their own profile; admins can view all
 CREATE POLICY users_select_own ON users
   FOR SELECT USING (

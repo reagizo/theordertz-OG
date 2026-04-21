@@ -31,7 +31,7 @@ export const supabase = createClient(effectiveUrl, effectiveKey, {
 })
 
 // Admin for Server Functions (uses Service Role Key)
-export const supabaseAdmin = supabaseServiceKey 
+export const supabaseAdmin = supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         storage: typeof window === 'undefined' ? serverStorage : localStorage,
@@ -41,3 +41,6 @@ export const supabaseAdmin = supabaseServiceKey
       },
     })
   : supabase // Fallback to regular client if no service key
+
+// Flag to indicate if service role key is configured
+export const hasServiceRoleKey = !!supabaseServiceKey

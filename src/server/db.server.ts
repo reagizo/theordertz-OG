@@ -9,6 +9,21 @@ import type {
   VendorProfile,
 } from '@/lib/types'
 
+// Trigger sync to Firebase after Supabase writes
+async function triggerSyncToFirebase(tableName: string) {
+  try {
+    const syncServiceUrl = process.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.reagizo.workers.dev'
+    await fetch(`${syncServiceUrl}/sync/${tableName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    console.log(`Sync triggered for ${tableName}`)
+  } catch (error) {
+    console.error(`Failed to trigger sync for ${tableName}:`, error)
+    // Don't throw - sync failures shouldn't block the main operation
+  }
+}
+
 function isTestEntity(item: { isTestAccount?: boolean } | { agentId?: string; customerId?: string } | { id?: string }): boolean {
   if ('isTestAccount' in item && item.isTestAccount) return true
   if ('agentId' in item && typeof item.agentId === 'string' && item.agentId.startsWith('test-')) return true
@@ -26,20 +41,17 @@ export async function getAgentProfile(id: string): Promise<AgentProfile | null> 
 }
 
 export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
-  const isTest = isTestEntity(profile)
   const { error } = await supabaseAdmin.from('agents').upsert({
     ...profile,
-    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving agent:', error)
 }
 
-export async function listAgents(testOnly?: boolean): Promise<AgentProfile[]> {
-  let query = supabaseAdmin.from('agents').select('*').order('created_at', { ascending: false })
-  if (testOnly) {
-    query = query.eq('is_test_account', true)
-  }
-  const { data, error } = await query
+export async function listAgents(): Promise<AgentProfile[]> {
+  const { data, error } = await supabaseAdmin
+    .from('agents')
+    .select('*')
+    .order('created_at', { ascending: false })
   if (error) {
     console.error('Error listing agents:', error)
     return []
@@ -48,8 +60,10 @@ export async function listAgents(testOnly?: boolean): Promise<AgentProfile[]> {
 }
 
 export async function listAllAgents(): Promise<{ real: AgentProfile[]; test: AgentProfile[] }> {
-  const [real, test] = await Promise.all([listAgents(false), listAgents(true)])
-  return { real, test }
+  const agents = await listAgents()
+  // Note: is_test_account is on users table, not agents table
+  // For now, return all agents in both categories
+  return { real: agents, test: [] }
 }
 
 // ── Customers ────────────────────────────────────────────────────────────────
@@ -61,20 +75,19 @@ export async function getCustomerProfile(id: string): Promise<CustomerProfile | 
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {
-  const isTest = isTestEntity(profile)
   const { error } = await supabaseAdmin.from('customers').upsert({
     ...profile,
-    is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving customer:', error)
+  // Trigger sync to Firebase
+  await triggerSyncToFirebase('customers')
 }
 
-export async function listCustomers(testOnly?: boolean): Promise<CustomerProfile[]> {
-  let query = supabaseAdmin.from('customers').select('*').order('created_at', { ascending: false })
-  if (testOnly) {
-    query = query.eq('is_test_account', true)
-  }
-  const { data, error } = await query
+export async function listCustomers(): Promise<CustomerProfile[]> {
+  const { data, error } = await supabaseAdmin
+    .from('customers')
+    .select('*')
+    .order('created_at', { ascending: false })
   if (error) {
     console.error('Error listing customers:', error)
     return []
@@ -83,12 +96,14 @@ export async function listCustomers(testOnly?: boolean): Promise<CustomerProfile
 }
 
 export async function listAllCustomers(): Promise<{ real: CustomerProfile[]; test: CustomerProfile[] }> {
-  const [real, test] = await Promise.all([listCustomers(false), listAgents(true)])
-  return { real, test: test as unknown as CustomerProfile[] }
+  const customers = await listCustomers()
+  // Note: is_test_account is on users table, not customers table
+  // For now, return all customers in both categories
+  return { real: customers, test: [] }
 }
 
-export async function listCustomersByTier(tier: 'd2d' | 'premier', testOnly?: boolean): Promise<CustomerProfile[]> {
-  const all = await listCustomers(testOnly)
+export async function listCustomersByTier(tier: 'd2d' | 'premier'): Promise<CustomerProfile[]> {
+  const all = await listCustomers()
   return all.filter(c => c.tier === tier)
 }
 
@@ -107,6 +122,8 @@ export async function saveTransaction(tx: Transaction): Promise<void> {
     is_test_account: isTest,
   }, { onConflict: 'id' })
   if (error) console.error('Error saving transaction:', error)
+  // Trigger sync to Firebase
+  await triggerSyncToFirebase('transactions')
 }
 
 export async function listTransactions(testOnly?: boolean): Promise<Transaction[]> {
@@ -251,8 +268,8 @@ export async function getCreditPortfolio(customerId: string): Promise<CreditPort
   }
 }
 
-export async function listCreditPortfolios(testOnly?: boolean): Promise<CreditPortfolio[]> {
-  const customers = await listCustomers(testOnly)
+export async function listCreditPortfolios(): Promise<CreditPortfolio[]> {
+  const customers = await listCustomers()
   const eligibleCustomers = customers.filter(c => c.tier === 'premier' || c.creditLimit > 0)
   const portfolios = await Promise.all(
     eligibleCustomers.map(c => getCreditPortfolio(c.id))
@@ -264,22 +281,27 @@ export async function listCreditPortfolios(testOnly?: boolean): Promise<CreditPo
 
 export async function deleteAgent(id: string): Promise<void> {
   await supabaseAdmin.from('agents').delete().eq('id', id)
+  await triggerSyncToFirebase('agents')
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
   await supabaseAdmin.from('customers').delete().eq('id', id)
+  await triggerSyncToFirebase('customers')
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
   await supabaseAdmin.from('transactions').delete().eq('id', id)
+  await triggerSyncToFirebase('transactions')
 }
 
 export async function deleteFloatRequest(id: string): Promise<void> {
   await supabaseAdmin.from('float_requests').delete().eq('id', id)
+  await triggerSyncToFirebase('float_requests')
 }
 
 export async function deleteFloatExchange(id: string): Promise<void> {
   await supabaseAdmin.from('float_exchanges').delete().eq('id', id)
+  await triggerSyncToFirebase('float_exchanges')
 }
 
 // ── Vendors ─────────────────────────────────────────────────────────────────
@@ -385,12 +407,14 @@ export async function syncVendorsToSupabase(): Promise<void> {
 // ── Test data cleanup ────────────────────────────────────────────────────────
 
 export async function clearAllTestData(): Promise<void> {
+  // Note: is_test_account is on users table, not on agents/customers/transactions tables
+  // To clear test data, we need to delete from users table with is_test_account=true
+  // which will cascade delete from related tables
   await Promise.all([
-    supabaseAdmin.from('agents').delete().eq('is_test_account', true),
-    supabaseAdmin.from('customers').delete().eq('is_test_account', true),
-    supabaseAdmin.from('transactions').delete().eq('is_test_account', true),
-    supabaseAdmin.from('float_requests').delete().eq('is_test_account', true),
-    supabaseAdmin.from('float_exchanges').delete().eq('is_test_account', true),
-    supabaseAdmin.from('vendors').delete().eq('istestaccount', true),
+    supabaseAdmin.from('users').delete().eq('is_test_account', true),
+    supabaseAdmin.from('registration_alerts').delete().eq('is_test_account', true),
   ])
+  // Trigger sync for all tables
+  await triggerSyncToFirebase('users')
+  await triggerSyncToFirebase('registration_alerts')
 }

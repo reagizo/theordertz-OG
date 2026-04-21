@@ -9,21 +9,21 @@ interface User {
   user_metadata?: { full_name?: string; profilePicture?: string }
 }
 
-// Lazy load Firebase auth functions only in browser context
+// Lazy load Supabase auth functions only in browser context
 let authLogin: any = null
 let authLogout: any = null
 let authSignup: any = null
-let onAuthStateChange: any = null
+let authGetCurrentUser: any = null
 
 async function loadAuthFunctions() {
   if (typeof window === 'undefined') return false
   
   try {
-    const authModule = await import('@/lib/firebase-auth')
+    const authModule = await import('@/lib/auth')
     authLogin = authModule.login
     authLogout = authModule.logout
     authSignup = authModule.signup
-    onAuthStateChange = authModule.onAuthStateChange
+    authGetCurrentUser = authModule.getCurrentUser
     return true
   } catch (error) {
     console.error('Failed to load auth functions:', error)
@@ -54,29 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let unsubscribe: (() => void) | null = null
-
-    // Load auth functions and set up listener
-    loadAuthFunctions().then((loaded) => {
-      if (loaded && onAuthStateChange) {
-        unsubscribe = onAuthStateChange((firebaseUser: User | null) => {
-          if (firebaseUser) {
-            setUser(firebaseUser)
-          } else {
-            setUser(null)
-          }
-          setLoading(false)
-        })
-      } else {
-        setLoading(false)
+    // Load auth functions and check current user
+    loadAuthFunctions().then(async (loaded) => {
+      if (loaded && authGetCurrentUser) {
+        const currentUser = await authGetCurrentUser()
+        setUser(currentUser)
       }
+      setLoading(false)
     }).catch(() => {
       setLoading(false)
     })
-
-    return () => {
-      if (unsubscribe) unsubscribe()
-    }
   }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<User> => {

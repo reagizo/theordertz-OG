@@ -170,13 +170,13 @@ function AdminDashboard() {
       if (alert.alert_type === 'agent') {
         const agent = agents.find((a: any) => a.email === alert.email)
         if (agent) {
-          const updated = { 
-            ...agent, 
-            status: 'approved', 
+          const updated = {
+            ...agent,
+            status: 'approved',
             services: services || [],
-            updatedAt: new Date().toISOString() 
+            updatedAt: new Date().toISOString()
           }
-          await saveAgentProfileFn({ data: updated })
+          await saveAgentProfileFn(updated)
         }
       } else if (alert.alert_type === 'customer') {
         const customer = customers.find((c: any) => c.email === alert.email)
@@ -189,13 +189,13 @@ function AdminDashboard() {
               .eq('id', customer.id)
           }
           const updated = { ...customer, status: 'approved', updatedAt: new Date().toISOString() }
-          await saveCustomerProfileFn({ data: updated })
+          await saveCustomerProfileFn(updated)
         }
       } else if (alert.alert_type === 'vendor') {
         const vendor = vendors.find((v: any) => v.email === alert.email)
         if (vendor) {
           const updated = { ...vendor, status: 'approved', updatedAt: new Date().toISOString() }
-          await saveVendorProfileFn({ data: updated })
+          await saveVendorProfileFn(updated)
         }
       }
       

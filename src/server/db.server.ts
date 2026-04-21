@@ -50,10 +50,20 @@ export async function getAgentProfile(id: string): Promise<AgentProfile | null> 
 }
 
 export async function saveAgentProfile(profile: AgentProfile): Promise<void> {
+  // Only save fields that exist in the agents table
   const { error } = await supabaseAdmin.from('agents').upsert({
-    ...profile,
+    id: profile.id,
+    business_name: profile.businessName,
+    status: profile.status,
+    float_balance: profile.floatBalance,
+    commission_rate: profile.commissionRate,
+    commission_earned: profile.commissionEarned,
+    updated_at: profile.updatedAt || new Date().toISOString(),
   }, { onConflict: 'id' })
-  if (error) console.error('Error saving agent:', error)
+  if (error) {
+    console.error('Error saving agent:', error)
+    throw error
+  }
 }
 
 export async function listAgents(): Promise<AgentProfile[]> {
@@ -128,10 +138,20 @@ export async function getCustomerProfile(id: string): Promise<CustomerProfile | 
 }
 
 export async function saveCustomerProfile(profile: CustomerProfile): Promise<void> {
+  // Only save fields that exist in the customers table
   const { error } = await supabaseAdmin.from('customers').upsert({
-    ...profile,
+    id: profile.id,
+    tier: profile.tier,
+    status: profile.status,
+    wallet_balance: profile.walletBalance,
+    credit_limit: profile.creditLimit,
+    credit_used: profile.creditUsed,
+    updated_at: profile.updatedAt || new Date().toISOString(),
   }, { onConflict: 'id' })
-  if (error) console.error('Error saving customer:', error)
+  if (error) {
+    console.error('Error saving customer:', error)
+    throw error
+  }
 }
 
 export async function listCustomers(): Promise<CustomerProfile[]> {

@@ -4,6 +4,4 @@ compatibility_date = "2026-04-04"
 
 [vars]
 VITE_SUPABASE_URL = "https://dlgtwwknvlncprphejaj.supabase.co"
-VITE_SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTI1MTU3NCwiZXhwIjoyMDkwODI3NTc0fQ.076NYiAofmB6E7gFthmmskllLt44V2pkDMtmnb_K7Tw"
-FIREBASE_PROJECT_ID = "the-ordertz"
-# FIREBASE_SERVICE_ACCOUNT_KEY - Set as Cloudflare Workers environment variable instead
+# VITE_SUPABASE_SERVICE_ROLE_KEY - Set as wrangler secret: wrangler secret put VITE_SUPABASE_SERVICE_ROLE_KEY

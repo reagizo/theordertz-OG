@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import path from 'path'
 
-// import { cloudflare } from "@cloudflare/vite-plugin";
+import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig({
   resolve: {
@@ -19,13 +19,13 @@ export default defineConfig({
     'import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZ3R3d2tudmxuY3BycGhlamFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTI1MTU3NCwiZXhwIjoyMDkwODI3NTc0fQ.076NYiAofmB6E7gFthmmskllLt44V2pkDMtmnb_K7Tw'),
   },
   plugins: [
+    cloudflare({
+      viteEnvironment: {
+        name: "ssr"
+      }
+    }),
     tanstackStart(),
     react(),
     tailwindcss(),
-    // cloudflare({
-    //   viteEnvironment: {
-    //     name: "ssr"
-    //   }
-    // })
   ],
 })

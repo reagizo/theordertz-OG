@@ -14,6 +14,8 @@ export type AppUser = {
   isTestAccount?: boolean
 }
 
+export type AgentService = 'cash_services' | 'all_payments' | 'float_exchange' | 'bulk_order'
+
 export type RegistrationAlert = {
   id: string
   type: 'agent' | 'customer' | 'vendor' | 'super_agent'
@@ -24,6 +26,7 @@ export type RegistrationAlert = {
   read: boolean
   createdAt: string
   isTestAccount?: boolean
+  services?: AgentService[]
 }
 
 export type PasswordResetItem = {

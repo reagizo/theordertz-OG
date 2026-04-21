@@ -80,6 +80,8 @@ export interface FloatExchange {
   updatedAt: string
 }
 
+export type AgentService = 'cash_services' | 'all_payments' | 'float_exchange' | 'bulk_order'
+
 export interface AgentProfile {
   id: string
   fullName: string
@@ -94,6 +96,7 @@ export interface AgentProfile {
   floatBalance: number
   commissionRate: number
   commissionEarned: number
+  services?: AgentService[]
   isTestAccount?: boolean
 }
 

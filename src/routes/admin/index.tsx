@@ -159,25 +159,46 @@ function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([])
+  const [selectedServices, setSelectedServices] = useState<Record<string, string[]>>({})
+  const [approvingAlert, setApprovingAlert] = useState<string | null>(null)
 
-  const handleApproveRegistration = async (alert: any) => {
+  const handleApproveRegistration = async (alert: any, services?: string[]) => {
+    setApprovingAlert(alert.id)
     try {
-      // Find the user in customers list and activate them in Supabase
-      const customer = customers.find((c: any) => c.email === alert.email)
-      if (customer) {
-        // Update user is_active status in Supabase
-        const { hasServiceRoleKey } = await import('@/lib/supabase')
-        if (hasServiceRoleKey) {
-          await supabaseAdmin
-            .from('users')
-            .update({ is_active: true })
-            .eq('id', customer.id)
+      const { saveAgentProfileFn, saveCustomerProfileFn, saveVendorProfileFn } = await import('@/server/db.functions')
+      
+      if (alert.alert_type === 'agent') {
+        const agent = agents.find((a: any) => a.email === alert.email)
+        if (agent) {
+          const updated = { 
+            ...agent, 
+            status: 'approved', 
+            services: services || [],
+            updatedAt: new Date().toISOString() 
+          }
+          await saveAgentProfileFn({ data: updated })
         }
-        // Update customer status
-        const updated = { ...customer, status: 'approved', updatedAt: new Date().toISOString() }
-        // This would need to call saveCustomerProfileFn, but we don't have it imported here
-        // For now, just mark the alert as read
+      } else if (alert.alert_type === 'customer') {
+        const customer = customers.find((c: any) => c.email === alert.email)
+        if (customer) {
+          const { hasServiceRoleKey } = await import('@/lib/supabase')
+          if (hasServiceRoleKey) {
+            await supabaseAdmin
+              .from('users')
+              .update({ is_active: true })
+              .eq('id', customer.id)
+          }
+          const updated = { ...customer, status: 'approved', updatedAt: new Date().toISOString() }
+          await saveCustomerProfileFn({ data: updated })
+        }
+      } else if (alert.alert_type === 'vendor') {
+        const vendor = vendors.find((v: any) => v.email === alert.email)
+        if (vendor) {
+          const updated = { ...vendor, status: 'approved', updatedAt: new Date().toISOString() }
+          await saveVendorProfileFn({ data: updated })
+        }
       }
+      
       // Mark alert as read in Supabase
       await supabaseAdmin
         .from('registration_alerts')
@@ -192,9 +213,22 @@ function AdminDashboard() {
       if (refreshedAlerts) {
         setRegistrationAlerts(refreshedAlerts)
       }
+      setSelectedServices(prev => ({ ...prev, [alert.id]: [] }))
     } catch (error) {
       console.error('Failed to approve registration:', error)
+    } finally {
+      setApprovingAlert(null)
     }
+  }
+
+  const handleServiceToggle = (alertId: string, service: string) => {
+    setSelectedServices(prev => {
+      const current = prev[alertId] || []
+      if (current.includes(service)) {
+        return { ...prev, [alertId]: current.filter(s => s !== service) }
+      }
+      return { ...prev, [alertId]: [...current, service] }
+    })
   }
 
   // Helper to get date from either snake_case or camelCase property
@@ -827,13 +861,37 @@ function AdminDashboard() {
                           )}
                           <p className="text-gray-500 text-xs mt-1">{alert.message}</p>
                           <p className="text-gray-400 text-xs mt-2">{formatDateTime(alert.created_at)}</p>
+                          {!alert.is_read && alert.alert_type === 'agent' && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <p className="text-xs font-medium text-gray-700 mb-2">Select Services:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  { id: 'cash_services', label: 'Cash Services' },
+                                  { id: 'all_payments', label: 'All Payments' },
+                                  { id: 'float_exchange', label: 'Float Exchange' },
+                                  { id: 'bulk_order', label: 'Bulk Order' },
+                                ].map((service) => (
+                                  <label key={service.id} className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={(selectedServices[alert.id] || []).includes(service.id)}
+                                      onChange={() => handleServiceToggle(alert.id, service.id)}
+                                      className="w-3 h-3 accent-green-600"
+                                    />
+                                    <span className="text-xs text-gray-700">{service.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         {!alert.is_read && (
                           <button
-                            onClick={() => handleApproveRegistration(alert)}
-                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                            onClick={() => handleApproveRegistration(alert, selectedServices[alert.id])}
+                            disabled={approvingAlert === alert.id}
+                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Approve
+                            {approvingAlert === alert.id ? 'Approving...' : 'Approve'}
                           </button>
                         )}
                       </div>
@@ -1034,11 +1092,72 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  Super Agents
+                  Super Agents ({agents.length})
                 </h3>
               </div>
-              <div className="text-gray-500 text-sm py-8">
-                Super Agent management coming soon
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3">Agent</th>
+                      <th className="px-4 py-3">Email</th>
+                      <th className="px-4 py-3">Phone</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Services</th>
+                      <th className="px-4 py-3">Float Balance</th>
+                      <th className="px-4 py-3">Commission</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agents.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                          No agents found
+                        </td>
+                      </tr>
+                    ) : (
+                      agents.map((agent: any) => (
+                        <tr key={agent.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium text-indigo-600">
+                                  {agent.fullName?.charAt(0) || 'A'}
+                                </span>
+                              </div>
+                              <span className="font-medium text-gray-900">{agent.fullName}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{agent.email}</td>
+                          <td className="px-4 py-3 text-gray-600">{agent.phone}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${statusColor(agent.status)}`}>
+                              {agent.status === 'approved' && <CheckCircle className="w-3 h-3" />}
+                              {agent.status === 'rejected' && <XCircle className="w-3 h-3" />}
+                              {agent.status === 'pending' && <Clock className="w-3 h-3" />}
+                              {agent.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {agent.services && agent.services.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {agent.services.map((service: string) => (
+                                  <span key={service} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+                                    {service.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">No services assigned</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{formatTZS(agent.floatBalance)}</td>
+                          <td className="px-4 py-3 text-gray-600">{agent.commissionRate}%</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

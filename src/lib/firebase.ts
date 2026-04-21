@@ -16,15 +16,18 @@ let db: any = null
 let messaging: any = null
 
 if (typeof window !== 'undefined') {
-  const { initializeApp, getApps } = require('firebase/app')
-  const { getAuth } = require('firebase/auth')
-  const { getFirestore } = require('firebase/firestore')
-  const { getMessaging } = require('firebase/messaging')
-  
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-  auth = getAuth(app)
-  db = getFirestore(app)
-  messaging = getMessaging(app)
+  import('firebase/app').then(({ initializeApp, getApps }) => {
+    import('firebase/auth').then(({ getAuth }) => {
+      import('firebase/firestore').then(({ getFirestore }) => {
+        import('firebase/messaging').then(({ getMessaging }) => {
+          app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+          auth = getAuth(app)
+          db = getFirestore(app)
+          messaging = getMessaging(app)
+        }).catch(console.error)
+      }).catch(console.error)
+    }).catch(console.error)
+  }).catch(console.error)
 }
 
 export { app, auth, db, messaging }

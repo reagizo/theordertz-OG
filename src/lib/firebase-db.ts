@@ -11,8 +11,9 @@ let getDocs: any = null
 let where: any = null
 let addDoc: any = null
 let serverTimestamp: any = null
-let DocumentData: any = null
-let Query: any = null
+let orderBy: any = null
+let limit: any = null
+let deleteDoc: any = null
 
 async function loadFirestore() {
   if (typeof window === 'undefined') return false
@@ -33,8 +34,9 @@ async function loadFirestore() {
     where = firestoreModule.where
     addDoc = firestoreModule.addDoc
     serverTimestamp = firestoreModule.serverTimestamp
-    DocumentData = firestoreModule.DocumentData
-    Query = firestoreModule.Query
+    orderBy = firestoreModule.orderBy
+    limit = firestoreModule.limit
+    deleteDoc = firestoreModule.deleteDoc
     
     return true
   } catch (error) {
@@ -69,11 +71,11 @@ export async function syncTestAccountToFirebase(data: { name: string; email: str
   }
 }
 
-export async function getTestAccountsFromFirebase(): Promise<{ success: boolean; data: DocumentData[]; error?: string }> {
+export async function getTestAccountsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
   try {
     const q = query(collection(db, 'test_accounts'), orderBy('created_at', 'desc'))
     const querySnapshot = await getDocs(q)
-    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    const data = querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))
     return { success: true, data }
   } catch (error) {
     console.error('Failed to get test accounts from Firebase:', error)
@@ -82,10 +84,10 @@ export async function getTestAccountsFromFirebase(): Promise<{ success: boolean;
 }
 
 // Real-time subscription to test accounts
-export function subscribeToTestAccounts(callback: (data: DocumentData[]) => void): () => void {
+export function subscribeToTestAccounts(callback: (data: Record<string, any>[]) => void): () => void {
   const q = query(collection(db, 'test_accounts'), orderBy('created_at', 'desc'))
-  return onSnapshot(q, (snapshot) => {
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  return onSnapshot(q, (snapshot: any) => {
+    const data = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))
     callback(data)
   })
 }
@@ -115,7 +117,7 @@ export async function syncRealAccountToFirebase(data: { name: string; email: str
   }
 }
 
-export async function getRealAccountsFromFirebase(): Promise<{ success: boolean; data: DocumentData[]; error?: string }> {
+export async function getRealAccountsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
   try {
     const q = query(collection(db, 'real_accounts'), orderBy('created_at', 'desc'))
     const querySnapshot = await getDocs(q)
@@ -128,7 +130,7 @@ export async function getRealAccountsFromFirebase(): Promise<{ success: boolean;
 }
 
 // Real-time subscription to real accounts
-export function subscribeToRealAccounts(callback: (data: DocumentData[]) => void): () => void {
+export function subscribeToRealAccounts(callback: (data: Record<string, any>[]) => void): () => void {
   const q = query(collection(db, 'real_accounts'), orderBy('created_at', 'desc'))
   return onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
@@ -151,7 +153,7 @@ export async function syncRegistrationAlertToFirebase(data: { type: string; name
   }
 }
 
-export async function getRegistrationAlertsFromFirebase(): Promise<{ success: boolean; data: DocumentData[]; error?: string }> {
+export async function getRegistrationAlertsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
   try {
     const q = query(collection(db, 'registration_alerts'), orderBy('created_at', 'desc'))
     const querySnapshot = await getDocs(q)
@@ -164,7 +166,7 @@ export async function getRegistrationAlertsFromFirebase(): Promise<{ success: bo
 }
 
 // Real-time subscription to registration alerts
-export function subscribeToRegistrationAlerts(callback: (data: DocumentData[]) => void): () => void {
+export function subscribeToRegistrationAlerts(callback: (data: Record<string, any>[]) => void): () => void {
   const q = query(collection(db, 'registration_alerts'), orderBy('created_at', 'desc'))
   return onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
@@ -213,7 +215,7 @@ export async function addUserUpdate(data: { userId: string; userEmail: string; a
 }
 
 // Real-time subscription to user updates (Option A - Realtime Dashboard)
-export function subscribeToUserUpdates(callback: (data: DocumentData[]) => void): () => void {
+export function subscribeToUserUpdates(callback: (data: Record<string, any>[]) => void): () => void {
   const q = query(collection(db, 'user_updates'), orderBy('created_at', 'desc'), limit(100))
   return onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
@@ -300,7 +302,7 @@ export async function logNotification(data: { recipientId: string; type: string;
 }
 
 // Real-time subscription to notifications (Option C - Hybrid)
-export function subscribeToNotifications(userId: string, callback: (data: DocumentData[]) => void): () => void {
+export function subscribeToNotifications(userId: string, callback: (data: Record<string, any>[]) => void): () => void {
   const q = query(collection(db, 'notifications'), where('recipientId', '==', userId), orderBy('created_at', 'desc'), limit(50))
   return onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
@@ -309,10 +311,348 @@ export function subscribeToNotifications(userId: string, callback: (data: Docume
 }
 
 // Generic real-time subscription helper
-export function subscribeToCollection(collectionName: string, constraints: any[], callback: (data: DocumentData[]) => void): () => void {
+export function subscribeToCollection(collectionName: string, constraints: any[], callback: (data: Record<string, any>[]) => void): () => void {
   const q = query(collection(db, collectionName), ...constraints)
   return onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     callback(data)
   })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUPABASE TABLE SYNC FUNCTIONS
+// These functions sync all Supabase tables to Firebase Firestore
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Users Table Sync
+export async function syncUserToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const userRef = doc(db, 'users', data.id)
+    await setDoc(userRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync user to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getUsersFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'users'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get users from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+export function subscribeToUsers(callback: (data: Record<string, any>[]) => void): () => void {
+  const q = query(collection(db, 'users'), orderBy('created_at', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    callback(data)
+  })
+}
+
+// Agents Table Sync
+export async function syncAgentToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const agentRef = doc(db, 'agents', data.id)
+    await setDoc(agentRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync agent to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getAgentsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'agents'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get agents from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+export function subscribeToAgents(callback: (data: Record<string, any>[]) => void): () => void {
+  const q = query(collection(db, 'agents'), orderBy('created_at', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    callback(data)
+  })
+}
+
+// Customers Table Sync
+export async function syncCustomerToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const customerRef = doc(db, 'customers', data.id)
+    await setDoc(customerRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync customer to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getCustomersFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'customers'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get customers from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+export function subscribeToCustomers(callback: (data: Record<string, any>[]) => void): () => void {
+  const q = query(collection(db, 'customers'), orderBy('created_at', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    callback(data)
+  })
+}
+
+// Transactions Table Sync
+export async function syncTransactionToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const transactionRef = doc(db, 'transactions', data.id)
+    await setDoc(transactionRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync transaction to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getTransactionsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'transactions'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get transactions from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+export function subscribeToTransactions(callback: (data: Record<string, any>[]) => void): () => void {
+  const q = query(collection(db, 'transactions'), orderBy('created_at', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    callback(data)
+  })
+}
+
+// Float Requests Table Sync
+export async function syncFloatRequestToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const floatRequestRef = doc(db, 'float_requests', data.id)
+    await setDoc(floatRequestRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync float request to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getFloatRequestsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'float_requests'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get float requests from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+export function subscribeToFloatRequests(callback: (data: Record<string, any>[]) => void): () => void {
+  const q = query(collection(db, 'float_requests'), orderBy('created_at', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    callback(data)
+  })
+}
+
+// Float Exchanges Table Sync
+export async function syncFloatExchangeToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const floatExchangeRef = doc(db, 'float_exchanges', data.id)
+    await setDoc(floatExchangeRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync float exchange to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getFloatExchangesFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'float_exchanges'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get float exchanges from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+export function subscribeToFloatExchanges(callback: (data: Record<string, any>[]) => void): () => void {
+  const q = query(collection(db, 'float_exchanges'), orderBy('created_at', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    callback(data)
+  })
+}
+
+// Audit Log Table Sync
+export async function syncAuditLogToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const auditLogRef = doc(db, 'audit_log', data.id)
+    await setDoc(auditLogRef, {
+      ...data,
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync audit log to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getAuditLogsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'audit_log'), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get audit logs from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+// Password Reset Requests Table Sync
+export async function syncPasswordResetRequestToFirebase(data: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    await loadFirestore()
+    const resetRef = doc(db, 'password_reset_requests', data.id)
+    await setDoc(resetRef, {
+      ...data,
+      updated_at: serverTimestamp(),
+    }, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to sync password reset request to Firebase:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getPasswordResetRequestsFromFirebase(): Promise<{ success: boolean; data: Record<string, any>[]; error?: string }> {
+  try {
+    const q = query(collection(db, 'password_reset_requests'), orderBy('requested_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    return { success: true, data }
+  } catch (error) {
+    console.error('Failed to get password reset requests from Firebase:', error)
+    return { success: false, error: String(error), data: [] }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BULK SYNC FUNCTIONS
+// Sync all tables from Supabase to Firebase via Cloudflare Worker
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export async function syncAllTablesToFirebase(): Promise<{ success: boolean; results?: any; error?: string }> {
+  try {
+    const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.workers.dev'
+    const response = await fetch(`${syncServiceUrl}/sync/all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Sync service responded: ${response.statusText}`)
+    }
+    
+    const result = await response.json()
+    return { success: true, results: result }
+  } catch (error) {
+    console.error('Failed to sync all tables:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function syncTableToFirebase(tableName: string): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.workers.dev'
+    const response = await fetch(`${syncServiceUrl}/sync/${tableName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Sync service responded: ${response.statusText}`)
+    }
+    
+    const result = await response.json()
+    return { success: true, result: result }
+  } catch (error) {
+    console.error(`Failed to sync table ${tableName}:`, error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function getSyncStatus(): Promise<{ success: boolean; status?: any; error?: string }> {
+  try {
+    const syncServiceUrl = import.meta.env.VITE_SYNC_SERVICE_URL || 'https://theordertz-sync-service.workers.dev'
+    const response = await fetch(`${syncServiceUrl}/sync/status`)
+    
+    if (!response.ok) {
+      throw new Error(`Sync service responded: ${response.statusText}`)
+    }
+    
+    const status = await response.json()
+    return { success: true, status }
+  } catch (error) {
+    console.error('Failed to get sync status:', error)
+    return { success: false, error: String(error) }
+  }
 }

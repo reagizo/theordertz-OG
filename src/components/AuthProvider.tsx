@@ -80,17 +80,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<User> => {
+    if (!authLogin) {
+      await loadAuthFunctions()
+      if (!authLogin) {
+        throw new Error('Auth functions not loaded')
+      }
+    }
     const user = await authLogin(email, password)
     setUser(user)
     return user
   }, [])
 
   const logout = useCallback(async () => {
+    if (!authLogout) {
+      await loadAuthFunctions()
+      if (!authLogout) {
+        throw new Error('Auth functions not loaded')
+      }
+    }
     await authLogout()
     setUser(null)
   }, [])
 
   const signup = useCallback(async (email: string, password: string, meta: Record<string, unknown>) => {
+    if (!authSignup) {
+      await loadAuthFunctions()
+      if (!authSignup) {
+        throw new Error('Auth functions not loaded')
+      }
+    }
     const user = await authSignup(email, password, meta)
     setUser(user)
     return user

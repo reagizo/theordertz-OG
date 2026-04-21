@@ -18,36 +18,64 @@ let collection: any = null
 let query: any = null
 let where: any = null
 let updateDoc: any = null
-let FirebaseUser: any = null
 
 async function loadFirebaseModules() {
   if (typeof window === 'undefined') return false
-  
+
   try {
-    const authModule = await import('firebase/auth')
+    // Wait for Firebase to initialize
     const firebaseModule = await import('./firebase')
-    const firestoreModule = await import('firebase/firestore')
-    
+    let attempts = 0
+    while (!firebaseModule.auth && attempts < 10) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+      attempts++
+    }
+
+    if (!firebaseModule.auth || !firebaseModule.db) {
+      throw new Error('Firebase not initialized after waiting')
+    }
+
+    const {
+      signInWithEmailAndPassword: signInFn,
+      createUserWithEmailAndPassword: createUserFn,
+      signOut: signOutFn,
+      onAuthStateChanged: onAuthStateChangeFn,
+      sendPasswordResetEmail: sendPasswordResetFn,
+      updateProfile: updateProfileFn,
+    } = await import('firebase/auth')
+
+    const {
+      doc: docFn,
+      setDoc: setDocFn,
+      getDoc: getDocFn,
+      getDocs: getDocsFn,
+      addDoc: addDocFn,
+      serverTimestamp: serverTimestampFn,
+      collection: collectionFn,
+      query: queryFn,
+      where: whereFn,
+      updateDoc: updateDocFn,
+    } = await import('firebase/firestore')
+
     auth = firebaseModule.auth
     db = firebaseModule.db
-    FirebaseUser = authModule.User
-    signInWithEmailAndPassword = authModule.signInWithEmailAndPassword
-    createUserWithEmailAndPassword = authModule.createUserWithEmailAndPassword
-    signOut = authModule.signOut
-    onAuthStateChanged = authModule.onAuthStateChanged
-    sendPasswordResetEmail = authModule.sendPasswordResetEmail
-    updateProfile = authModule.updateProfile
-    doc = firestoreModule.doc
-    setDoc = firestoreModule.setDoc
-    getDoc = firestoreModule.getDoc
-    getDocs = firestoreModule.getDocs
-    addDoc = firestoreModule.addDoc
-    serverTimestamp = firestoreModule.serverTimestamp
-    collection = firestoreModule.collection
-    query = firestoreModule.query
-    where = firestoreModule.where
-    updateDoc = firestoreModule.updateDoc
-    
+    signInWithEmailAndPassword = signInFn
+    createUserWithEmailAndPassword = createUserFn
+    signOut = signOutFn
+    onAuthStateChanged = onAuthStateChangeFn
+    sendPasswordResetEmail = sendPasswordResetFn
+    updateProfile = updateProfileFn
+    doc = docFn
+    setDoc = setDocFn
+    getDoc = getDocFn
+    getDocs = getDocsFn
+    addDoc = addDocFn
+    serverTimestamp = serverTimestampFn
+    collection = collectionFn
+    query = queryFn
+    where = whereFn
+    updateDoc = updateDocFn
+
     return true
   } catch (error) {
     console.error('Failed to load Firebase modules:', error)
@@ -245,7 +273,7 @@ export async function approveRegistration(email: string): Promise<User | null> {
 }
 
 // Sync Firebase Auth user to custom users collection
-async function syncUserToCustomTable(authUser: FirebaseUser): Promise<void> {
+async function syncUserToCustomTable(authUser: any): Promise<void> {
   const userRef = doc(db, 'users', authUser.uid)
   const userSnap = await getDoc(userRef)
 
@@ -272,6 +300,18 @@ async function syncUserToCustomTable(authUser: FirebaseUser): Promise<void> {
 }
 
 export async function login(email: string, password: string): Promise<User> {
+  if (typeof window === 'undefined') {
+    throw new Error('Firebase Auth is not available in server context')
+  }
+  
+  if (!auth) {
+    await loadFirebaseModules()
+  }
+  
+  if (!auth || !signInWithEmailAndPassword) {
+    throw new Error('Firebase Auth modules not loaded')
+  }
+  
   const userCredential = await signInWithEmailAndPassword(auth, email, password)
   const user = userCredential.user
 

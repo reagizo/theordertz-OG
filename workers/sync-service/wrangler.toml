@@ -1,0 +1,9 @@
+name = "theordertz-sync-service"
+main = "index.ts"
+compatibility_date = "2026-04-04"
+
+[vars]
+VITE_SUPABASE_URL = "your-supabase-url"
+VITE_SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key"
+FIREBASE_PROJECT_ID = "your-project-id"
+FIREBASE_SERVICE_ACCOUNT_KEY = "your-service-account-json-key-here"

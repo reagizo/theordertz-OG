@@ -79,7 +79,7 @@ function AdminDashboardPage() {
   )
 }
 
-type TabId = 'overview' | 'completed' | 'pending' | 'agents' | 'd2d' | 'premier' | 'audit' | 'registrations'
+type TabId = 'overview' | 'completed' | 'pending' | 'agents' | 'd2d' | 'premier' | 'vendors' | 'super_agents' | 'audit' | 'registrations'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -89,6 +89,8 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'agents', label: 'Super Agent Transactions' },
   { id: 'd2d', label: 'D2D Customers' },
   { id: 'premier', label: 'Premier Customers' },
+  { id: 'vendors', label: 'Vendors' },
+  { id: 'super_agents', label: 'Super Agents' },
   { id: 'audit', label: 'Audit Trail' },
 ]
 
@@ -237,10 +239,22 @@ function AdminDashboard() {
         actor: c.fullName,
       }))
 
-    setAuditTrail([...entries, ...agentEntries, ...customerEntries].sort(
+    const vendorEntries: AuditEntry[] = vendors
+      .sort((a, b) => new Date(getUpdatedAt(b)).getTime() - new Date(getUpdatedAt(a)).getTime())
+      .map((v) => ({
+        id: `audit-vendor-${v.id}`,
+        timestamp: getUpdatedAt(v),
+        action: `Vendor ${v.status}`,
+        entityType: 'Vendor',
+        entityName: v.fullName,
+        details: `Business: ${v.businessName || 'N/A'} | Float: ${formatTZS(v.floatBalance)} | Commission: ${v.commissionRate}%`,
+        actor: v.fullName,
+      }))
+
+    setAuditTrail([...entries, ...agentEntries, ...customerEntries, ...vendorEntries].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     ))
-  }, [transactions, agents, customers])
+  }, [transactions, agents, customers, vendors])
 
   // KPI calculations
   const kpis = useMemo(() => {
@@ -798,7 +812,7 @@ function AdminDashboard() {
                           <div className="flex items-center gap-2 mb-1">
                             <Bell className={`w-4 h-4 ${alert.is_read ? 'text-gray-400' : 'text-yellow-600'}`} />
                             <span className="font-medium text-gray-900 text-sm">
-                              {alert.type === 'agent' ? 'Agent' : 'Customer'} Registration
+                              {alert.alert_type === 'vendor' ? 'Vendor' : alert.alert_type === 'super_agent' ? 'Super Agent' : alert.alert_type === 'agent' ? 'Agent' : 'Customer'} Registration
                             </span>
                             {!alert.is_read && (
                               <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs">New</span>
@@ -941,6 +955,69 @@ function AdminDashboard() {
             </div>
           )}
 
+          {activeTab === 'vendors' && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-700">
+                  Vendors ({vendors.length})
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Business Name</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Float Balance</th>
+                      <th className="px-4 py-3">Commission Rate</th>
+                      <th className="px-4 py-3">Commission Earned</th>
+                      <th className="px-4 py-3">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vendors.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                          No vendors found
+                        </td>
+                      </tr>
+                    ) : (
+                      vendors.map((v) => (
+                        <tr key={v.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                          <td className="px-4 py-3 font-medium">{v.fullName}</td>
+                          <td className="px-4 py-3">{v.businessName || '-'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${statusColor(v.status)}`}>
+                              {v.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">{formatTZS(v.floatBalance)}</td>
+                          <td className="px-4 py-3">{v.commissionRate}%</td>
+                          <td className="px-4 py-3">{formatTZS(v.commissionEarned)}</td>
+                          <td className="px-4 py-3 text-gray-500 text-sm">{formatDateTime(getDate(v))}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'super_agents' && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-700">
+                  Super Agents
+                </h3>
+              </div>
+              <div className="text-gray-500 text-sm py-8">
+                Super Agent management coming soon
+              </div>
+            </div>
+          )}
+
           {activeTab === 'audit' && (
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">
@@ -964,6 +1041,7 @@ function AdminDashboard() {
                           <span className={`inline-flex px-1.5 py-0.5 text-xs rounded-full ${
                             entry.entityType === 'Transaction' ? 'bg-blue-100 text-blue-700' :
                             entry.entityType === 'Agent' ? 'bg-green-100 text-green-700' :
+                            entry.entityType === 'Vendor' ? 'bg-teal-100 text-teal-700' :
                             'bg-purple-100 text-purple-700'
                           }`}>
                             {entry.entityType}

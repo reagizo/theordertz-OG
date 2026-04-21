@@ -27,12 +27,16 @@ function Home() {
         router.navigate({ to: '/login' })
       } else if (role === 'admin') {
         router.navigate({ to: '/admin' })
+      } else if (role === 'supervisor') {
+        router.navigate({ to: '/supervisor' })
       } else if (role === 'agent') {
         router.navigate({ to: '/agent' })
       } else if (role === 'customer') {
         router.navigate({ to: '/customer' })
       } else if (role === 'vendor') {
         router.navigate({ to: '/vendor' })
+      } else if (role === 'superAgent') {
+        router.navigate({ to: '/supervisor' })
       } else {
         router.navigate({ to: '/login' })
       }

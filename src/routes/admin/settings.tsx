@@ -12,7 +12,7 @@ export const Route = createFileRoute('/admin/settings')({
   component: AdminSettings,
 })
 
-const ROLES: UserRole[] = ['Admin', 'Supervisor', 'Clerk', 'Agent', 'Customer', 'Test', 'SuperAgent']
+const ROLES: UserRole[] = ['Admin', 'Supervisor', 'Clerk', 'Agent', 'Customer', 'Vendor', 'SuperAgent', 'Test']
 
 const ROLE_COLORS: Record<UserRole, string> = {
   Admin: 'bg-red-100 text-red-700',
@@ -21,6 +21,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   Clerk: 'bg-blue-100 text-blue-700',
   Agent: 'bg-orange-100 text-orange-700',
   Customer: 'bg-green-100 text-green-700',
+  Vendor: 'bg-teal-100 text-teal-700',
   Test: 'bg-gray-100 text-gray-700',
 }
 

@@ -1,6 +1,6 @@
 import React from 'react'
 
-export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Test' | 'SuperAgent'
+export type UserRole = 'Admin' | 'Supervisor' | 'Clerk' | 'Agent' | 'Customer' | 'Vendor' | 'SuperAgent' | 'Test'
 export type CustomerTier = 'd2d' | 'premier'
 
 export type AppUser = {

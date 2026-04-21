@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useSettings, type UserRole, type AppUser } from '@/contexts/SettingsContext'
 import { Save, Upload, X, Check, KeyRound, User, Shield } from 'lucide-react'
 import React from 'react'
+import { uploadProfilePicture, syncRealAccountToSupabase } from '@/server/db.supabase'
 
 export const Route = createFileRoute('/supervisor/settings')({
   component: SupervisorSettings,
@@ -20,21 +21,48 @@ function AvatarWithPicture({ picture, name, size = 'sm' }: { picture?: string; n
   )
 }
 
-function ProfilePictureUploader({ currentPicture, name, onUpload }: { currentPicture?: string; name: string; onUpload: (dataUrl: string) => void }) {
+function ProfilePictureUploader({ currentPicture, name, onUpload, userId }: { currentPicture?: string; name: string; onUpload: (url: string) => void; userId?: string }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploading, setUploading] = React.useState(false)
+  
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => { if (ev.target?.result) onUpload(ev.target.result as string) }
-    reader.readAsDataURL(file)
+    
+    setUploading(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        if (ev.target?.result) {
+          const base64 = ev.target.result as string
+          if (userId) {
+            const result = await uploadProfilePicture({ data: { base64, fileName: file.name, userId } })
+            if (result.success && result.url) {
+              onUpload(result.url)
+            } else {
+              console.error('Failed to upload profile picture:', result.error)
+              alert('Failed to upload profile picture')
+            }
+          } else {
+            onUpload(base64)
+          }
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading profile picture:', error)
+      alert('Failed to upload profile picture')
+    } finally {
+      setUploading(false)
+    }
   }
+  
   return (
     <div className="flex items-center gap-4">
       <AvatarWithPicture picture={currentPicture} name={name} size="lg" />
       <div>
-        <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100">
-          <Upload className="w-4 h-4" /> Upload Photo
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 disabled:opacity-50">
+          {uploading ? 'Uploading...' : <><Upload className="w-4 h-4" /> Upload Photo</>}
         </button>
         {currentPicture && (
           <button type="button" onClick={() => onUpload('')} className="ml-2 inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-700">
@@ -126,7 +154,7 @@ function SupervisorSettings() {
           </div>
           {currentUser && (
             <div className="space-y-4">
-              <ProfilePictureUploader currentPicture={currentUser.profilePicture} name={currentUser.name} onUpload={(pic) => updateUser(currentUser.id, { profilePicture: pic || undefined })} />
+              <ProfilePictureUploader currentPicture={currentUser.profilePicture} name={currentUser.name} onUpload={(pic) => updateUser(currentUser.id, { profilePicture: pic || undefined })} userId={currentUser.id} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>

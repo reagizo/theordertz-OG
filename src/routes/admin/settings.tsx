@@ -6,6 +6,7 @@ import {
   Bell, BellOff, AlertTriangle, Activity, FlaskConical, Users, RefreshCw,
 } from 'lucide-react'
 import { TEST_ADMIN_EMAIL, REAL_ADMIN_EMAIL } from '@/contexts/SettingsContext'
+import { uploadProfilePicture, syncTestAccountToSupabase } from '@/server/db.supabase'
 
 export const Route = createFileRoute('/admin/settings')({
   component: AdminSettings,
@@ -35,21 +36,50 @@ function AvatarWithPicture({ picture, name, size = 'md' }: { picture?: string; n
   )
 }
 
-function ProfilePictureUploader({ currentPicture, name, onUpload }: { currentPicture?: string; name: string; onUpload: (dataUrl: string) => void }) {
+function ProfilePictureUploader({ currentPicture, name, onUpload, userId }: { currentPicture?: string; name: string; onUpload: (url: string) => void; userId?: string }) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploading, setUploading] = useState(false)
+  
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => { if (ev.target?.result) onUpload(ev.target.result as string) }
-    reader.readAsDataURL(file)
+    
+    setUploading(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        if (ev.target?.result) {
+          const base64 = ev.target.result as string
+          if (userId) {
+            // Upload to Supabase Storage
+            const result = await uploadProfilePicture({ data: { base64, fileName: file.name, userId } })
+            if (result.success && result.url) {
+              onUpload(result.url)
+            } else {
+              console.error('Failed to upload profile picture:', result.error)
+              alert('Failed to upload profile picture')
+            }
+          } else {
+            // Fallback to base64 if no userId
+            onUpload(base64)
+          }
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading profile picture:', error)
+      alert('Failed to upload profile picture')
+    } finally {
+      setUploading(false)
+    }
   }
+  
   return (
     <div className="flex items-center gap-4">
       <AvatarWithPicture picture={currentPicture} name={name} size="lg" />
       <div>
-        <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-          <Upload className="w-4 h-4" /> Upload Photo
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50">
+          {uploading ? 'Uploading...' : <><Upload className="w-4 h-4" /> Upload Photo</>}
         </button>
         {currentPicture && (
           <button type="button" onClick={() => onUpload('')} className="ml-2 inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-700">
@@ -129,7 +159,11 @@ function AdminSettings() {
     if (!newUserName.trim() || !newUserEmail.trim()) return
     if (!newUserPassword || newUserPassword.length < 6) { alert('Password must be at least 6 characters.'); return }
     if (newUserPassword !== newUserConfirmPassword) { alert('Passwords do not match.'); return }
-    addUser({ name: newUserName.trim(), email: newUserEmail.trim(), role: newUserRole, profilePicture: newUserPicture || undefined, password: newUserPassword })
+    const newUser = addUser({ name: newUserName.trim(), email: newUserEmail.trim(), role: newUserRole, profilePicture: newUserPicture || undefined, password: newUserPassword })
+    // Sync to Supabase
+    if (newUserPicture) {
+      syncTestAccountToSupabase({ data: { name: newUserName.trim(), email: newUserEmail.trim(), role: newUserRole, profilePicture: newUserPicture } })
+    }
     setNewUserName(''); setNewUserEmail(''); setNewUserRole('Clerk'); setNewUserTier('d2d'); setNewUserPicture(''); setNewUserPassword(''); setNewUserConfirmPassword(''); setShowAddUser(false)
   }
 
@@ -149,12 +183,29 @@ function AdminSettings() {
     setEditConfirmPassword('')
   }
 
-  const handleEditPictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditPictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => { if (ev.target?.result) setEditPicture(ev.target.result as string) }
-    reader.readAsDataURL(file)
+    if (!file || !editingUserId) return
+    
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        if (ev.target?.result) {
+          const base64 = ev.target.result as string
+          const result = await uploadProfilePicture({ data: { base64, fileName: file.name, userId: editingUserId } })
+          if (result.success && result.url) {
+            setEditPicture(result.url)
+          } else {
+            console.error('Failed to upload profile picture:', result.error)
+            alert('Failed to upload profile picture')
+          }
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading profile picture:', error)
+      alert('Failed to upload profile picture')
+    }
   }
 
   const formatDateTime = (d: string) => new Date(d).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -268,7 +319,7 @@ function AdminSettings() {
                       <h3 className="text-sm font-semibold text-gray-700">Add New User</h3>
                       <button onClick={() => setShowAddUser(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
                     </div>
-                    <ProfilePictureUploader currentPicture={newUserPicture} name={newUserName || 'New User'} onUpload={setNewUserPicture} />
+                    <ProfilePictureUploader currentPicture={newUserPicture} name={newUserName || 'New User'} onUpload={setNewUserPicture} userId="new-user" />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>

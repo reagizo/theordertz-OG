@@ -107,3 +107,42 @@ export const clearAllAlertsInSupabase = createServerFn({ method: 'POST' })
       return { success: false, error: String(error) }
     }
   })
+
+// Profile Picture Upload to Supabase Storage
+export const uploadProfilePicture = createServerFn({ method: 'POST' })
+  .inputValidator((data: { base64: string; fileName: string; userId: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      const { base64, fileName, userId } = data
+      
+      // Convert base64 to buffer
+      const base64Data = base64.split(',')[1] // Remove data URL prefix
+      const buffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))
+      
+      // Generate unique filename
+      const fileExt = fileName.split('.').pop()
+      const uniqueFileName = `${userId}/${Date.now()}.${fileExt}`
+      
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabaseAdmin
+        .storage
+        .from('profile-pictures')
+        .upload(uniqueFileName, buffer, {
+          contentType: 'image/jpeg',
+          upsert: true
+        })
+      
+      if (uploadError) throw uploadError
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabaseAdmin
+        .storage
+        .from('profile-pictures')
+        .getPublicUrl(uniqueFileName)
+      
+      return { success: true, url: publicUrl }
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error)
+      return { success: false, error: String(error) }
+    }
+  })

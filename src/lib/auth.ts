@@ -124,7 +124,7 @@ export async function requestRegistration(
   if (existingUser) return
   
   // Create registration alert for admin (visible to admin@example.com and rkaijage@gmail.com)
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('registration_alerts')
     .insert({
       alert_type: role,

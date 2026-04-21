@@ -6,6 +6,7 @@ import { generateId } from '@/lib/utils'
 import { Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react'
 import AnimatedLogo from '@/components/AnimatedLogo'
 import { isTestAccountByNameOrEmail, useSettings, SettingsProvider } from '@/contexts/SettingsContext'
+import { requestRegistration } from '@/lib/auth'
 
 export const Route = createFileRoute('/register/agent')({
   component: AgentRegisterPage,
@@ -63,6 +64,8 @@ function AgentRegisterContent() {
         message: `New agent registration from ${form.phone || form.email}. Awaiting admin approval.`,
         isTestAccount: isTest,
       })
+      // Create registration alert in Supabase for both admins to see
+      await requestRegistration(form.email, 'agent', { name: form.fullName, isTestAccount: isTest })
       router.navigate({ to: '/agent' })
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string }
